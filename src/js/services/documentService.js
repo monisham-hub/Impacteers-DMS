@@ -323,6 +323,53 @@ class DocumentService {
     window.dispatchEvent(new CustomEvent('document:created', { detail: newDoc }));
     return newDoc;
   }
+
+  /**
+   * Permanently delete a document from vault
+   */
+  deleteDocument(docId) {
+    const user = authService.getCurrentUser();
+    const index = db.data.documents.findIndex(d => d.id === docId);
+    if (index === -1) throw new Error('Document not found.');
+
+    const doc = db.data.documents[index];
+    db.data.documents.splice(index, 1);
+    db.saveToStorage();
+
+    auditService.log({
+      actorName: user.name,
+      actorRole: user.roleLabel || user.role,
+      action: 'DELETE_DOCUMENT',
+      target: `${doc.title} (${doc.departmentName || doc.departmentId})`
+    });
+
+    window.dispatchEvent(new CustomEvent('document:deleted', { detail: { id: docId } }));
+    return true;
+  }
+
+  /**
+   * Delete all old/archived documents or clear all vault documents
+   */
+  deleteAllDocuments() {
+    const user = authService.getCurrentUser();
+    if (!authService.isLegalAdmin() && !authService.isLegalManager()) {
+      throw new Error('Unauthorized: Only Legal Managers can delete all vault documents.');
+    }
+
+    const count = db.data.documents.length;
+    db.data.documents = [];
+    db.saveToStorage();
+
+    auditService.log({
+      actorName: user.name,
+      actorRole: user.roleLabel || user.role,
+      action: 'PURGE_ALL_DOCUMENTS',
+      target: `Purged ${count} vault documents`
+    });
+
+    window.dispatchEvent(new CustomEvent('documents:cleared', { detail: { count } }));
+    return count;
+  }
 }
 
 export const documentService = new DocumentService();

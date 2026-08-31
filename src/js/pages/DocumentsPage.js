@@ -1,7 +1,7 @@
 /**
- * Impacteers Legal docs
+ * Impacteers DMS — Enterprise In-House Legal & Document Management System
  * Centralized Legal Document Repository & Vault Page
- * With "+ Add Document" Dialog & Department Sharing Permissions
+ * With "+ Add Document" Dialog, Department Sharing Permissions & Delete Actions
  */
 
 import { authService } from '../services/authService.js';
@@ -29,10 +29,13 @@ export function renderDocumentsPage() {
             Central repository of executed agreements, master contracts, and company legal records.
           </p>
         </div>
-        <div>
+        <div style="display: flex; gap: 8px; align-items: center;">
           ${
             isLegal
               ? `
+            <button class="btn btn-secondary btn-sm" id="btn-purge-all-docs" onclick="window.deleteAllVaultDocuments()" style="font-size: 12px; color: #DC2626; border-color: #FECDD3; background: #FFF1F2;">
+              🗑️ Clear All Old Documents
+            </button>
             <button class="btn btn-primary btn-sm" id="btn-vault-add-doc" style="font-size: 12.5px; padding: 7px 14px; font-weight: 600;">
               + Add Document
             </button>
@@ -108,7 +111,7 @@ export function renderDocumentsPage() {
                 <th style="padding: 10px 16px; font-size: 11.5px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.05em; width: 180px;">Shared Scope</th>
                 <th style="padding: 10px 16px; font-size: 11.5px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.05em; width: 120px;">Effective Date</th>
                 <th style="padding: 10px 16px; font-size: 11.5px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.05em; width: 110px;">Status</th>
-                <th style="padding: 10px 16px; font-size: 11.5px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.05em; width: 100px; text-align: right;">Action</th>
+                <th style="padding: 10px 16px; font-size: 11.5px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.05em; width: 160px; text-align: right;">Actions</th>
               </tr>
             </thead>
             <tbody id="docs-tbody">
@@ -123,6 +126,8 @@ export function renderDocumentsPage() {
 }
 
 export function renderVaultDocRows(docs) {
+  const isLegal = authService.isLegalManager();
+
   if (!docs || docs.length === 0) {
     return `
       <tr>
@@ -170,14 +175,30 @@ export function renderVaultDocRows(docs) {
         <td style="padding: 12px 16px; vertical-align: middle;">
           <span class="badge badge-green" style="font-size: 11px;">${doc.status || 'Executed'}</span>
         </td>
-        <td style="padding: 12px 16px; vertical-align: middle; text-align: right;">
-          <button 
-            class="btn btn-secondary btn-sm" 
-            style="padding: 3px 8px; font-size: 11px; font-weight: 600;" 
-            onclick="window.downloadDocumentFile('${fileName}', '${doc.title}')"
-          >
-            📥 Download
-          </button>
+        <td style="padding: 12px 16px; vertical-align: middle; text-align: right; white-space: nowrap;">
+          <div style="display: flex; gap: 6px; justify-content: flex-end; align-items: center;">
+            <button 
+              class="btn btn-secondary btn-sm" 
+              style="padding: 3px 8px; font-size: 11px; font-weight: 600;" 
+              onclick="window.downloadDocumentFile('${fileName}', '${doc.title.replace(/'/g, "\\'")}')"
+            >
+              📥 Download
+            </button>
+            ${
+              isLegal
+                ? `
+              <button 
+                class="btn btn-secondary btn-sm" 
+                style="padding: 3px 8px; font-size: 11px; font-weight: 600; color: #DC2626; border-color: #FECDD3;" 
+                onclick="window.deleteVaultDocument('${doc.id}', '${doc.title.replace(/'/g, "\\'")}')"
+                title="Delete this document"
+              >
+                🗑️ Delete
+              </button>
+            `
+                : ''
+            }
+          </div>
         </td>
       </tr>
     `;

@@ -285,6 +285,32 @@ class App {
       }
     };
 
+    // Delete single vault document
+    window.deleteVaultDocument = (docId, docTitle) => {
+      if (confirm(`Are you sure you want to permanently delete "${docTitle || 'this document'}" from the repository?`)) {
+        try {
+          documentService.deleteDocument(docId);
+          Toast.success('Document deleted successfully.');
+          this.handleRoute();
+        } catch (err) {
+          Toast.error(err.message);
+        }
+      }
+    };
+
+    // Clear / delete all old vault documents
+    window.deleteAllVaultDocuments = () => {
+      if (confirm('Are you sure you want to delete and clear all old documents from the vault? This cannot be undone.')) {
+        try {
+          const count = documentService.deleteAllDocuments();
+          Toast.success(`Successfully deleted all ${count} vault documents.`);
+          this.handleRoute();
+        } catch (err) {
+          Toast.error(err.message);
+        }
+      }
+    };
+
     // AI suggestions helper
     window.useSuggestedPrompt = text => {
       const input = document.getElementById('ai-chat-input');

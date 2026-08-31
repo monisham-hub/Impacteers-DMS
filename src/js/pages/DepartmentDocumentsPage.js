@@ -1,6 +1,6 @@
 /**
- * Impacteers Legal docs
- * Simple Department Document Repository Page
+ * Impacteers DMS — Enterprise In-House Legal & Document Management System
+ * Department Document Repository Page
  */
 
 import { authService } from '../services/authService.js';
@@ -9,6 +9,7 @@ import { Toast } from '../components/Toast.js';
 
 export function renderDepartmentDocumentsPage(targetDeptId = null) {
   const user = authService.getCurrentUser();
+  const isLegal = authService.isLegalManager();
   const deptId = targetDeptId || (user ? user.departmentId : 'dept-hr');
   const dept = db.data.departments.find(d => d.id === deptId) || db.data.departments[0];
 
@@ -24,7 +25,7 @@ export function renderDepartmentDocumentsPage(targetDeptId = null) {
     `;
   }
 
-  const docs = db.data.documents.filter(d => d.departmentId === dept.id);
+  const docs = db.data.documents.filter(d => d.departmentId === dept.id || d.departmentId === 'ALL');
 
   return `
     <div class="content-container">
@@ -82,7 +83,7 @@ export function renderDepartmentDocumentsPage(targetDeptId = null) {
                 <th>Status</th>
                 <th>File Name</th>
                 <th>Updated</th>
-                <th>Action</th>
+                <th style="text-align: right;">Actions</th>
               </tr>
             </thead>
             <tbody id="dept-doc-tbody">
@@ -98,20 +99,31 @@ export function renderDepartmentDocumentsPage(targetDeptId = null) {
                           <span>${doc.title}</span>
                         </div>
                       </td>
-                      <td style="font-size: 12.5px;">${doc.documentType}</td>
+                      <td style="font-size: 12.5px;">${doc.documentType || 'Agreement'}</td>
                       <td>
                         <span class="badge ${doc.status === 'Executed' ? 'badge-green' : 'badge-amber'}">
-                          ${doc.status}
+                          ${doc.status || 'Executed'}
                         </span>
                       </td>
                       <td style="font-family: var(--font-mono); font-size: 11.5px; color: #64748B;">
-                        ${doc.fileName} (${doc.fileSize})
+                        ${doc.fileName || `${doc.title}.pdf`} (${doc.fileSize || '2.0 MB'})
                       </td>
-                      <td style="font-size: 12.5px; color: #64748B;">${doc.updatedAt}</td>
-                      <td>
-                        <button class="btn btn-secondary btn-sm" style="padding: 3px 8px; font-size: 11px;" onclick="alert('Downloading verified secure document: ${doc.fileName}');">
-                          📥 Download
-                        </button>
+                      <td style="font-size: 12.5px; color: #64748B;">${doc.updatedAt || 'Active'}</td>
+                      <td style="text-align: right; white-space: nowrap;">
+                        <div style="display: flex; gap: 6px; justify-content: flex-end; align-items: center;">
+                          <button class="btn btn-secondary btn-sm" style="padding: 3px 8px; font-size: 11px;" onclick="window.downloadDocumentFile('${doc.fileName || doc.title + '.pdf'}', '${doc.title.replace(/'/g, "\\'")}')">
+                            📥 Download
+                          </button>
+                          ${
+                            isLegal
+                              ? `
+                            <button class="btn btn-secondary btn-sm" style="padding: 3px 8px; font-size: 11px; color: #DC2626; border-color: #FECDD3;" onclick="window.deleteVaultDocument('${doc.id}', '${doc.title.replace(/'/g, "\\'")}')" title="Delete document">
+                              🗑️ Delete
+                            </button>
+                          `
+                              : ''
+                          }
+                        </div>
                       </td>
                     </tr>
                   `).join('')

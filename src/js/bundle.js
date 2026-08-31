@@ -1772,6 +1772,53 @@ class DocumentService {
     window.dispatchEvent(new CustomEvent('document:created', { detail: newDoc }));
     return newDoc;
   }
+
+  /**
+   * Permanently delete a document from vault
+   */
+  deleteDocument(docId) {
+    const user = authService.getCurrentUser();
+    const index = db.data.documents.findIndex(d => d.id === docId);
+    if (index === -1) throw new Error('Document not found.');
+
+    const doc = db.data.documents[index];
+    db.data.documents.splice(index, 1);
+    db.saveToStorage();
+
+    auditService.log({
+      actorName: user.name,
+      actorRole: user.roleLabel || user.role,
+      action: 'DELETE_DOCUMENT',
+      target: `${doc.title} (${doc.departmentName || doc.departmentId})`
+    });
+
+    window.dispatchEvent(new CustomEvent('document:deleted', { detail: { id: docId } }));
+    return true;
+  }
+
+  /**
+   * Delete all old/archived documents or clear all vault documents
+   */
+  deleteAllDocuments() {
+    const user = authService.getCurrentUser();
+    if (!authService.isLegalAdmin() && !authService.isLegalManager()) {
+      throw new Error('Unauthorized: Only Legal Managers can delete all vault documents.');
+    }
+
+    const count = db.data.documents.length;
+    db.data.documents = [];
+    db.saveToStorage();
+
+    auditService.log({
+      actorName: user.name,
+      actorRole: user.roleLabel || user.role,
+      action: 'PURGE_ALL_DOCUMENTS',
+      target: `Purged ${count} vault documents`
+    });
+
+    window.dispatchEvent(new CustomEvent('documents:cleared', { detail: { count } }));
+    return count;
+  }
 }
 const documentService = new DocumentService();
 
@@ -5463,11 +5510,12 @@ function renderCreateRequestPage() {
 
 // === File: src\js\pages\DepartmentDocumentsPage.js ===
 /**
- * Impacteers Legal docs
- * Simple Department Document Repository Page
+ * Impacteers DMS — Enterprise In-House Legal & Document Management System
+ * Department Document Repository Page
  */
 function renderDepartmentDocumentsPage(targetDeptId = null) {
   const user = authService.getCurrentUser();
+  const isLegal = authService.isLegalManager();
   const deptId = targetDeptId || (user ? user.departmentId : 'dept-hr');
   const dept = db.data.departments.find(d => d.id === deptId) || db.data.departments[0];
 
@@ -5483,7 +5531,7 @@ function renderDepartmentDocumentsPage(targetDeptId = null) {
     `;
   }
 
-  const docs = db.data.documents.filter(d => d.departmentId === dept.id);
+  const docs = db.data.documents.filter(d => d.departmentId === dept.id || d.departmentId === 'ALL');
 
   return `
     <div class="content-container">
@@ -5541,7 +5589,7 @@ function renderDepartmentDocumentsPage(targetDeptId = null) {
                 <th>Status</th>
                 <th>File Name</th>
                 <th>Updated</th>
-                <th>Action</th>
+                <th style="text-align: right;">Actions</th>
               </tr>
             </thead>
             <tbody id="dept-doc-tbody">
@@ -5557,20 +5605,31 @@ function renderDepartmentDocumentsPage(targetDeptId = null) {
                           <span>${doc.title}</span>
                         </div>
                       </td>
-                      <td style="font-size: 12.5px;">${doc.documentType}</td>
+                      <td style="font-size: 12.5px;">${doc.documentType || 'Agreement'}</td>
                       <td>
                         <span class="badge ${doc.status === 'Executed' ? 'badge-green' : 'badge-amber'}">
-                          ${doc.status}
+                          ${doc.status || 'Executed'}
                         </span>
                       </td>
                       <td style="font-family: var(--font-mono); font-size: 11.5px; color: #64748B;">
-                        ${doc.fileName} (${doc.fileSize})
+                        ${doc.fileName || `${doc.title}.pdf`} (${doc.fileSize || '2.0 MB'})
                       </td>
-                      <td style="font-size: 12.5px; color: #64748B;">${doc.updatedAt}</td>
-                      <td>
-                        <button class="btn btn-secondary btn-sm" style="padding: 3px 8px; font-size: 11px;" onclick="alert('Downloading verified secure document: ${doc.fileName}');">
-                          📥 Download
-                        </button>
+                      <td style="font-size: 12.5px; color: #64748B;">${doc.updatedAt || 'Active'}</td>
+                      <td style="text-align: right; white-space: nowrap;">
+                        <div style="display: flex; gap: 6px; justify-content: flex-end; align-items: center;">
+                          <button class="btn btn-secondary btn-sm" style="padding: 3px 8px; font-size: 11px;" onclick="window.downloadDocumentFile('${doc.fileName || doc.title + '.pdf'}', '${doc.title.replace(/'/g, "\\'")}')">
+                            📥 Download
+                          </button>
+                          ${
+                            isLegal
+                              ? `
+                            <button class="btn btn-secondary btn-sm" style="padding: 3px 8px; font-size: 11px; color: #DC2626; border-color: #FECDD3;" onclick="window.deleteVaultDocument('${doc.id}', '${doc.title.replace(/'/g, "\\'")}')" title="Delete document">
+                              🗑️ Delete
+                            </button>
+                          `
+                              : ''
+                          }
+                        </div>
                       </td>
                     </tr>
                   `).join('')
@@ -6628,6 +6687,38 @@ function renderDocumentsPage() {
           ${
             isLegal
               ? `
+// === File: src\js\pages\DocumentsPage.js ===
+/**
+ * Impacteers DMS — Enterprise In-House Legal & Document Management System
+ * Centralized Legal Document Repository & Vault Page
+ * With "+ Add Document" Dialog, Department Sharing Permissions & Delete Actions
+ */
+function renderDocumentsPage() {
+  const user = authService.getCurrentUser();
+  const isLegal = authService.isLegalManager();
+  const isChairman = authService.isChairman();
+  const docs = documentService.getDocuments();
+
+  return `
+    <div class="content-container" style="max-width: 1200px;">
+      
+      <!-- Page Header -->
+      <div class="page-header" style="margin-bottom: 20px;">
+        <div>
+          <h1 class="page-title" style="font-size: 22px; font-weight: 700; color: #0F172A;">
+            📁 Documents Vault & Repository
+          </h1>
+          <p class="page-subtitle" style="font-size: 13px; color: #64748B; margin-top: 2px;">
+            Central repository of executed agreements, master contracts, and company legal records.
+          </p>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          ${
+            isLegal
+              ? `
+            <button class="btn btn-secondary btn-sm" id="btn-purge-all-docs" onclick="window.deleteAllVaultDocuments()" style="font-size: 12px; color: #DC2626; border-color: #FECDD3; background: #FFF1F2;">
+              🗑️ Clear All Old Documents
+            </button>
             <button class="btn btn-primary btn-sm" id="btn-vault-add-doc" style="font-size: 12.5px; padding: 7px 14px; font-weight: 600;">
               + Add Document
             </button>
@@ -6703,7 +6794,7 @@ function renderDocumentsPage() {
                 <th style="padding: 10px 16px; font-size: 11.5px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.05em; width: 180px;">Shared Scope</th>
                 <th style="padding: 10px 16px; font-size: 11.5px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.05em; width: 120px;">Effective Date</th>
                 <th style="padding: 10px 16px; font-size: 11.5px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.05em; width: 110px;">Status</th>
-                <th style="padding: 10px 16px; font-size: 11.5px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.05em; width: 100px; text-align: right;">Action</th>
+                <th style="padding: 10px 16px; font-size: 11.5px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.05em; width: 160px; text-align: right;">Actions</th>
               </tr>
             </thead>
             <tbody id="docs-tbody">
@@ -6716,7 +6807,10 @@ function renderDocumentsPage() {
     </div>
   `;
 }
+
 function renderVaultDocRows(docs) {
+  const isLegal = authService.isLegalManager();
+
   if (!docs || docs.length === 0) {
     return `
       <tr>
@@ -6764,14 +6858,30 @@ function renderVaultDocRows(docs) {
         <td style="padding: 12px 16px; vertical-align: middle;">
           <span class="badge badge-green" style="font-size: 11px;">${doc.status || 'Executed'}</span>
         </td>
-        <td style="padding: 12px 16px; vertical-align: middle; text-align: right;">
-          <button 
-            class="btn btn-secondary btn-sm" 
-            style="padding: 3px 8px; font-size: 11px; font-weight: 600;" 
-            onclick="window.downloadDocumentFile('${fileName}', '${doc.title}')"
-          >
-            📥 Download
-          </button>
+        <td style="padding: 12px 16px; vertical-align: middle; text-align: right; white-space: nowrap;">
+          <div style="display: flex; gap: 6px; justify-content: flex-end; align-items: center;">
+            <button 
+              class="btn btn-secondary btn-sm" 
+              style="padding: 3px 8px; font-size: 11px; font-weight: 600;" 
+              onclick="window.downloadDocumentFile('${fileName}', '${doc.title.replace(/'/g, "\\'")}')"
+            >
+              📥 Download
+            </button>
+            ${
+              isLegal
+                ? `
+              <button 
+                class="btn btn-secondary btn-sm" 
+                style="padding: 3px 8px; font-size: 11px; font-weight: 600; color: #DC2626; border-color: #FECDD3;" 
+                onclick="window.deleteVaultDocument('${doc.id}', '${doc.title.replace(/'/g, "\\'")}')"
+                title="Delete this document"
+              >
+                🗑️ Delete
+              </button>
+            `
+                : ''
+            }
+          </div>
         </td>
       </tr>
     `;
@@ -8454,6 +8564,32 @@ class App {
         this.handleRoute();
       } catch (e) {
         Toast.error(e.message);
+      }
+    };
+
+    // Delete single vault document
+    window.deleteVaultDocument = (docId, docTitle) => {
+      if (confirm(`Are you sure you want to permanently delete "${docTitle || 'this document'}" from the repository?`)) {
+        try {
+          documentService.deleteDocument(docId);
+          Toast.success('Document deleted successfully.');
+          this.handleRoute();
+        } catch (err) {
+          Toast.error(err.message);
+        }
+      }
+    };
+
+    // Clear / delete all old vault documents
+    window.deleteAllVaultDocuments = () => {
+      if (confirm('Are you sure you want to delete and clear all old documents from the vault? This cannot be undone.')) {
+        try {
+          const count = documentService.deleteAllDocuments();
+          Toast.success(`Successfully deleted all ${count} vault documents.`);
+          this.handleRoute();
+        } catch (err) {
+          Toast.error(err.message);
+        }
       }
     };
 
