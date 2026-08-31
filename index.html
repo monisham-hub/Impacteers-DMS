@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Impacteers DMS — Document Management System</title>
+  <meta name="description" content="Secure, enterprise-grade Document Management System for Impacteers combining ticket workflows, version-controlled document repository, contract lifecycle management, and RBAC department isolation." />
+  <meta name="theme-color" content="#0F172A" />
+  <link rel="icon" type="image/png" href="./assets/impacteers-logo.png" />
+  <link rel="stylesheet" href="./src/css/app.css" />
+</head>
+<body>
+  <!-- Main Application Container -->
+  <div id="app">
+    <!-- Initial Loading State -->
+    <div style="display: flex; height: 100vh; width: 100vw; align-items: center; justify-content: center; background: #0F172A; color: #FFFFFF; font-family: 'Inter', sans-serif;">
+      <div style="text-align: center;">
+        <img src="./assets/impacteers-logo.png" alt="Impacteers Logo" style="height: 54px; width: auto; display: block; margin: 0 auto 16px auto;" />
+        <div style="font-size: 22px; font-weight: 800; letter-spacing: -0.01em; color: #F8FAFC;">Impacteers DMS</div>
+        <div style="font-size: 13px; color: #94A3B8; margin-top: 4px; font-weight: 500;">Document Management System</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container"></div>
+
+  <!-- Main Application Script (Standalone Bundle with Modular Fallback) -->
+  <script src="./src/js/bundle.js"></script>
+  <script type="module">
+    // Fallback if bundle is not present
+    if (!window.impacteersApp) {
+      import('./src/js/app.js');
+    }
+  </script>
+</body>
+</html>
