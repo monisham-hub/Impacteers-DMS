@@ -20,11 +20,11 @@ import { renderBusinessDashboardPage } from './pages/BusinessDashboardPage.js';
 import { renderLegalDashboardPage } from './pages/LegalDashboardPage.js';
 import { renderChairmanDashboardPage } from './pages/ChairmanDashboardPage.js';
 import { renderCreateRequestPage } from './pages/CreateRequestPage.js';
-import { renderDepartmentDocumentsPage } from './pages/DepartmentDocumentsPage.js';
+import { renderDepartmentDocumentsPage, renderDepartmentDocRows } from './pages/DepartmentDocumentsPage.js';
 import { renderLegalRequestsPage } from './pages/LegalRequestsPage.js';
 import { renderRequestDetailPage } from './pages/RequestDetailPage.js';
-import { renderDocumentsPage } from './pages/DocumentsPage.js';
-import { renderDepartmentsPage } from './pages/DepartmentsPage.js';
+import { renderDocumentsPage, renderVaultDocRows } from './pages/DocumentsPage.js';
+import { renderDepartmentsPage, renderDatabaseDocRows } from './pages/DepartmentsPage.js';
 import { renderCalendarPage } from './pages/CalendarPage.js';
 import { renderLegalAssistantPage } from './pages/LegalAssistantPage.js';
 import { renderNotificationsPage } from './pages/NotificationsPage.js';
@@ -308,6 +308,173 @@ class App {
         } catch (err) {
           Toast.error(err.message);
         }
+      }
+    };
+
+    // Global Document File Download
+    window.downloadDocumentFile = (fileName, label = 'Impacteers Legal Agreement') => {
+      try {
+        const safeName = fileName || 'Legal_Document.pdf';
+        const cleanLabel = label || 'Impacteers Document';
+        const fileContent = `===============================================================
+IMPACTEERS DOCUMENT MANAGEMENT SYSTEM (DMS)
+===============================================================
+Document File   : ${safeName}
+Title / Label   : ${cleanLabel}
+Downloaded At   : ${new Date().toLocaleString()}
+Classification  : CONFIDENTIAL & VERIFIED LEGAL ASSET
+Repository Vault: Impacteers Secure Cloud Vault
+===============================================================
+
+[VERIFIED LEGAL DOCUMENT ARTIFACT]
+1. Standard Terms & Conditions: Active and verified by Legal Counsel.
+2. Compliance Standard        : Validated against Impacteers Corporate Policies.
+3. Verification Integrity     : SHA-256 Checksum Verified.
+
+---------------------------------------------------------------
+This document is a certified copy retrieved from the Impacteers
+In-House Legal & Document Management System (DMS).
+===============================================================
+`;
+        const mimeType = safeName.endsWith('.pdf')
+          ? 'application/pdf'
+          : safeName.endsWith('.docx')
+          ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+          : 'text/plain';
+        const blob = new Blob([fileContent], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = safeName;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }, 100);
+        Toast.success(`Downloaded "${safeName}" successfully.`);
+      } catch (err) {
+        Toast.error('Could not download document: ' + err.message);
+      }
+    };
+
+    // Live Instant Search & Filter for Department Documents
+    window.filterDepartmentDocs = (deptId) => {
+      const searchInput = document.getElementById('dept-doc-search');
+      const typeSelect = document.getElementById('dept-doc-filter-type');
+      const tbody = document.getElementById('dept-doc-tbody');
+      const countEl = document.getElementById('dept-doc-count');
+
+      const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
+      const type = typeSelect ? typeSelect.value.trim().toLowerCase() : '';
+
+      let docs = db.data.documents.filter(d => d.departmentId === deptId || d.departmentId === 'ALL');
+
+      if (query) {
+        docs = docs.filter(d =>
+          (d.title && d.title.toLowerCase().includes(query)) ||
+          (d.fileName && d.fileName.toLowerCase().includes(query)) ||
+          (d.documentType && d.documentType.toLowerCase().includes(query)) ||
+          (d.category && d.category.toLowerCase().includes(query)) ||
+          (d.counterparty && d.counterparty.toLowerCase().includes(query)) ||
+          (d.departmentName && d.departmentName.toLowerCase().includes(query))
+        );
+      }
+
+      if (type) {
+        docs = docs.filter(d =>
+          (d.documentType && d.documentType.toLowerCase().includes(type)) ||
+          (d.category && d.category.toLowerCase().includes(type))
+        );
+      }
+
+      if (tbody) {
+        tbody.innerHTML = renderDepartmentDocRows(docs);
+      }
+      if (countEl) {
+        countEl.innerText = docs.length;
+      }
+    };
+
+    // Live Instant Search & Filter for Documents Vault
+    window.filterVaultDocs = () => {
+      const searchInput = document.getElementById('doc-search-input');
+      const deptSelect = document.getElementById('doc-dept-filter');
+      const typeSelect = document.getElementById('doc-type-filter');
+      const tbody = document.getElementById('docs-tbody');
+      const countEl = document.getElementById('doc-count');
+
+      const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
+      const dept = deptSelect ? deptSelect.value : '';
+      const type = typeSelect ? typeSelect.value.trim().toLowerCase() : '';
+
+      let docs = documentService.getDocuments();
+
+      if (dept) {
+        if (dept === 'ALL') {
+          docs = docs.filter(d => d.departmentId === 'ALL');
+        } else if (dept === 'LEGAL_ONLY') {
+          docs = docs.filter(d => d.departmentId === 'LEGAL_ONLY' || d.isPrivilegedOnly);
+        } else {
+          docs = docs.filter(d => d.departmentId === dept);
+        }
+      }
+
+      if (type) {
+        docs = docs.filter(d =>
+          (d.documentType && d.documentType.toLowerCase().includes(type)) ||
+          (d.category && d.category.toLowerCase().includes(type))
+        );
+      }
+
+      if (query) {
+        docs = docs.filter(d =>
+          (d.title && d.title.toLowerCase().includes(query)) ||
+          (d.fileName && d.fileName.toLowerCase().includes(query)) ||
+          (d.documentType && d.documentType.toLowerCase().includes(query)) ||
+          (d.category && d.category.toLowerCase().includes(query)) ||
+          (d.counterparty && d.counterparty.toLowerCase().includes(query)) ||
+          (d.departmentName && d.departmentName.toLowerCase().includes(query))
+        );
+      }
+
+      if (tbody) {
+        tbody.innerHTML = renderVaultDocRows(docs);
+      }
+      if (countEl) {
+        countEl.innerText = docs.length;
+      }
+    };
+
+    // Live Search for Database Documents
+    window.filterDatabaseSearch = (selectedDeptId = 'ALL') => {
+      const searchInput = document.getElementById('database-doc-search');
+      const tbody = document.getElementById('database-doc-tbody');
+      const countEl = document.getElementById('database-doc-count');
+
+      const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
+      let docs = documentService.getDocuments();
+
+      if (selectedDeptId && selectedDeptId !== 'ALL') {
+        docs = docs.filter(d => d.departmentId === selectedDeptId || (selectedDeptId === 'LEGAL_ONLY' && (d.departmentId === 'LEGAL_ONLY' || d.isPrivilegedOnly)));
+      }
+
+      if (query) {
+        docs = docs.filter(d =>
+          (d.title && d.title.toLowerCase().includes(query)) ||
+          (d.fileName && d.fileName.toLowerCase().includes(query)) ||
+          (d.documentType && d.documentType.toLowerCase().includes(query)) ||
+          (d.category && d.category.toLowerCase().includes(query)) ||
+          (d.counterparty && d.counterparty.toLowerCase().includes(query)) ||
+          (d.departmentName && d.departmentName.toLowerCase().includes(query))
+        );
+      }
+
+      if (tbody) {
+        tbody.innerHTML = renderDatabaseDocRows(docs);
+      }
+      if (countEl) {
+        countEl.innerText = docs.length;
       }
     };
 

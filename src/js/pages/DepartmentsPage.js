@@ -1,7 +1,7 @@
 /**
- * Impacteers Legal docs
+ * Impacteers DMS — Enterprise In-House Legal & Document Management System
  * Document Database & Contracts Repository Page
- * Shows all company legal agreements across departments with filtering
+ * Shows all company legal agreements across departments with search and filtering
  */
 
 import { authService } from '../services/authService.js';
@@ -40,7 +40,7 @@ export function renderDepartmentsPage(selectedDeptId = null) {
         gap: 8px;
         overflow-x: auto;
         padding-bottom: 12px;
-        margin-bottom: 20px;
+        margin-bottom: 16px;
       ">
         <button 
           class="btn btn-sm ${!selectedDeptId || selectedDeptId === 'ALL' ? 'btn-primary' : 'btn-secondary'}" 
@@ -79,11 +79,42 @@ export function renderDepartmentsPage(selectedDeptId = null) {
         }
       </div>
 
+      <!-- Search Bar -->
+      <div style="
+        background: #FFFFFF;
+        border: 1px solid #E2E8F0;
+        border-radius: 10px;
+        padding: 12px 16px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+      ">
+        <div style="flex: 1;">
+          <input 
+            type="text" 
+            id="database-doc-search" 
+            class="form-input" 
+            placeholder="Search across all contracts and department documents..." 
+            oninput="window.filterDatabaseSearch('${selectedDeptId || 'ALL'}')"
+            style="height: 36px; font-size: 13px; padding: 6px 12px;"
+          />
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="
+          const s = document.getElementById('database-doc-search');
+          if (s) s.value = '';
+          window.filterDatabaseSearch('${selectedDeptId || 'ALL'}');
+        " style="height: 36px; padding: 0 12px; font-size: 12px;">
+          Reset
+        </button>
+      </div>
+
       <!-- Database Table Card -->
       <div class="enterprise-card" style="box-shadow: 0 1px 3px rgba(0,0,0,0.04); border-radius: 10px; overflow: hidden;">
         <div class="enterprise-card-header" style="padding: 12px 18px; background: #FAFAFA; border-bottom: 1px solid #E2E8F0; display: flex; justify-content: space-between; align-items: center;">
           <div class="enterprise-card-title" style="font-size: 13.5px; font-weight: 700; color: #0F172A;">
-            <span>Document Records (<strong style="color: #2563EB;">${allDocs.length}</strong>)</span>
+            <span>Document Records (<strong id="database-doc-count" style="color: #2563EB;">${allDocs.length}</strong>)</span>
           </div>
         </div>
 
@@ -96,54 +127,11 @@ export function renderDepartmentsPage(selectedDeptId = null) {
                 <th style="padding: 10px 16px; font-size: 11.5px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.05em; width: 140px;">Department</th>
                 <th style="padding: 10px 16px; font-size: 11.5px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.05em; width: 120px;">Effective Date</th>
                 <th style="padding: 10px 16px; font-size: 11.5px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.05em; width: 110px;">Status</th>
-                <th style="padding: 10px 16px; font-size: 11.5px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.05em; width: 100px; text-align: right;">Action</th>
+                <th style="padding: 10px 16px; font-size: 11.5px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.05em; width: 150px; text-align: right;">Actions</th>
               </tr>
             </thead>
-            <tbody>
-              ${
-                allDocs.length === 0
-                  ? `<tr><td colspan="6" style="text-align: center; padding: 40px 16px; color: #94A3B8;">No documents found for this department.</td></tr>`
-                  : allDocs
-                      .map(doc => {
-                        const fileName = doc.fileName || `${doc.title}.pdf`;
-                        const fileSize = doc.fileSize || '2.0 MB';
-                        return `
-                      <tr style="border-bottom: 1px solid #F1F5F9; transition: background 0.1s ease;" onmouseover="this.style.background='#F8FAFC'" onmouseout="this.style.background='transparent'">
-                        <td style="padding: 12px 16px; vertical-align: middle;">
-                          <div style="font-weight: 600; font-size: 13.5px; color: #0F172A; display: flex; align-items: center; gap: 6px;">
-                            <span>📜</span>
-                            <span>${doc.title}</span>
-                          </div>
-                          <div style="font-size: 11.5px; color: #64748B; margin-top: 2px; margin-left: 22px;">
-                            ${fileName} (${fileSize})
-                          </div>
-                        </td>
-                        <td style="padding: 12px 16px; vertical-align: middle; font-size: 12.5px; color: #334155;">
-                          ${doc.documentType || doc.category || 'Agreement'}
-                        </td>
-                        <td style="padding: 12px 16px; vertical-align: middle;">
-                          <span class="badge badge-slate" style="font-size: 11px;">${doc.departmentName}</span>
-                        </td>
-                        <td style="padding: 12px 16px; vertical-align: middle; font-family: var(--font-mono); font-size: 12px; color: #475569;">
-                          ${doc.updatedAt ? new Date(doc.updatedAt).toLocaleDateString() : 'Active'}
-                        </td>
-                        <td style="padding: 12px 16px; vertical-align: middle;">
-                          <span class="badge badge-green" style="font-size: 11px;">${doc.status || 'Executed'}</span>
-                        </td>
-                        <td style="padding: 12px 16px; vertical-align: middle; text-align: right;">
-                          <button 
-                            class="btn btn-secondary btn-sm" 
-                            style="padding: 3px 8px; font-size: 11px; font-weight: 600;" 
-                            onclick="window.downloadDocumentFile('${fileName}', '${doc.title}')"
-                          >
-                            📥 Download
-                          </button>
-                        </td>
-                      </tr>
-                    `;
-                      })
-                      .join('')
-              }
+            <tbody id="database-doc-tbody">
+              ${renderDatabaseDocRows(allDocs)}
             </tbody>
           </table>
         </div>
@@ -151,4 +139,73 @@ export function renderDepartmentsPage(selectedDeptId = null) {
 
     </div>
   `;
+}
+
+export function renderDatabaseDocRows(allDocs) {
+  const isLegal = authService.isLegalManager();
+
+  if (!allDocs || allDocs.length === 0) {
+    return `<tr><td colspan="6" style="text-align: center; padding: 40px 16px; color: #94A3B8;">
+      <div style="font-size: 26px; margin-bottom: 4px;">📂</div>
+      <div style="font-size: 13.5px; font-weight: 600; color: #475569;">No documents found.</div>
+      <div style="font-size: 12px; color: #94A3B8; margin-top: 2px;">Try adjusting your search terms or department filters.</div>
+    </td></tr>`;
+  }
+
+  return allDocs
+    .map(doc => {
+      const fileName = doc.fileName || `${doc.title.replace(/\s+/g, '_')}.pdf`;
+      const fileSize = doc.fileSize || '2.0 MB';
+      return `
+    <tr style="border-bottom: 1px solid #F1F5F9; transition: background 0.1s ease;" onmouseover="this.style.background='#F8FAFC'" onmouseout="this.style.background='transparent'">
+      <td style="padding: 12px 16px; vertical-align: middle;">
+        <div style="font-weight: 600; font-size: 13.5px; color: #0F172A; display: flex; align-items: center; gap: 6px;">
+          <span>📜</span>
+          <span>${doc.title}</span>
+        </div>
+        <div style="font-size: 11.5px; color: #64748B; margin-top: 2px; margin-left: 22px;">
+          ${fileName} (${fileSize})
+        </div>
+      </td>
+      <td style="padding: 12px 16px; vertical-align: middle; font-size: 12.5px; color: #334155;">
+        ${doc.documentType || doc.category || 'Agreement'}
+      </td>
+      <td style="padding: 12px 16px; vertical-align: middle;">
+        <span class="badge badge-slate" style="font-size: 11px;">${doc.departmentName}</span>
+      </td>
+      <td style="padding: 12px 16px; vertical-align: middle; font-family: var(--font-mono); font-size: 12px; color: #475569;">
+        ${doc.updatedAt ? new Date(doc.updatedAt).toLocaleDateString() : 'Active'}
+      </td>
+      <td style="padding: 12px 16px; vertical-align: middle;">
+        <span class="badge badge-green" style="font-size: 11px;">${doc.status || 'Executed'}</span>
+      </td>
+      <td style="padding: 12px 16px; vertical-align: middle; text-align: right; white-space: nowrap;">
+        <div style="display: flex; gap: 6px; justify-content: flex-end; align-items: center;">
+          <button 
+            class="btn btn-secondary btn-sm" 
+            style="padding: 3px 8px; font-size: 11px; font-weight: 600;" 
+            onclick="window.downloadDocumentFile('${fileName}', '${doc.title.replace(/'/g, "\\'")}')"
+          >
+            📥 Download
+          </button>
+          ${
+            isLegal
+              ? `
+            <button 
+              class="btn btn-secondary btn-sm" 
+              style="padding: 3px 8px; font-size: 11px; font-weight: 600; color: #DC2626; border-color: #FECDD3;" 
+              onclick="window.deleteVaultDocument('${doc.id}', '${doc.title.replace(/'/g, "\\'")}')"
+              title="Delete this document"
+            >
+              🗑️ Delete
+            </button>
+          `
+              : ''
+          }
+        </div>
+      </td>
+    </tr>
+  `;
+    })
+    .join('');
 }

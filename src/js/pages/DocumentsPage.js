@@ -63,13 +63,14 @@ export function renderDocumentsPage() {
             type="text" 
             id="doc-search-input" 
             class="form-input" 
-            placeholder="Search documents by title, file name, or type..." 
+            placeholder="Search documents by title, file name, keyword, or counterparty..." 
+            oninput="window.filterVaultDocs()"
             style="height: 36px; font-size: 13px; padding: 6px 12px;"
           />
         </div>
 
         <div>
-          <select id="doc-dept-filter" class="form-select" style="min-width: 170px; height: 36px; font-size: 12.5px; padding: 6px 10px;">
+          <select id="doc-dept-filter" class="form-select" onchange="window.filterVaultDocs()" style="min-width: 170px; height: 36px; font-size: 12.5px; padding: 6px 10px;">
             <option value="">All Scopes & Departments</option>
             <option value="ALL">Company-Wide (All)</option>
             <option value="LEGAL_ONLY">Confidential Legal Only</option>
@@ -78,7 +79,7 @@ export function renderDocumentsPage() {
         </div>
 
         <div>
-          <select id="doc-type-filter" class="form-select" style="min-width: 150px; height: 36px; font-size: 12.5px; padding: 6px 10px;">
+          <select id="doc-type-filter" class="form-select" onchange="window.filterVaultDocs()" style="min-width: 150px; height: 36px; font-size: 12.5px; padding: 6px 10px;">
             <option value="">All Document Types</option>
             <option value="Agreement">Agreement</option>
             <option value="MSA">Master Services Agreement (MSA)</option>
@@ -89,7 +90,15 @@ export function renderDocumentsPage() {
           </select>
         </div>
 
-        <button id="doc-reset-filter-btn" class="btn btn-secondary btn-sm" style="height: 36px; padding: 0 12px; font-size: 12px;">
+        <button id="doc-reset-filter-btn" class="btn btn-secondary btn-sm" onclick="
+          const s = document.getElementById('doc-search-input');
+          const d = document.getElementById('doc-dept-filter');
+          const t = document.getElementById('doc-type-filter');
+          if (s) s.value = '';
+          if (d) d.value = '';
+          if (t) t.value = '';
+          window.filterVaultDocs();
+        " style="height: 36px; padding: 0 12px; font-size: 12px;">
           Reset
         </button>
       </div>
