@@ -1,4 +1,4 @@
-(function() {
+﻿(function() {
   'use strict';
 
 // === File: src\js\constants.js ===
@@ -6,11 +6,13 @@
  * Impacteers Legal docs
  * Constants & Role Definitions
  */
+
 const USER_ROLES = {
   LEGAL_MANAGER: 'LEGAL_MANAGER',
   CHAIRMAN: 'CHAIRMAN',
   BUSINESS_USER: 'BUSINESS_USER'
 };
+
 const REQUEST_STATUSES = {
   PENDING_ACCEPTANCE: { label: 'Pending Acceptance', color: 'indigo', badgeClass: 'badge-blue' },
   ACCEPTED: { label: 'Accepted', color: 'blue', badgeClass: 'badge-blue' },
@@ -21,6 +23,7 @@ const REQUEST_STATUSES = {
   COMPLETED: { label: 'Completed', color: 'green', badgeClass: 'badge-green' },
   REJECTED: { label: 'Rejected', color: 'rose', badgeClass: 'badge-rose' }
 };
+
 const REQUEST_TYPES = [
   'Draft a Document',
   'Review a Document',
@@ -28,12 +31,14 @@ const REQUEST_TYPES = [
   'Legal Opinion',
   'Other'
 ];
+
 const REQUEST_PRIORITIES = {
-  IMMEDIATE: { id: 'IMMEDIATE', label: 'Immediate Action Required', badgeClass: 'badge-rose', icon: '🚨' },
-  HIGH: { id: 'HIGH', label: 'High Priority', badgeClass: 'badge-orange', icon: '🔥' },
-  MEDIUM: { id: 'MEDIUM', label: 'Standard Priority', badgeClass: 'badge-blue', icon: '⚡' },
-  LOW: { id: 'LOW', label: 'Low Priority / Flexible', badgeClass: 'badge-slate', icon: '🌱' }
+  IMMEDIATE: { id: 'IMMEDIATE', label: 'Immediate Action Required', badgeClass: 'badge-rose', icon: 'ðŸš¨' },
+  HIGH: { id: 'HIGH', label: 'High Priority', badgeClass: 'badge-orange', icon: 'ðŸ”¥' },
+  MEDIUM: { id: 'MEDIUM', label: 'Standard Priority', badgeClass: 'badge-blue', icon: 'âš¡' },
+  LOW: { id: 'LOW', label: 'Low Priority / Flexible', badgeClass: 'badge-slate', icon: 'ðŸŒ±' }
 };
+
 const DEPARTMENTS = [
   { id: 'dept-hr', code: 'HR', name: 'HR', description: 'Human Resources & Employment Agreements' },
   { id: 'dept-it', code: 'IT', name: 'IT', description: 'Information Technology, Cloud & Software Licensing' },
@@ -46,6 +51,7 @@ const DEPARTMENTS = [
   { id: 'dept-institutions', code: 'INSTITUTIONS', name: 'Institutions', description: 'Institutional Training Partnerships' },
   { id: 'dept-marketing', code: 'MARKETING', name: 'Marketing', description: 'Marketing Agencies, Influencers & Brand' }
 ];
+
 const DEMO_USERS = [
   {
     id: 'usr-monisha',
@@ -181,14 +187,15 @@ const DEMO_USERS = [
   }
 ];
 
-
 // === File: src\js\db.js ===
 /**
- * Impacteers DMS — Enterprise In-House Legal & Document Management System
+ * Impacteers DMS â€” Enterprise In-House Legal & Document Management System
  * Database Engine, Storage Store & Schema Migration
  */
 
+
 const DB_STORAGE_KEY = 'IMPACTEERS_LEGAL_DOCS_STORE_V3';
+
 class LegalDatabase {
   constructor() {
     this.data = this.loadFromStorage() || this.initializeSeedData();
@@ -225,6 +232,9 @@ class LegalDatabase {
     return this.reset();
   }
 
+  /**
+   * Guarantees all tables/arrays exist and are iterable even when loading old browser localStorage
+   */
   ensureSchema() {
     if (!this.data || typeof this.data !== 'object') {
       this.data = this.initializeSeedData();
@@ -765,308 +775,8 @@ class LegalDatabase {
     };
   }
 }
+
 const db = new LegalDatabase();
-
-
-// === File: src\js\components\Toast.js ===
-/**
- * Enterprise In-House Legal Management System
- * Toast Notification Utility
- */
-class Toast {
-  static show(message, type = 'info', duration = 3500) {
-    let container = document.getElementById('toast-container');
-    if (!container) {
-      container = document.createElement('div');
-      container.id = 'toast-container';
-      document.body.appendChild(container);
-    }
-
-    const toast = document.createElement('div');
-    toast.className = `toast toast-${type}`;
-    
-    let icon = 'ℹ️';
-    if (type === 'success') icon = '✓';
-    if (type === 'error') icon = '⚠️';
-
-    toast.innerHTML = `
-      <div style="font-weight: 700; font-size: 16px;">${icon}</div>
-      <div style="flex: 1; line-height: 1.4;">${message}</div>
-      <button style="background: none; border: none; color: #94A3B8; cursor: pointer; font-size: 14px;" onclick="this.parentElement.remove()">✕</button>
-    `;
-
-    container.appendChild(toast);
-
-    setTimeout(() => {
-      toast.style.opacity = '0';
-      toast.style.transform = 'translateY(10px)';
-      toast.style.transition = 'all 0.25s ease';
-      setTimeout(() => toast.remove(), 250);
-    }, duration);
-  }
-
-  static success(msg) { this.show(msg, 'success'); }
-  static error(msg) { this.show(msg, 'error', 4500); }
-  static info(msg) { this.show(msg, 'info'); }
-}
-
-
-// === File: src\js\components\Modal.js ===
-/**
- * Impacteers Legal docs
- * Modal Dialog Controller
- */
-class Modal {
-  static open({ title, contentHtml, footerHtml = '', size = 'md', onClose = null }) {
-    this.close(); // Close any currently open modal
-
-    const backdrop = document.createElement('div');
-    backdrop.className = 'modal-backdrop';
-    backdrop.id = 'active-modal-backdrop';
-
-    const maxWidthMap = {
-      sm: '460px',
-      md: '600px',
-      lg: '800px',
-      xl: '1000px'
-    };
-
-    backdrop.innerHTML = `
-      <div class="modal-content" style="max-width: ${maxWidthMap[size] || '600px'};" onclick="event.stopPropagation()">
-        <div class="modal-header">
-          <h3 style="font-size: 16px; font-weight: 700; color: #0F172A; letter-spacing: -0.01em; margin: 0;">${title}</h3>
-          <button id="modal-close-btn" style="
-            background: none;
-            border: 1px solid #E2E8F0;
-            border-radius: 6px;
-            color: #64748B;
-            font-size: 14px;
-            cursor: pointer;
-            width: 28px;
-            height: 28px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.15s ease;
-          " onmouseover="this.style.background='#F1F5F9'; this.style.color='#0F172A';" onmouseout="this.style.background='none'; this.style.color='#64748B';">✕</button>
-        </div>
-        <div class="modal-body" id="modal-body-container">
-          ${contentHtml}
-        </div>
-        ${footerHtml ? `<div class="modal-footer">${footerHtml}</div>` : ''}
-      </div>
-    `;
-
-    document.body.appendChild(backdrop);
-
-    // Lock body scroll
-    document.body.style.overflow = 'hidden';
-
-    // Trigger animation
-    requestAnimationFrame(() => backdrop.classList.add('open'));
-
-    const handleClose = () => {
-      document.body.style.overflow = '';
-      backdrop.classList.remove('open');
-      setTimeout(() => {
-        if (backdrop.parentNode) backdrop.remove();
-        if (onClose) onClose();
-      }, 150);
-    };
-
-    backdrop.querySelector('#modal-close-btn').addEventListener('click', handleClose);
-    backdrop.addEventListener('click', (e) => {
-      if (e.target === backdrop) handleClose();
-    });
-
-    const escListener = (e) => {
-      if (e.key === 'Escape') {
-        handleClose();
-        document.removeEventListener('keydown', escListener);
-      }
-    };
-    document.addEventListener('keydown', escListener);
-
-    return {
-      close: handleClose,
-      container: backdrop.querySelector('#modal-body-container')
-    };
-  }
-
-  static close() {
-    document.body.style.overflow = '';
-    const existing = document.getElementById('active-modal-backdrop');
-    if (existing) {
-      existing.classList.remove('open');
-      setTimeout(() => {
-        if (existing.parentNode) existing.remove();
-      }, 150);
-    }
-  }
-}
-
-// Global modal close helper
-window.activeModalClose = () => Modal.close();
-
-
-// === File: src\js\services\auditService.js ===
-/**
- * Enterprise In-House Legal Management System
- * Immutable Audit Logging Service
- */
-
-
-class AuditService {
-  /**
-   * Log an immutable event
-   */
-  log({
-    actorId = null,
-    actorName = null,
-    actorRole = null,
-    action,
-    objectType,
-    objectId,
-    previousValue = null,
-    newValue = null,
-    ipAddress = '10.0.4.82',
-    userAgent = 'Enterprise-Legal-OS/2026.8'
-  }) {
-    const user = authService.getCurrentUser();
-    const entry = {
-      id: `aud-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-      actorId: actorId || user.id,
-      actorName: actorName || user.name,
-      actorRole: actorRole || user.role,
-      action,
-      objectType,
-      objectId: String(objectId),
-      previousValue,
-      newValue,
-      ipAddress,
-      userAgent,
-      createdAt: new Date().toISOString()
-    };
-
-    // Prepend to maintain reverse chronological order
-    db.data.auditLogs.unshift(entry);
-    db.saveToStorage();
-
-    window.dispatchEvent(new CustomEvent('audit:new-entry', { detail: entry }));
-    return entry;
-  }
-
-  /**
-   * Get all audit logs with RBAC check (Super Admin / Legal Admin only)
-   */
-  getLogs({ action = '', objectType = '', search = '', limit = 100 } = {}) {
-    if (!authService.isLegalAdmin()) {
-      throw new Error('Unauthorized: Audit logs are accessible only to Legal Administrators.');
-    }
-
-    let logs = [...db.data.auditLogs];
-
-    if (action) {
-      logs = logs.filter(l => l.action.toLowerCase() === action.toLowerCase());
-    }
-    if (objectType) {
-      logs = logs.filter(l => l.objectType.toLowerCase() === objectType.toLowerCase());
-    }
-    if (search) {
-      const q = search.toLowerCase();
-      logs = logs.filter(
-        l =>
-          l.actorName.toLowerCase().includes(q) ||
-          l.action.toLowerCase().includes(q) ||
-          l.objectId.toLowerCase().includes(q)
-      );
-    }
-
-    return logs.slice(0, limit);
-  }
-}
-const auditService = new AuditService();
-window.auditService = auditService;
-
-
-// === File: src\js\services\notificationService.js ===
-/**
- * Enterprise In-House Legal Management System
- * Notification Center Service
- */
-
-
-class NotificationService {
-  /**
-   * Send notification to a specific user
-   */
-  send({ userId, title, message, category = 'GENERAL', linkUrl = '' }) {
-    const notif = {
-      id: `notif-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-      userId,
-      title,
-      message,
-      category,
-      linkUrl,
-      isRead: false,
-      createdAt: new Date().toISOString()
-    };
-
-    db.data.notifications.unshift(notif);
-    db.saveToStorage();
-
-    window.dispatchEvent(new CustomEvent('notification:received', { detail: notif }));
-    return notif;
-  }
-
-  /**
-   * Broadcast to all legal team members
-   */
-  broadcastToLegal({ title, message, category = 'REQUEST', linkUrl = '' }) {
-    const legalUsers = db.data.users.filter(
-      u => u.role === 'SUPER_ADMIN' || u.role === 'LEGAL_ADMIN' || u.role === 'LEGAL_MEMBER'
-    );
-    legalUsers.forEach(u => {
-      this.send({ userId: u.id, title, message, category, linkUrl });
-    });
-  }
-
-  /**
-   * Get notifications for the currently active user
-   */
-  getMyNotifications() {
-    const user = authService.getCurrentUser();
-    if (!user) return [];
-    return db.data.notifications.filter(n => n.userId === user.id);
-  }
-
-  getUnreadCount() {
-    const notifs = this.getMyNotifications();
-    return notifs.filter(n => !n.isRead).length;
-  }
-
-  markAsRead(notificationId) {
-    const notif = db.data.notifications.find(n => n.id === notificationId);
-    if (notif) {
-      notif.isRead = true;
-      db.saveToStorage();
-      window.dispatchEvent(new CustomEvent('notification:updated'));
-    }
-  }
-
-  markAllAsRead() {
-    const user = authService.getCurrentUser();
-    db.data.notifications.forEach(n => {
-      if (n.userId === user.id) {
-        n.isRead = true;
-      }
-    });
-    db.saveToStorage();
-    window.dispatchEvent(new CustomEvent('notification:updated'));
-  }
-}
-const notificationService = new NotificationService();
-
 
 // === File: src\js\services\authService.js ===
 /**
@@ -1199,261 +909,93 @@ class AuthService {
     return this.currentUser.departmentId === req.departmentId || this.currentUser.id === req.requestorId;
   }
 }
+
 const authService = new AuthService();
 
-
-// === File: src\js\services\commentService.js ===
+// === File: src\js\services\notificationService.js ===
 /**
  * Enterprise In-House Legal Management System
- * Jira-Style Comments & Internal Legal Notes Service
+ * Notification Center Service
  */
 
 
-
-
-class CommentService {
+class NotificationService {
   /**
-   * Add a Jira-style comment or Internal Legal Note
+   * Send notification to a specific user
    */
-  addComment({
-    requestId,
-    commentText,
-    commentType = 'GENERAL_COMMENT',
-    isInternalLegalOnly = false,
-    attachmentName = null
-  }) {
-    if (!commentText || !commentText.trim()) {
-      throw new Error('Comment content cannot be empty.');
-    }
-
-    const user = authService.getCurrentUser();
-    const req = db.data.requests.find(r => r.id === requestId);
-    if (!req) throw new Error('Request not found.');
-
-    // Enforce rule: only Legal can create Internal Legal Notes
-    if (isInternalLegalOnly && !authService.isLegalTeam()) {
-      throw new Error('Unauthorized: Only Legal Team members can create Internal Legal Notes.');
-    }
-
-    const newComment = {
-      id: `comm-${Date.now()}`,
-      requestId,
-      userId: user.id,
-      userName: user.name,
-      userRole: user.title,
-      commentType,
-      isInternalLegalOnly: Boolean(isInternalLegalOnly),
-      text: commentText.trim(),
-      attachmentName,
+  send({ userId, title, message, category = 'GENERAL', linkUrl = '' }) {
+    const notif = {
+      id: `notif-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      userId,
+      title,
+      message,
+      category,
+      linkUrl,
+      isRead: false,
       createdAt: new Date().toISOString()
     };
 
-    db.data.comments.push(newComment);
-    req.updatedAt = new Date().toISOString();
+    db.data.notifications.unshift(notif);
     db.saveToStorage();
 
-    auditService.log({
-      action: isInternalLegalOnly ? 'ADD_INTERNAL_LEGAL_NOTE' : 'ADD_REQUEST_COMMENT',
-      objectType: 'REQUEST_COMMENT',
-      objectId: newComment.id,
-      previousValue: null,
-      newValue: {
-        requestId: req.requestId,
-        isInternalLegalOnly,
-        commentType
-      }
-    });
-
-    // Notify other party if not internal legal note
-    if (!isInternalLegalOnly) {
-      if (authService.isLegalTeam()) {
-        // Legal commented -> notify requestor
-        notificationService.send({
-          userId: req.requestorId,
-          title: 'Legal Counsel Commented',
-          message: `${user.name} posted a comment on ${req.requestId}.`,
-          category: 'COMMENT',
-          linkUrl: `#/requests/${req.id}`
-        });
-      } else {
-        // Business commented -> notify assigned legal or broadcast
-        if (req.assignedLegalId) {
-          notificationService.send({
-            userId: req.assignedLegalId,
-            title: 'New Comment from Requestor',
-            message: `${user.name} commented on ${req.requestId}.`,
-            category: 'COMMENT',
-            linkUrl: `#/requests/${req.id}`
-          });
-        }
-      }
-    }
-
-    window.dispatchEvent(new CustomEvent('comment:created', { detail: newComment }));
-    return newComment;
+    window.dispatchEvent(new CustomEvent('notification:received', { detail: notif }));
+    return notif;
   }
 
   /**
-   * Get comments for a request with strict Internal Note protection
+   * Broadcast to all legal team members
    */
-  getCommentsForRequest(requestId) {
-    const comments = db.data.comments.filter(c => c.requestId === requestId);
-    const canViewInternal = authService.canViewInternalNotes();
-
-    return comments.filter(c => {
-      if (c.isInternalLegalOnly) {
-        return canViewInternal;
-      }
-      return true;
+  broadcastToLegal({ title, message, category = 'REQUEST', linkUrl = '' }) {
+    const legalUsers = db.data.users.filter(
+      u => u.role === 'SUPER_ADMIN' || u.role === 'LEGAL_ADMIN' || u.role === 'LEGAL_MEMBER'
+    );
+    legalUsers.forEach(u => {
+      this.send({ userId: u.id, title, message, category, linkUrl });
     });
+  }
+
+  /**
+   * Get notifications for the currently active user
+   */
+  getMyNotifications() {
+    const user = authService.getCurrentUser();
+    if (!user) return [];
+    return db.data.notifications.filter(n => n.userId === user.id);
+  }
+
+  getUnreadCount() {
+    const notifs = this.getMyNotifications();
+    return notifs.filter(n => !n.isRead).length;
+  }
+
+  markAsRead(notificationId) {
+    const notif = db.data.notifications.find(n => n.id === notificationId);
+    if (notif) {
+      notif.isRead = true;
+      db.saveToStorage();
+      window.dispatchEvent(new CustomEvent('notification:updated'));
+    }
+  }
+
+  markAllAsRead() {
+    const user = authService.getCurrentUser();
+    db.data.notifications.forEach(n => {
+      if (n.userId === user.id) {
+        n.isRead = true;
+      }
+    });
+    db.saveToStorage();
+    window.dispatchEvent(new CustomEvent('notification:updated'));
   }
 }
-const commentService = new CommentService();
 
-
-// === File: src\js\services\remarkService.js ===
-/**
- * Enterprise In-House Legal Management System
- * Legal Remarks & Clause Review Service
- */
-
-
-
-
-class RemarkService {
-  /**
-   * Add a clause remark (Legal review only)
-   */
-  addRemark({ requestId, clauseReference, remarkText }) {
-    if (!authService.isLegalTeam()) {
-      throw new Error('Unauthorized: Only Legal Team members can add official legal review remarks.');
-    }
-    if (!clauseReference || !remarkText) {
-      throw new Error('Clause reference and remark text are required.');
-    }
-
-    const user = authService.getCurrentUser();
-    const req = db.data.requests.find(r => r.id === requestId);
-    if (!req) throw new Error('Request not found.');
-
-    const newRemark = {
-      id: `rem-${Date.now()}`,
-      requestId,
-      clauseReference: clauseReference.trim(),
-      remarkText: remarkText.trim(),
-      status: 'OPEN',
-      createdBy: user.name,
-      createdByName: user.name,
-      createdAt: new Date().toISOString(),
-      replies: []
-    };
-
-    db.data.legalRemarks.unshift(newRemark);
-    req.updatedAt = new Date().toISOString();
-    db.saveToStorage();
-
-    auditService.log({
-      action: 'ADD_LEGAL_REMARK',
-      objectType: 'LEGAL_REMARK',
-      objectId: newRemark.id,
-      previousValue: null,
-      newValue: {
-        requestId: req.requestId,
-        clause: clauseReference,
-        remark: remarkText
-      }
-    });
-
-    notificationService.send({
-      userId: req.requestorId,
-      title: 'New Legal Review Remark Added',
-      message: `${user.name} added a remark on "${clauseReference}" for request ${req.requestId}.`,
-      category: 'REMARK',
-      linkUrl: `#/requests/${req.id}`
-    });
-
-    window.dispatchEvent(new CustomEvent('remark:created', { detail: newRemark }));
-    return newRemark;
-  }
-
-  /**
-   * Reply to a remark (Business & Legal)
-   */
-  addReply(remarkId, { text }) {
-    if (!text || !text.trim()) throw new Error('Reply text cannot be empty.');
-
-    const remark = db.data.legalRemarks.find(r => r.id === remarkId);
-    if (!remark) throw new Error('Remark not found.');
-
-    const user = authService.getCurrentUser();
-    const reply = {
-      id: `rep-${Date.now()}`,
-      userName: user.name,
-      userRole: user.title,
-      text: text.trim(),
-      createdAt: new Date().toISOString()
-    };
-
-    remark.replies.push(reply);
-    db.saveToStorage();
-
-    auditService.log({
-      action: 'REPLY_LEGAL_REMARK',
-      objectType: 'LEGAL_REMARK',
-      objectId: remark.id,
-      previousValue: null,
-      newValue: { replyBy: user.name, text: reply.text }
-    });
-
-    // Notify assigned legal counsel or requestor
-    const req = db.data.requests.find(r => r.id === remark.requestId);
-    if (req && req.assignedLegalId && user.id !== req.assignedLegalId) {
-      notificationService.send({
-        userId: req.assignedLegalId,
-        title: 'Response to Legal Remark',
-        message: `${user.name} responded to "${remark.clauseReference}" on ${req.requestId}.`,
-        category: 'REMARK',
-        linkUrl: `#/requests/${req.id}`
-      });
-    }
-
-    window.dispatchEvent(new CustomEvent('remark:updated', { detail: remark }));
-    return reply;
-  }
-
-  /**
-   * Update remark resolution status (OPEN -> IN_PROGRESS -> RESOLVED)
-   */
-  updateStatus(remarkId, newStatus) {
-    const remark = db.data.legalRemarks.find(r => r.id === remarkId);
-    if (!remark) throw new Error('Remark not found.');
-
-    const user = authService.getCurrentUser();
-    const prevStatus = remark.status;
-    remark.status = newStatus;
-    db.saveToStorage();
-
-    auditService.log({
-      action: 'UPDATE_REMARK_STATUS',
-      objectType: 'LEGAL_REMARK',
-      objectId: remark.id,
-      previousValue: { status: prevStatus },
-      newValue: { status: newStatus, updatedBy: user.name }
-    });
-
-    window.dispatchEvent(new CustomEvent('remark:updated', { detail: remark }));
-    return remark;
-  }
-}
-const remarkService = new RemarkService();
-
+const notificationService = new NotificationService();
 
 // === File: src\js\services\documentService.js ===
 /**
  * Enterprise In-House Legal Management System
  * Centralized Legal Document Repository & Vault Service
  */
-
 
 
 class DocumentService {
@@ -1820,16 +1362,14 @@ class DocumentService {
     return count;
   }
 }
-const documentService = new DocumentService();
 
+const documentService = new DocumentService();
 
 // === File: src\js\services\contractService.js ===
 /**
  * Enterprise In-House Legal Management System
  * Contract Lifecycle Management (CLM) Service
  */
-
-
 
 
 class ContractService {
@@ -2045,175 +1585,14 @@ class ContractService {
     return contract;
   }
 }
+
 const contractService = new ContractService();
-
-
-// === File: src\js\services\reportService.js ===
-/**
- * Enterprise In-House Legal Management System
- * Reporting, Analytics & Workload Metrics Service
- */
-
-
-
-class ReportService {
-  /**
-   * Compute comprehensive dashboard & report KPIs
-   */
-  getMetrics() {
-    const user = authService.getCurrentUser();
-    let requests = [...(db.data.requests || [])].filter(r => !r.isArchived);
-    let contracts = [...(db.data.contracts || [])].filter(c => !c.isArchived);
-    let documents = [...(db.data.documents || [])].filter(d => !d.isArchived);
-
-    // Scoping if business user
-    if (!authService.isLegalTeam()) {
-      requests = requests.filter(r => r.departmentId === user.departmentId);
-      contracts = contracts.filter(c => c.departmentId === user.departmentId);
-      documents = documents.filter(d => d.departmentId === user.departmentId && d.confidentialityLevel !== 'LEGAL_PRIVILEGED');
-    }
-
-    const now = new Date('2026-08-27T00:00:00.000Z');
-    const oneWeekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-
-    const openRequests = requests.filter(r => !['COMPLETED', 'REJECTED'].includes(r.status));
-    const pendingAcceptance = requests.filter(r => ['NEW_REQUEST', 'PENDING_LEGAL_ACCEPTANCE', 'RESCHEDULE_REQUESTED'].includes(r.status));
-    
-    const dueThisWeek = openRequests.filter(r => {
-      const d = new Date(r.currentDueDate);
-      return d >= now && d <= oneWeekFromNow;
-    });
-
-    const overdue = openRequests.filter(r => {
-      const d = new Date(r.currentDueDate);
-      return d < now;
-    });
-
-    const completed = requests.filter(r => r.status === 'COMPLETED');
-    const accepted = requests.filter(r => r.status === 'ACCEPTED' || r.status === 'UNDER_LEGAL_REVIEW');
-    const rejected = requests.filter(r => r.status === 'REJECTED');
-    const rescheduled = requests.filter(r => (r.rescheduledHistory && r.rescheduledHistory.length > 0));
-
-    const activeContracts = contracts.filter(c => c.status === 'ACTIVE' || c.status === 'EXPIRING_SOON');
-    const expiringSoonContracts = contracts.filter(c => {
-      const exp = new Date(c.expiryDate);
-      const diff = Math.ceil((exp - now) / (1000 * 60 * 60 * 24));
-      return diff >= 0 && diff <= 30;
-    });
-
-    const totalContractValue = activeContracts.reduce((sum, c) => sum + (c.contractValue || 0), 0);
-
-    // Department Distribution
-    const departmentDistribution = DEPARTMENTS.map(dept => {
-      const deptRequests = requests.filter(r => r.departmentId === dept.id);
-      const deptContracts = contracts.filter(c => c.departmentId === dept.id);
-      const deptValue = deptContracts.reduce((sum, c) => sum + (c.contractValue || 0), 0);
-      return {
-        id: dept.id,
-        code: dept.code,
-        name: dept.name,
-        totalRequests: deptRequests.length,
-        openRequests: deptRequests.filter(r => !['COMPLETED', 'REJECTED'].includes(r.status)).length,
-        activeContracts: deptContracts.length,
-        contractValue: deptValue
-      };
-    });
-
-    // Request Type Distribution
-    const requestTypeCounts = {};
-    requests.forEach(r => {
-      requestTypeCounts[r.requestType] = (requestTypeCounts[r.requestType] || 0) + 1;
-    });
-
-    // Legal Counsel Workload Distribution
-    const legalWorkload = (db.data.users || [])
-      .filter(u => u.role === 'LEGAL_ADMIN' || u.role === 'LEGAL_MEMBER')
-      .map(counsel => {
-        const assigned = requests.filter(r => r.assignedLegalId === counsel.id && !['COMPLETED', 'REJECTED'].includes(r.status));
-        return {
-          id: counsel.id,
-          name: counsel.name,
-          title: counsel.title,
-          activeCases: assigned.length,
-          highPriority: assigned.filter(r => ['HIGH', 'URGENT', 'CRITICAL'].includes(r.priority)).length
-        };
-      });
-
-    return {
-      totalRequests: requests.length,
-      totalOpenRequests: openRequests.length,
-      pendingLegalReview: pendingAcceptance.length,
-      dueThisWeek: dueThisWeek.length,
-      overdue: overdue.length,
-      accepted: accepted.length,
-      rejected: rejected.length,
-      rescheduled: rescheduled.length,
-      completed: completed.length,
-      activeContracts: activeContracts.length,
-      contractsExpiringSoon: expiringSoonContracts.length,
-      totalContractValue,
-      departmentDistribution,
-      requestTypeCounts,
-      legalWorkload,
-      averageTurnaroundDays: 3.4
-    };
-  }
-
-  /**
-   * Export report data to CSV
-   */
-  exportToCsv(type = 'requests') {
-    let rows = [];
-    let headers = [];
-
-    if (type === 'requests') {
-      headers = ['Request ID', 'Title', 'Type', 'Department', 'Requestor', 'Priority', 'Status', 'Due Date', 'Value'];
-      rows = (db.data.requests || []).map(r => [
-        r.requestId,
-        `"${(r.title || '').replace(/"/g, '""')}"`,
-        r.requestType || '',
-        r.departmentName || '',
-        r.requestorName || '',
-        r.priority || '',
-        r.status || '',
-        r.currentDueDate || '',
-        r.contractValue || 0
-      ]);
-    } else if (type === 'contracts') {
-      headers = ['Contract ID', 'Name', 'Type', 'Department', 'Counterparty', 'Status', 'Effective Date', 'Expiry Date', 'Value'];
-      rows = (db.data.contracts || []).map(c => [
-        c.contractId,
-        `"${(c.name || '').replace(/"/g, '""')}"`,
-        c.contractType || '',
-        c.departmentName || '',
-        `"${(c.counterparty || '').replace(/"/g, '""')}"`,
-        c.status || '',
-        c.effectiveDate || '',
-        c.expiryDate || '',
-        c.contractValue || 0
-      ]);
-    }
-
-    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `Legal_Report_${type}_${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  }
-}
-const reportService = new ReportService();
-
 
 // === File: src\js\services\requestService.js ===
 /**
  * Impacteers Legal docs
  * Simplified Legal Request Workflow Service
  */
-
-
 
 
 class RequestService {
@@ -2492,7 +1871,7 @@ class RequestService {
 
     notificationService.send({
       userId: req.requestorId,
-      title: '⏱️ Legal Reschedule Proposal',
+      title: 'â±ï¸ Legal Reschedule Proposal',
       message: `Monisha proposed a new completion date (${proposedDate}) for ${req.requestId} ("${req.title}"). Reason: "${reason.trim()}"`,
       category: 'RESCHEDULE',
       linkUrl: `#/requests/${req.id}`
@@ -2541,7 +1920,7 @@ class RequestService {
 
       notificationService.send({
         userId: 'usr-monisha',
-        title: '✓ Reschedule Accepted & Task Assigned',
+        title: 'âœ“ Reschedule Accepted & Task Assigned',
         message: `${user.name} accepted the new date (${req.currentDueDate}) for ${req.requestId}. Task is now assigned and in review.`,
         category: 'RESCHEDULE',
         linkUrl: `#/requests/${req.id}`
@@ -2559,14 +1938,14 @@ class RequestService {
         authorId: user.id,
         authorName: user.name,
         authorRole: user.tagline || user.roleLabel,
-        text: `DECLINED RESCHEDULE • Requested Date: ${targetDate}\nJustification: ${comment.trim() || 'Urgent business priority, need to close as soon as possible.'}`,
+        text: `DECLINED RESCHEDULE â€¢ Requested Date: ${targetDate}\nJustification: ${comment.trim() || 'Urgent business priority, need to close as soon as possible.'}`,
         isInternalLegalOnly: false,
         createdAt: new Date().toISOString()
       });
 
       notificationService.send({
         userId: 'usr-monisha',
-        title: '⚠️ Reschedule Declined / Counter-Proposal',
+        title: 'âš ï¸ Reschedule Declined / Counter-Proposal',
         message: `${user.name} (${req.departmentName}) declined the reschedule for ${req.requestId}. Requested Date: ${targetDate}. Reason: "${comment.trim()}"`,
         category: 'RESCHEDULE',
         linkUrl: `#/requests/${req.id}`
@@ -2614,7 +1993,7 @@ class RequestService {
 
     notificationService.send({
       userId: req.requestorId,
-      title: '✓ Legal Accepted Requested Date',
+      title: 'âœ“ Legal Accepted Requested Date',
       message: `Monisha accepted your requested completion date (${targetDate}) for ${req.requestId}. Review in active progress.`,
       category: 'RESCHEDULE',
       linkUrl: `#/requests/${req.id}`
@@ -2692,7 +2071,7 @@ class RequestService {
 
     notificationService.send({
       userId: req.requestorId,
-      title: '📝 Legal Review Completed',
+      title: 'ðŸ“ Legal Review Completed',
       message: `Monisha uploaded reviewed draft (${name}) for ${req.requestId}. Please review and execute with client.`,
       category: 'DOCUMENT',
       linkUrl: `#/requests/${req.id}`
@@ -2793,7 +2172,7 @@ class RequestService {
       authorId: user.id,
       authorName: user.name,
       authorRole: user.tagline || user.roleLabel,
-      text: `🎉 FINAL SIGNED DOCUMENT UPLOADED: ${name}\nRequest is automatically marked as COMPLETED and published to ${req.departmentName} Documents repository.${commentText && commentText.trim() ? `\n\nExecution Notes: ${commentText.trim()}` : ''}`,
+      text: `ðŸŽ‰ FINAL SIGNED DOCUMENT UPLOADED: ${name}\nRequest is automatically marked as COMPLETED and published to ${req.departmentName} Documents repository.${commentText && commentText.trim() ? `\n\nExecution Notes: ${commentText.trim()}` : ''}`,
       isInternalLegalOnly: false,
       createdAt: new Date().toISOString()
     });
@@ -2802,7 +2181,7 @@ class RequestService {
 
     notificationService.send({
       userId: 'usr-monisha',
-      title: '🎉 Request Completed & Executed Document Stored',
+      title: 'ðŸŽ‰ Request Completed & Executed Document Stored',
       message: `${user.name} uploaded final signed copy (${name}) for ${req.requestId}. Request marked as COMPLETED and stored in ${req.departmentName} repository.`,
       category: 'DOCUMENT',
       linkUrl: `#/requests/${req.id}`
@@ -2811,7 +2190,7 @@ class RequestService {
     if (req.requestorId !== user.id) {
       notificationService.send({
         userId: req.requestorId,
-        title: '🎉 Request Completed & Agreement Stored',
+        title: 'ðŸŽ‰ Request Completed & Agreement Stored',
         message: `Final signed document (${name}) uploaded for ${req.requestId}. Agreement published in ${req.departmentName} Documents repository.`,
         category: 'DOCUMENT',
         linkUrl: `#/department-docs`
@@ -2938,14 +2317,330 @@ class RequestService {
     return comment;
   }
 }
+
 const requestService = new RequestService();
 
+// === File: src\js\services\aiService.js ===
+/**
+ * Impacteers DMS â€” Enterprise AI Legal Assistant Service
+ * Abstraction layer for legal research, contract auditing, clause analysis, and session memory.
+ * Communicates exclusively with the secure server-side API (/api/legal-assistant/chat).
+ */
+
+class AIService {
+  constructor() {
+    this.storageKey = 'impacteers_dms_ai_sessions_v2';
+    this.currentSessionIdKey = 'impacteers_dms_current_ai_session_id';
+    this.activeJurisdictionKey = 'impacteers_dms_ai_jurisdiction';
+    this.activeModeKey = 'impacteers_dms_ai_mode';
+
+    this.defaultJurisdiction = localStorage.getItem(this.activeJurisdictionKey) || 'India';
+    this.defaultMode = localStorage.getItem(this.activeModeKey) || 'general';
+
+    this.initDefaultSession();
+  }
+
+  // ---------------------------------------------------------------------------
+  // 1. Backend Status & Metadata
+  // ---------------------------------------------------------------------------
+  async getStatus() {
+    try {
+      const res = await fetch('/api/legal-assistant/status');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      return {
+        status: 'offline',
+        provider: 'Fallback Rule Engine',
+        model: 'in-house-v1',
+        apiKeyConfigured: false,
+        jurisdictions: ['India', 'Tamil Nadu', 'Delaware / US', 'United Kingdom', 'Custom'],
+        disclaimer: 'AI Legal Assistant provides general legal information and document-analysis support and does not constitute legal advice.'
+      };
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // 2. Chat Query Execution
+  // ---------------------------------------------------------------------------
+  async generateLegalResponse({ message, documentText = '', jurisdiction = null, mode = null, history = [], model = null }) {
+    const activeJur = jurisdiction || this.getJurisdiction();
+    const activeMode = mode || this.getMode();
+
+    const payload = {
+      message: message.trim(),
+      documentText: documentText ? documentText.trim() : '',
+      jurisdiction: activeJur,
+      mode: activeMode,
+      conversationHistory: history.slice(-8), // Keep recent conversation window
+      model: model || null
+    };
+
+    try {
+      const res = await fetch('/api/legal-assistant/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || `Server responded with status ${res.status}`);
+      }
+
+      const data = await res.json();
+      return {
+        success: true,
+        reply: data.reply,
+        provider: data.provider || 'Impacteers Legal Assistant',
+        jurisdiction: data.jurisdiction || activeJur,
+        mode: data.mode || activeMode,
+        timestamp: data.timestamp || new Date().toISOString()
+      };
+    } catch (err) {
+      return {
+        success: false,
+        error: 'Unable to connect to the Legal Assistant right now. Please try again or verify your server configuration.',
+        reply: `âš ï¸ **Unable to connect to the Legal Assistant right now.**\n\nPlease try again in a few moments.\n\n*Error details: ${err.message || 'Connection failed'}*`,
+        provider: 'Connection Error'
+      };
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // 3. Document Analysis & Clause Auditing Specialized Methods
+  // ---------------------------------------------------------------------------
+  async analyzeDocument({ documentText, fileName, jurisdiction = null }) {
+    const prompt = `Please perform a comprehensive contract review of this agreement (${fileName || 'Uploaded Agreement'}). 
+Identify:
+1. One-sided or unbalanced obligations
+2. Liability caps and indemnification scope
+3. Termination rights and notice periods
+4. Missing critical clauses (Data Protection, Force Majeure, IP assignment, Non-Solicit)
+5. Clear recommended action points and a clause risk matrix table.`;
+
+    return this.generateLegalResponse({
+      message: prompt,
+      documentText,
+      jurisdiction,
+      mode: 'review'
+    });
+  }
+
+  async compareClauses({ clauseA, clauseB, jurisdiction = null }) {
+    const prompt = `Please perform a side-by-side legal comparison between these two clauses:
+
+CLAUSE A:
+"""
+${clauseA}
+"""
+
+CLAUSE B:
+"""
+${clauseB}
+"""
+
+Evaluate:
+1. Which clause provides stronger legal and commercial protection?
+2. What are the key risk differences?
+3. Provide a recommended balanced version.`;
+
+    return this.generateLegalResponse({
+      message: prompt,
+      jurisdiction,
+      mode: 'compare'
+    });
+  }
+
+  async checkMissingClauses({ documentText, contractType = 'Commercial Agreement', jurisdiction = null }) {
+    const prompt = `Review this ${contractType} specifically to identify any MISSING clauses or omitted protections that should be included under ${jurisdiction || 'applicable law'}. Generate a missing-clause risk checklist with suggested drafting additions.`;
+
+    return this.generateLegalResponse({
+      message: prompt,
+      documentText,
+      jurisdiction,
+      mode: 'missing_clauses'
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // 4. Session & Chat History Management (Client Storage)
+  // ---------------------------------------------------------------------------
+  getSessions() {
+    try {
+      const data = localStorage.getItem(this.storageKey);
+      return data ? JSON.parse(data) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  saveSessions(sessions) {
+    try {
+      localStorage.setItem(this.storageKey, JSON.stringify(sessions));
+    } catch (e) {
+      console.error('Failed to save sessions to localStorage:', e);
+    }
+  }
+
+  getCurrentSessionId() {
+    return localStorage.getItem(this.currentSessionIdKey);
+  }
+
+  setCurrentSessionId(id) {
+    localStorage.setItem(this.currentSessionIdKey, id);
+  }
+
+  getCurrentSession() {
+    const sessions = this.getSessions();
+    const currentId = this.getCurrentSessionId();
+    let current = sessions.find(s => s.id === currentId);
+    if (!current && sessions.length > 0) {
+      current = sessions[0];
+      this.setCurrentSessionId(current.id);
+    }
+    return current || null;
+  }
+
+  initDefaultSession() {
+    const sessions = this.getSessions();
+    if (sessions.length === 0) {
+      this.createSession('General Legal Consultation', this.defaultJurisdiction);
+    }
+  }
+
+  createSession(title = 'New Legal Chat', jurisdiction = null) {
+    const sessions = this.getSessions();
+    const newSession = {
+      id: 'session-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6),
+      title: title || 'New Legal Consultation',
+      jurisdiction: jurisdiction || this.getJurisdiction(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      attachedDocument: null, // { name, text, size }
+      messages: [
+        {
+          id: 'msg-' + Date.now(),
+          role: 'assistant',
+          content: `Hello! I am your **AI Legal Assistant**. I can assist you with contract review, clause risk analysis, plain-English explanations, drafting safer wording, and checking compliance under **${jurisdiction || this.getJurisdiction()}** law.\n\nHow can I help you today? You can also upload or paste a contract for clause-by-clause analysis.`,
+          timestamp: new Date().toISOString(),
+          provider: 'Impacteers Legal Assistant'
+        }
+      ]
+    };
+
+    sessions.unshift(newSession);
+    this.saveSessions(sessions);
+    this.setCurrentSessionId(newSession.id);
+    return newSession;
+  }
+
+  addMessage(sessionId, message) {
+    const sessions = this.getSessions();
+    const session = sessions.find(s => s.id === sessionId);
+    if (!session) return;
+
+    const newMsg = {
+      id: 'msg-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5),
+      role: message.role, // 'user' | 'assistant'
+      content: message.content,
+      timestamp: new Date().toISOString(),
+      provider: message.provider || 'Impacteers AI',
+      jurisdiction: message.jurisdiction || session.jurisdiction,
+      mode: message.mode || 'general'
+    };
+
+    session.messages.push(newMsg);
+    session.updatedAt = new Date().toISOString();
+
+    // Auto-update title based on first user question
+    if (session.messages.filter(m => m.role === 'user').length === 1 && message.role === 'user') {
+      const cleanTitle = message.content.slice(0, 36).replace(/\n/g, ' ').trim() + (message.content.length > 36 ? '...' : '');
+      session.title = cleanTitle || 'Legal Inquiry';
+    }
+
+    this.saveSessions(sessions);
+    return newMsg;
+  }
+
+  attachDocumentToSession(sessionId, docObj) {
+    const sessions = this.getSessions();
+    const session = sessions.find(s => s.id === sessionId);
+    if (!session) return;
+
+    session.attachedDocument = docObj; // { name, text, size, charCount }
+    session.updatedAt = new Date().toISOString();
+    this.saveSessions(sessions);
+  }
+
+  removeAttachedDocument(sessionId) {
+    const sessions = this.getSessions();
+    const session = sessions.find(s => s.id === sessionId);
+    if (!session) return;
+
+    session.attachedDocument = null;
+    session.updatedAt = new Date().toISOString();
+    this.saveSessions(sessions);
+  }
+
+  deleteSession(sessionId) {
+    let sessions = this.getSessions();
+    sessions = sessions.filter(s => s.id !== sessionId);
+    this.saveSessions(sessions);
+
+    if (this.getCurrentSessionId() === sessionId) {
+      if (sessions.length > 0) {
+        this.setCurrentSessionId(sessions[0].id);
+      } else {
+        this.createSession('General Legal Consultation', this.getJurisdiction());
+      }
+    }
+  }
+
+  clearAllSessions() {
+    localStorage.removeItem(this.storageKey);
+    localStorage.removeItem(this.currentSessionIdKey);
+    return this.createSession('General Legal Consultation', this.getJurisdiction());
+  }
+
+  // ---------------------------------------------------------------------------
+  // 5. Jurisdiction & Preferences
+  // ---------------------------------------------------------------------------
+  getJurisdiction() {
+    return localStorage.getItem(this.activeJurisdictionKey) || 'India';
+  }
+
+  setJurisdiction(jurisdiction) {
+    localStorage.setItem(this.activeJurisdictionKey, jurisdiction);
+    const session = this.getCurrentSession();
+    if (session) {
+      session.jurisdiction = jurisdiction;
+      const sessions = this.getSessions();
+      const idx = sessions.findIndex(s => s.id === session.id);
+      if (idx !== -1) {
+        sessions[idx].jurisdiction = jurisdiction;
+        this.saveSessions(sessions);
+      }
+    }
+  }
+
+  getMode() {
+    return localStorage.getItem(this.activeModeKey) || 'general';
+  }
+
+  setMode(mode) {
+    localStorage.setItem(this.activeModeKey, mode);
+  }
+}
+
+const aiService = new AIService();
 
 // === File: src\js\services\legalAssistantService.js ===
 /**
- * Impacteers DMS — Enterprise In-House Legal & Document Management System
- * Local LLM Ollama Integration & Legal RAG Grounding Engine
+ * Impacteers DMS â€” Enterprise In-House Legal & Document Management System
+ * Local LLM Ollama Integration & Secure Legal AI Gateway
  */
+
 
 class LegalAssistantService {
   constructor() {
@@ -2961,18 +2656,19 @@ class LegalAssistantService {
 
   getSuggestedPrompts() {
     return [
-      'What is the notice period for Board Meetings & General Meetings under AOA?',
-      'Summarize standard aggregate liability cap policy for contracts.',
-      'What are the termination rights and cure periods across MSAs?',
-      'What non-disclosure and confidentiality obligations are standard?',
-      'Show me all contracts expiring in the next 60 days.',
-      'What are the standard payment terms and invoice dispute policies?',
-      'What are the non-solicitation rules in our staffing agreements?'
+      'Review this contract for legal risks',
+      'Explain this clause in simple language',
+      'Identify missing clauses',
+      'Summarise this agreement',
+      'Compare these two clauses',
+      'Draft a stronger termination clause',
+      'Identify commercial risks',
+      'Check this agreement for inconsistencies'
     ];
   }
 
   getSafetyDisclaimer() {
-    return 'Impacteers AI Assistant provides corporate legal intelligence. This internal tool assists contract review and does not replace formal legal counsel signature or board execution.';
+    return 'AI Legal Assistant provides general legal information and document-analysis support and does not constitute legal advice or create an attorney-client relationship. AI-generated responses should be independently verified against applicable law and reviewed by a qualified legal professional.';
   }
 
   getAuthorizedContextDocuments() {
@@ -2990,7 +2686,6 @@ class LegalAssistantService {
     if (this.isChecking) return { connected: this.isConnected, models: this.installedModels, activeModel: this.model };
     this.isChecking = true;
 
-    // 1. Try local proxy first (guarantees zero CORS issues)
     const endpointsToTry = [
       `${this.proxyEndpoint}/tags`,
       `${this.endpoint}/api/tags`
@@ -3048,935 +2743,228 @@ class LegalAssistantService {
         connected: false,
         models: [],
         activeModel: this.model,
+        endpoint: this.endpoint,
         error: 'Ollama is offline or unreachable'
       };
     }
   }
 
-  setModel(modelName) {
-    if (modelName) {
-      this.model = modelName;
-      localStorage.setItem('OLLAMA_MODEL', modelName);
-    }
-  }
-
-  setEndpoint(endpointUrl) {
-    if (endpointUrl) {
-      this.endpoint = endpointUrl.replace(/\/+$/, '');
-      localStorage.setItem('OLLAMA_ENDPOINT', this.endpoint);
-    }
-  }
-
-  setTemperature(temp) {
-    const val = parseFloat(temp);
-    if (!isNaN(val)) {
-      this.temperature = Math.max(0, Math.min(1, val));
-      localStorage.setItem('OLLAMA_TEMP', this.temperature.toString());
-    }
-  }
-
   /**
-   * Build RAG Grounding System Prompt for Legal Intelligence
+   * Main Query Entrypoint â€” calls secure backend /api/legal-assistant/chat via aiService
    */
-  buildLegalRAGSystemPrompt(user, targetDoc) {
-    const today = '2026-08-31';
-    let docContext = '';
+  async queryLegalAI({ prompt, contextDocId = null, customDocText = '', jurisdiction = 'India', mode = 'general', history = [] }) {
+    let docContextText = customDocText || '';
 
-    if (targetDoc) {
-      const versions = targetDoc.versions ? targetDoc.versions.map(v => `v${v.versionNumber}: ${v.fileName} (uploaded by ${v.uploadedBy})`).join('; ') : 'v1.0';
-      docContext = `
-SELECTED DOCUMENT CONTEXT (RAG Grounding):
-- Document ID: ${targetDoc.id}
-- Title: ${targetDoc.title}
-- Department: ${targetDoc.departmentName} (${targetDoc.departmentId})
-- Counterparty / Vendor: ${targetDoc.counterparty || 'N/A'}
-- Contract Value: ${targetDoc.contractValue ? '$' + targetDoc.contractValue.toLocaleString() : 'N/A'}
-- Effective Date: ${targetDoc.effectiveDate || '2026-01-01'}
-- Expiry Date: ${targetDoc.expiryDate || '2027-01-01'}
-- Status: ${targetDoc.status}
-- Confidentiality Level: ${targetDoc.confidentialityLevel || 'Confidential'}
-- File History: ${versions}
-- Standard Clauses:
-  * Clause 4 (Payment & Invoicing): Net 30 Days from receipt of invoice, invoiced in arrears.
-  * Clause 7 (Limitation of Liability): Aggregate liability capped at 1x-2x contract annual value, uncapped for gross negligence, IP infringement, and confidentiality breaches.
-  * Clause 9 (Indemnification): Mutual third-party defense, contractor hold-harmless.
-  * Clause 10 (Termination): 30 days prior written notice for convenience; 15 days cure period for material breach. Post-termination data transition support for 30 days.
-  * Clause 11 (Confidentiality): 3 years post-termination. Non-solicitation 12 months.
-`;
-    } else {
-      const activeContracts = contractService.getContracts();
-      const expSoon = contractService.getContracts({ expiringWithinDays: 60 });
-      docContext = `
-ENTERPRISE VAULT & CLM CONTEXT (RAG Grounding):
-- Organization: Impacteers
-- Total Active Indexed Agreements: ${activeContracts.length}
-- Contracts Expiring Soon (Next 60 Days): ${expSoon.length} items (${expSoon.map(c => `${c.name} - Exp: ${c.expiryDate}`).join(', ') || 'None'})
-- Corporate Governance & Articles of Association (AOA) Guidelines:
-  * General Meetings (AGM / EGM): 21 clear days prior written notice required to all shareholders, directors, and auditors. Shorter notice permissible with 95% consent.
-  * Board of Directors Meetings: 7 days prior written notice with detailed agenda. Urgent meetings permitted if independent director attends or decisions are ratified.
-  * Contracts > $100,000 require Legal Manager (Monisha) review.
-  * Cloud & Software vendor agreements require DPDP / GDPR data processing addenda.
-  * Standard payment terms must be Net 30 Days or better.
-`;
-    }
-
-    return `You are the Impacteers DMS In-House AI Legal Counsel & Contract Intelligence Assistant.
-You provide precise, legally rigorous, clear, and actionable analysis of corporate law, Articles of Association (AOA), contracts, legal clauses, risk exposure, and document management workflows for Impacteers.
-
-CURRENT USER CONTEXT:
-- Name: ${user.name}
-- Role: ${user.roleLabel || user.role}
-- Department: ${user.departmentName || 'Global Legal Operations'}
-- Access Scope: ${authService.isLegalManager() || authService.isChairman() ? 'Global Access (All 11 Departments)' : user.departmentName + ' Department Only'}
-- Current Date: ${today}
-
-${docContext}
-
-INSTRUCTIONS FOR YOUR RESPONSE:
-1. Ground your answers in corporate legal standards, AOA rules, and the provided document context.
-2. If asked about AOA notice periods, liability, payment, termination, or confidentiality, structure your answer with clear bold headings and bullet points.
-3. Highlight potential legal risks, recommended redlines, and commercial mitigations.
-4. Use clean Markdown formatting without raw HTML tags.
-5. Maintain a professional, executive legal tone suitable for general counsel and corporate department heads.
-6. Keep answers concise, factual, and direct.`;
-  }
-
-  /**
-   * Send a question to Ollama Local LLM or graceful intelligent fallback
-   */
-  async askQuestion({ question, documentId = null, conversationHistory = [] }) {
-    if (!question || !question.trim()) {
-      throw new Error('Question cannot be empty.');
-    }
-
-    const user = authService.getCurrentUser();
-    let targetDoc = null;
-
-    if (documentId) {
-      targetDoc = documentService.getDocumentById(documentId);
-    }
-
-    const systemPrompt = this.buildLegalRAGSystemPrompt(user, targetDoc);
-
-    // Check Ollama status
-    const status = await this.checkOllamaStatus();
-
-    if (status.connected) {
-      try {
-        const messages = [
-          { role: 'system', content: systemPrompt },
-          ...conversationHistory.slice(-6).map(m => ({
-            role: m.role === 'user' ? 'user' : 'assistant',
-            content: m.text || m.content || ''
-          })),
-          { role: 'user', content: question.trim() }
-        ];
-
-        const payload = {
-          model: this.model,
-          messages: messages,
-          stream: false,
-          options: {
-            temperature: this.temperature
-          }
-        };
-
-        const endpointsToTry = [
-          `${this.proxyEndpoint}/chat`,
-          `${this.endpoint}/api/chat`
-        ];
-
-        let responseData = null;
-
-        for (const url of endpointsToTry) {
-          try {
-            const res = await fetch(url, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(payload)
-            });
-
-            if (res.ok) {
-              responseData = await res.json();
-              if (responseData && responseData.message && responseData.message.content) {
-                break;
-              }
-            }
-          } catch (e) {
-            // continue
-          }
-        }
-
-        if (responseData && responseData.message && responseData.message.content) {
-          const aiText = responseData.message.content.trim();
-          
-          let citations = [];
-          if (targetDoc) {
-            citations.push(`${targetDoc.title} (v${targetDoc.currentVersion || 1})`);
-          } else {
-            citations.push('Impacteers Document Vault & Corporate Knowledge Base');
-          }
-
-          return {
-            id: `ollama-${Date.now()}`,
-            role: 'assistant',
-            text: aiText,
-            citations: citations,
-            model: `Ollama (${this.model})`,
-            provider: 'ollama',
-            timestamp: new Date().toISOString(),
-            disclaimer: this.getSafetyDisclaimer(),
-            isLiveOllama: true
-          };
-        }
-      } catch (err) {
-        console.warn('Ollama request failed, falling back to corporate legal intelligence:', err);
+    // If a vault doc ID was selected, retrieve its text & metadata
+    if (contextDocId) {
+      const docs = this.getAuthorizedContextDocuments();
+      const targetDoc = docs.find(d => d.id === contextDocId);
+      if (targetDoc) {
+        docContextText = `[Vault Document: ${targetDoc.title}]\nCategory: ${targetDoc.documentType || 'Agreement'}\nDepartment: ${targetDoc.departmentName || 'General'}\nStatus: ${targetDoc.status || 'Executed'}\n\n${targetDoc.content || targetDoc.summary || 'Document executed and archived in Impacteers secure legal vault.'}`;
       }
     }
 
-    // 2. Comprehensive In-House Legal Intelligence Engine (Offline / Fallback)
-    await new Promise(resolve => setTimeout(resolve, 350));
+    return await aiService.generateLegalResponse({
+      message: prompt,
+      documentText: docContextText,
+      jurisdiction,
+      mode,
+      history
+    });
+  }
 
-    const q = question.trim().toLowerCase();
-    let responseText = '';
-    let citations = [];
+  /**
+   * Extract contractual clauses by keyword
+   */
+  extractClauses(text) {
+    if (!text) return [];
+    const clauses = [];
+    const lower = text.toLowerCase();
 
-    // Check specific document mode
-    if (targetDoc) {
-      if (q.includes('liability') || q.includes('cap') || q.includes('damage') || q.includes('indemnif')) {
-        responseText = `### Liability & Indemnification Analysis for **${targetDoc.title}**\n\n- **Liability Limitation (Clause 7.1)**: Aggregate liability is capped at 1x to 2x annual contract value ($${(targetDoc.contractValue || 37500).toLocaleString()}).\n- **Uncapped Carve-outs**: Claims arising from gross negligence, willful misconduct, IP infringement, and data breach / confidentiality violations are strictly uncapped.\n- **Indemnification (Clause 9.2)**: Mutual third-party indemnification applies with full defense and hold-harmless coverage.\n\n*Recommended Action: Ensure contractor misclassification and data security incidents are explicitly covered.*`;
-        citations = [`${targetDoc.title} – Clause 7.1 (Limitation of Liability)`, `${targetDoc.title} – Clause 9.2 (Indemnification)`];
-      } else if (q.includes('terminat') || q.includes('notice') || q.includes('cancel') || q.includes('cure') || q.includes('exit')) {
-        responseText = `### Termination Terms & Notice Periods for **${targetDoc.title}**\n\n- **Termination for Convenience**: Either party may terminate by providing **30 calendar days** prior written notice.\n- **Termination for Cause (Material Breach)**: Immediate termination upon written notice if breach is not cured within **15 business days** of receipt of notice.\n- **Post-Termination Transition**: Vendor is obligated to provide **30 days** of transition and data repatriation assistance at agreed rates.\n\n*Recommended Action: Confirm non-renewal notice deadline at least 45 days before the expiry date (${targetDoc.expiryDate || 'annual cycle'}).*`;
-        citations = [`${targetDoc.title} – Clause 10 (Termination & Transition Provisions)`];
-      } else if (q.includes('payment') || q.includes('fee') || q.includes('invoic') || q.includes('price') || q.includes('billing')) {
-        responseText = `### Payment & Invoicing Terms for **${targetDoc.title}**\n\n- **Standard Term**: **Net 30 Days** from receipt of an undisputed, valid tax invoice.\n- **Billing Cycle**: Invoiced monthly in arrears.\n- **Disputed Amounts**: Impacteers may withhold payment on disputed line items without incurring late interest penalties during good-faith dispute review.\n\n*Source: Clause 4 (Payment Obligations & Financial Terms)*`;
-        citations = [`${targetDoc.title} – Clause 4 (Payment Obligations)`];
+    const patterns = [
+      { type: 'Liability Cap', keyword: 'liability', icon: 'âš–ï¸', desc: 'Aggregate liability limit' },
+      { type: 'Indemnification', keyword: 'indemn', icon: 'ðŸ›¡ï¸', desc: 'Third-party claim protections' },
+      { type: 'Termination', keyword: 'terminat', icon: 'â±ï¸', desc: 'Notice period & cause rights' },
+      { type: 'Payment Terms', keyword: 'payment', icon: 'ðŸ’³', desc: 'Invoice cycle & dispute protocol' },
+      { type: 'Confidentiality', keyword: 'confidential', icon: 'ðŸ”’', desc: 'Proprietary info & NDA term' },
+      { type: 'Intellectual Property', keyword: 'intellectual property', icon: 'ðŸ’¡', desc: 'Ownership & licensing rights' },
+      { type: 'Governing Law', keyword: 'governing law', icon: 'ðŸ›ï¸', desc: 'Jurisdiction & arbitration venue' },
+      { type: 'Non-Solicitation', keyword: 'solicit', icon: 'ðŸ‘¥', desc: 'Employee & customer non-solicit' },
+      { type: 'Force Majeure', keyword: 'force majeure', icon: 'âš¡', desc: 'Unforeseen disaster excusal' }
+    ];
+
+    for (const p of patterns) {
+      if (lower.includes(p.keyword)) {
+        clauses.push({
+          type: p.type,
+          icon: p.icon,
+          description: p.desc,
+          status: 'Present'
+        });
       } else {
-        responseText = `### Document Summary & Clause Audit for **${targetDoc.title}**\n\n- **Document Title**: ${targetDoc.title} (v${targetDoc.currentVersion || 1})\n- **Department**: ${targetDoc.departmentName}\n- **Counterparty**: ${targetDoc.counterparty || 'N/A'}\n- **Status**: ${targetDoc.status}\n- **Effective Dates**: ${targetDoc.effectiveDate || '2026-01-01'} to ${targetDoc.expiryDate || '2027-01-01'}\n- **Confidentiality**: ${targetDoc.confidentialityLevel || 'Confidential'}\n\n**Key Legal Highlights**:\n1. **Standard SLA & Notice**: 30-day termination notice for convenience with 15-day cure window.\n2. **Liability Cap**: Capped at 1x-2x contract value with customary carve-outs.\n3. **Compliance**: Verified for corporate policy alignment and data protection addenda.`;
-        citations = [`${targetDoc.title}`];
-      }
-    } else {
-      // General Enterprise & Corporate Law Query Matching
-
-      // 1. Articles of Association (AOA) / MOA / Board Meetings / Corporate Governance
-      if (q.includes('aoa') || q.includes('articles of association') || q.includes('moa') || q.includes('memorandum') || q.includes('board meeting') || q.includes('general meeting') || q.includes('agm') || q.includes('egm') || q.includes('bylaws') || q.includes('bylaw') || (q.includes('notice period') && (q.includes('meeting') || q.includes('director') || q.includes('shareholder') || q.includes('board')))) {
-        responseText = `### Articles of Association (AOA) & Corporate Governance Notice Periods\n\nUnder corporate governance guidelines and the **Articles of Association (AOA)**, standard statutory notice requirements are structured as follows:\n\n#### 1. General Meetings (AGM & EGM)\n- **Standard Notice Period**: Minimum **21 clear days' written notice** (by electronic mail or physical delivery) to all shareholders, directors, and statutory auditors.\n- **Shorter Notice Rule**: A General Meeting may be convened on shorter notice if written consent is received from **not less than 95%** of members entitled to vote at the meeting.\n\n#### 2. Board of Directors Meetings\n- **Standard Notice Period**: Minimum **7 days' prior written notice** sent to every director at their registered address, accompanied by the agenda and draft resolutions.\n- **Urgent Board Meetings**: Permissible on shorter notice provided at least **one Independent Director** is present, or the decisions are subsequently circulated and ratified in writing by the majority.\n\n#### 3. Committee Meetings (Audit, Remuneration & POSH)\n- **Standard Notice Period**: Minimum **3 to 7 business days' notice** with agenda papers circulated in advance.\n\n#### 4. Special Resolutions & Alterations\n- Any resolution to amend the Articles of Association (AOA), alter share capital, or approve mergers requires **21 clear days' notice** with explicit explanatory statements.`;
-        citations = [
-          'Impacteers Articles of Association (AOA) – Section 4 (Meetings & Notice Provisions)',
-          'Corporate Governance & Companies Act Compliance Handbook'
-        ];
-      }
-
-      // 2. Termination Clauses & Contract Notice Periods
-      else if (q.includes('terminat') || (q.includes('notice') && (q.includes('period') || q.includes('contract') || q.includes('agreement') || q.includes('vendor')))) {
-        responseText = `### Standard Contract Notice Periods & Termination Guidelines\n\nFor commercial agreements, MSAs, and employment contracts across Impacteers, standard notice periods are:\n\n1. **Commercial Agreements & Vendor MSAs**:\n   - **Termination for Convenience**: **30 to 60 calendar days** prior written notice.\n   - **Material Breach / Cure Period**: **15 to 30 days** written notice to cure default prior to termination.\n   - **Auto-Renewal Notice Window**: Written non-renewal notice required **45 to 60 days** before the expiration date.\n\n2. **Employment & Consultant Agreements**:\n   - **Full-Time Employees**: **30 to 90 calendar days** notice (or salary in lieu of notice) based on grade.\n   - **Probationary Period**: **15 calendar days** written notice.\n   - **Senior Executives**: **60 to 90 calendar days** notice.\n\n3. **Non-Disclosure Agreements (NDAs)**:\n   - Terminated only upon expiration of the **3-year** confidentiality obligation (trade secrets remain protected indefinitely).`;
-        citations = [
-          'Impacteers Master Contracting Policy – Section 8 (Termination & Notice Standards)',
-          'Standard Master Services Agreement (MSA) Template – Clause 10'
-        ];
-      }
-
-      // 3. Liability Caps & Indemnification
-      else if (q.includes('liability') || q.includes('cap') || q.includes('damages') || q.includes('indemn')) {
-        responseText = `### Enterprise Liability Cap & Indemnification Policy\n\nImpacteers standard risk allocation guidelines enforce:\n\n- **General Commercial Liability Cap**: Capped at **1x to 2x Annual Contract Value** (or total fees paid in the preceding 12 months).\n- **Mandatory Uncapped Carve-outs**:\n  1. Breach of Confidentiality and Non-Disclosure obligations.\n  2. Third-party Intellectual Property (IP) infringement claims.\n  3. Gross negligence, intentional misconduct, and fraud.\n  4. Data Protection & Privacy violations (DPA / GDPR / DPDP).\n- **Indemnification Scope**: Mutual indemnification must include defense obligations, reasonable legal fees, and hold-harmless protection.`;
-        citations = [
-          'Impacteers Legal Risk & Contracting Standard – Clause 7 (Limitation of Liability)',
-          'Standard Master Services Agreement (MSA) Template – Clause 9'
-        ];
-      }
-
-      // 4. Confidentiality, Non-Disclosure (NDA) & Trade Secrets
-      else if (q.includes('nda') || q.includes('confidential') || q.includes('trade secret') || q.includes('proprietary')) {
-        responseText = `### Confidentiality & NDA Standards\n\n- **Protection Term**: Confidential information must remain protected for a minimum of **3 to 5 years** following disclosure.\n- **Trade Secrets & Source Code**: Protected in **perpetuity** (no time limitation).\n- **Standard Exclusions**: Information publicly known without breach, already in possession prior to disclosure, or independently developed.\n- **Permitted Disclosures**: Compelled disclosures under court subpoena require prompt written notice before disclosure to enable protective order filings.`;
-        citations = [
-          'Impacteers Master Employee NDA Template – Clause 3',
-          'DevCore Systems Integration NDA (doc-eng-01)'
-        ];
-      }
-
-      // 5. Non-Compete & Non-Solicitation
-      else if (q.includes('non-compete') || q.includes('non compete') || q.includes('solicit') || q.includes('non-solicit')) {
-        responseText = `### Non-Solicitation & Non-Compete Policy\n\n- **Non-Solicitation of Staff & Contractors**: Enforceable for **12 months** following contract termination or separation.\n- **Non-Solicitation of Clients**: Enforceable for **12 months** post-termination regarding active prospective and current clients.\n- **Non-Compete Covenants**: Applied during the active term of employment/contract. Post-termination covenants are tailored to geographic and role reasonableness in compliance with applicable employment laws.`;
-        citations = [
-          'TalentBridge Staffing Framework MSA (CNT-2026-0002) – Clause 11.2',
-          'HR Master Employment Agreement – Clause 14'
-        ];
-      }
-
-      // 6. Contract Expirations & Renewals
-      else if (q.includes('expir') || q.includes('renew') || q.includes('renewal') || q.includes('month') || q.includes('60 day') || q.includes('30 day')) {
-        const expiringContracts = contractService.getContracts({ expiringWithinDays: 60 });
-        if (expiringContracts.length > 0) {
-          const list = expiringContracts.map(c => `- **${c.contractId}**: ${c.name} (${c.counterparty || c.departmentName}) – Expiring on **${c.expiryDate}** (Value: $${(c.contractValue || 0).toLocaleString()})`).join('\n');
-          responseText = `### Contracts Expiring in the Next 60 Days\n\nFound **${expiringContracts.length}** active contracts nearing renewal or expiration:\n\n${list}\n\n**Recommended Action**: Review renewal terms and issue non-renewal or renegotiation notices before notice cutoff dates.`;
-          citations = expiringContracts.map(c => `${c.contractId}`);
-        } else {
-          responseText = `### Contract Expiry Schedule\n\nNo active contracts in your authorized scope are scheduled to expire in the next 60 days. All ongoing agreements are in good standing.`;
-          citations = ['Impacteers CLM Contract Registry'];
-        }
-      }
-
-      // 7. Payment Terms & Invoicing
-      else if (q.includes('payment') || q.includes('invoice') || q.includes('net 30') || q.includes('fee') || q.includes('tax') || q.includes('gst') || q.includes('tds')) {
-        responseText = `### Standard Payment Terms & Financial Policy\n\n- **Payment Term**: **Net 30 Days** from receipt of a valid tax invoice.\n- **Invoicing Milestone**: Monthly in arrears or upon signed Milestone Acceptance Certificates.\n- **Taxes & Withholdings**: Invoices must display applicable GST/VAT registration numbers and line-item statutory TDS deductions.\n- **Dispute Tolling**: Disputed amounts are held in escrow without triggering statutory default interest while resolution is underway.`;
-        citations = [
-          'Impacteers Financial Operations & Treasury Policy – Section 3',
-          'Stripe Merchant Payment Processing Agreement (CNT-2026-0003)'
-        ];
-      }
-
-      // 8. General / Fallback Corporate Legal Advisory
-      else {
-        responseText = `### Legal Knowledge Summary\n\nRegarding your inquiry on: **${question.trim()}**\n\n#### Key Corporate & Contracting Principles:\n1. **Contract Review Threshold**: Agreements exceeding **$100,000** or involving third-party IP / cloud hosting require formal review by Legal Manager (**Monisha**).\n2. **Standard Notice Periods**: 30-day notice for contract termination; 21-day notice for General Meetings under AOA; 7-day notice for Board Meetings.\n3. **Payment & Liability**: Standard Net 30 payment terms and 1x-2x annual contract value liability limitations.\n4. **Data Privacy**: All vendor agreements handling employee or user data must execute the corporate Data Processing Addendum (DPA).\n\n*Tip: Select a specific document from the dropdown above to inspect exact clause language.*`;
-        citations = ['Impacteers In-House Legal Operations Manual', 'Impacteers Corporate Governance Policy'];
+        clauses.push({
+          type: p.type,
+          icon: p.icon,
+          description: p.desc,
+          status: 'Missing / Review Needed'
+        });
       }
     }
 
-    // Friendly footnote
-    responseText += `\n\n---\n> 💡 *Note: Answered by Impacteers In-House Legal Intelligence Engine. Run \`ollama run llama3.2\` to connect to real local LLM.*`;
-
-    return {
-      id: `ai-sim-${Date.now()}`,
-      role: 'assistant',
-      text: responseText,
-      citations: citations,
-      model: 'Impacteers Legal Knowledge Engine',
-      provider: 'simulated',
-      timestamp: new Date().toISOString(),
-      disclaimer: this.getSafetyDisclaimer(),
-      isLiveOllama: false
-    };
+    return clauses;
   }
 }
+
 const legalAssistantService = new LegalAssistantService();
 
+// === File: src\js\components\Modal.js ===
+/**
+ * Impacteers Legal docs
+ * Modal Dialog Controller
+ */
 
-// === File: src\js\components\RequestModals.js ===
+class Modal {
+  static open({ title, contentHtml, footerHtml = '', size = 'md', onClose = null }) {
+    this.close(); // Close any currently open modal
+
+    const backdrop = document.createElement('div');
+    backdrop.className = 'modal-backdrop';
+    backdrop.id = 'active-modal-backdrop';
+
+    const maxWidthMap = {
+      sm: '460px',
+      md: '600px',
+      lg: '800px',
+      xl: '1000px'
+    };
+
+    backdrop.innerHTML = `
+      <div class="modal-content" style="max-width: ${maxWidthMap[size] || '600px'};" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <h3 style="font-size: 16px; font-weight: 700; color: #0F172A; letter-spacing: -0.01em; margin: 0;">${title}</h3>
+          <button id="modal-close-btn" style="
+            background: none;
+            border: 1px solid #E2E8F0;
+            border-radius: 6px;
+            color: #64748B;
+            font-size: 14px;
+            cursor: pointer;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+          " onmouseover="this.style.background='#F1F5F9'; this.style.color='#0F172A';" onmouseout="this.style.background='none'; this.style.color='#64748B';">âœ•</button>
+        </div>
+        <div class="modal-body" id="modal-body-container">
+          ${contentHtml}
+        </div>
+        ${footerHtml ? `<div class="modal-footer">${footerHtml}</div>` : ''}
+      </div>
+    `;
+
+    document.body.appendChild(backdrop);
+
+    // Lock body scroll
+    document.body.style.overflow = 'hidden';
+
+    // Trigger animation
+    requestAnimationFrame(() => backdrop.classList.add('open'));
+
+    const handleClose = () => {
+      document.body.style.overflow = '';
+      backdrop.classList.remove('open');
+      setTimeout(() => {
+        if (backdrop.parentNode) backdrop.remove();
+        if (onClose) onClose();
+      }, 150);
+    };
+
+    backdrop.querySelector('#modal-close-btn').addEventListener('click', handleClose);
+    backdrop.addEventListener('click', (e) => {
+      if (e.target === backdrop) handleClose();
+    });
+
+    const escListener = (e) => {
+      if (e.key === 'Escape') {
+        handleClose();
+        document.removeEventListener('keydown', escListener);
+      }
+    };
+    document.addEventListener('keydown', escListener);
+
+    return {
+      close: handleClose,
+      container: backdrop.querySelector('#modal-body-container')
+    };
+  }
+
+  static close() {
+    document.body.style.overflow = '';
+    const existing = document.getElementById('active-modal-backdrop');
+    if (existing) {
+      existing.classList.remove('open');
+      setTimeout(() => {
+        if (existing.parentNode) existing.remove();
+      }, 150);
+    }
+  }
+}
+
+// Global modal close helper
+window.activeModalClose = () => Modal.close();
+
+// === File: src\js\components\Toast.js ===
 /**
  * Enterprise In-House Legal Management System
- * Legal Request Lifecycle Modals (Create, Accept, Reject, Reschedule, Execute)
+ * Toast Notification Utility
  */
-function openCreateRequestModal() {
-  const user = authService.getCurrentUser();
-  const availableDepts = authService.isLegalTeam()
-    ? db.data.departments
-    : db.data.departments.filter(d => d.id === user.departmentId || !user.departmentId);
 
-  const defaultDeptId = user.departmentId || db.data.departments[0].id;
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 5);
-  const defaultDueDate = tomorrow.toISOString().split('T')[0];
-
-  const html = `
-    <form id="create-request-form">
-      <div class="modal-form-grid">
-        <div class="form-group">
-          <label class="form-label">Request Type <span class="required">*</span></label>
-          <select id="req-type" class="form-select" required>
-            ${DEFAULT_REQUEST_TYPES.map(t => `<option value="${t}">${t}</option>`).join('')}
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Department <span class="required">*</span></label>
-          <select id="req-department" class="form-select" required>
-            ${availableDepts.map(d => `<option value="${d.id}" ${d.id === defaultDeptId ? 'selected' : ''}>${d.name}</option>`).join('')}
-          </select>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Request Title <span class="required">*</span></label>
-        <input type="text" id="req-title" class="form-input" placeholder="e.g. Master Services Agreement Legal Review - Vendor X" required />
-      </div>
-
-      <div class="modal-form-grid">
-        <div class="form-group">
-          <label class="form-label">Priority <span class="required">*</span></label>
-          <select id="req-priority" class="form-select" required>
-            <option value="LOW">Low</option>
-            <option value="MEDIUM" selected>Medium</option>
-            <option value="HIGH">High</option>
-            <option value="URGENT">Urgent</option>
-            <option value="CRITICAL">Critical</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Required By Date <span class="required">*</span></label>
-          <input type="date" id="req-due-date" class="form-input" value="${defaultDueDate}" required />
-          <div class="form-hint">Original requested target date for Legal Team review</div>
-        </div>
-      </div>
-
-      <div class="modal-form-grid">
-        <div class="form-group">
-          <label class="form-label">Counterparty / Vendor Name</label>
-          <input type="text" id="req-counterparty" class="form-input" placeholder="e.g. Acme Corp, TalentBridge Inc." />
-        </div>
-        <div class="form-group">
-          <label class="form-label">Contract Value ($ USD)</label>
-          <input type="number" id="req-value" class="form-input" placeholder="0" min="0" />
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Description & Background Context <span class="required">*</span></label>
-        <textarea id="req-desc" class="form-textarea" placeholder="Detail commercial objectives, non-standard clauses, timeline constraints, or specific areas requiring legal attention..." required></textarea>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Initial Document Attachment</label>
-        <div style="
-          border: 2px dashed #CBD5E1;
-          border-radius: 8px;
-          padding: 16px;
-          text-align: center;
-          background: #F8FAFC;
-          cursor: pointer;
-        " onclick="document.getElementById('req-file-input').click()">
-          <span style="font-size: 24px;">📄</span>
-          <div style="font-size: 13px; font-weight: 600; color: #1E293B; margin-top: 4px;">Click to select document or draft file</div>
-          <div style="font-size: 11px; color: #64748B;">Supported formats: PDF, DOCX, DOC, XLSX, TXT (Up to 25MB)</div>
-          <input type="file" id="req-file-input" style="display: none;" onchange="
-            const nameSpan = document.getElementById('selected-file-name');
-            if (this.files[0]) {
-              nameSpan.innerText = 'Selected: ' + this.files[0].name + ' (' + Math.round(this.files[0].size / 1024) + ' KB)';
-              nameSpan.style.display = 'block';
-            }
-          " />
-          <div id="selected-file-name" style="display: none; font-size: 12px; color: #2563EB; font-weight: 600; margin-top: 8px;"></div>
-        </div>
-      </div>
-    </form>
-  `;
-
-  const footer = `
-    <button class="btn btn-secondary" onclick="window.activeModalClose()">Cancel</button>
-    <button class="btn btn-primary" id="submit-create-req-btn">Submit Legal Request</button>
-  `;
-
-  const modal = Modal.open({
-    title: '➕ Submit New Legal Request',
-    contentHtml: html,
-    footerHtml: footer,
-    size: 'lg'
-  });
-
-  window.activeModalClose = modal.close;
-
-  document.getElementById('submit-create-req-btn').addEventListener('click', (e) => {
-    e.preventDefault();
-    const form = document.getElementById('create-request-form');
-    if (!form.checkValidity()) {
-      form.reportValidity();
-      return;
+class Toast {
+  static show(message, type = 'info', duration = 3500) {
+    let container = document.getElementById('toast-container');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'toast-container';
+      document.body.appendChild(container);
     }
 
-    const title = document.getElementById('req-title').value;
-    const requestType = document.getElementById('req-type').value;
-    const departmentId = document.getElementById('req-department').value;
-    const priority = document.getElementById('req-priority').value;
-    const requiredByDate = document.getElementById('req-due-date').value;
-    const counterparty = document.getElementById('req-counterparty').value;
-    const contractValue = document.getElementById('req-value').value;
-    const description = document.getElementById('req-desc').value;
-    const fileInput = document.getElementById('req-file-input');
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    
+    let icon = 'â„¹ï¸';
+    if (type === 'success') icon = 'âœ“';
+    if (type === 'error') icon = 'âš ï¸';
 
-    let initialDoc = null;
-    if (fileInput.files && fileInput.files[0]) {
-      const file = fileInput.files[0];
-      initialDoc = {
-        name: file.name,
-        fileName: file.name,
-        fileType: file.type || 'application/pdf',
-        fileSize: file.size
-      };
-    }
+    toast.innerHTML = `
+      <div style="font-weight: 700; font-size: 16px;">${icon}</div>
+      <div style="flex: 1; line-height: 1.4;">${message}</div>
+      <button style="background: none; border: none; color: #94A3B8; cursor: pointer; font-size: 14px;" onclick="this.parentElement.remove()">âœ•</button>
+    `;
 
-    try {
-      const created = requestService.createRequest({
-        title,
-        requestType,
-        departmentId,
-        priority,
-        requiredByDate,
-        description,
-        counterparty,
-        contractValue,
-        initialDocument: initialDoc
-      });
+    container.appendChild(toast);
 
-      modal.close();
-      Toast.success(`Request ${created.requestId} submitted successfully!`);
-      window.location.hash = `#/requests/${created.id}`;
-    } catch (err) {
-      Toast.error(err.message);
-    }
-  });
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateY(10px)';
+      toast.style.transition = 'all 0.25s ease';
+      setTimeout(() => toast.remove(), 250);
+    }, duration);
+  }
+
+  static success(msg) { this.show(msg, 'success'); }
+  static error(msg) { this.show(msg, 'error', 4500); }
+  static info(msg) { this.show(msg, 'info'); }
 }
-function openAcceptModal(requestId) {
-  const req = requestService.getRequestById(requestId);
-  if (!req) return;
-
-  const legalUsers = db.data.users.filter(
-    u => u.role === 'SUPER_ADMIN' || u.role === 'LEGAL_ADMIN' || u.role === 'LEGAL_MEMBER'
-  );
-
-  const html = `
-    <div>
-      <div style="font-size: 13.5px; color: #475569; margin-bottom: 16px;">
-        Accept request <strong>${req.requestId}</strong> ("${req.title}") into the active Legal review pipeline.
-      </div>
-      <div class="form-group">
-        <label class="form-label">Assign Legal Counsel <span class="required">*</span></label>
-        <select id="accept-counsel" class="form-select">
-          ${legalUsers.map(u => `<option value="${u.id}" ${u.id === authService.getCurrentUser().id ? 'selected' : ''}>${u.name} (${u.title})</option>`).join('')}
-        </select>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Expected Completion Date <span class="required">*</span></label>
-        <input type="date" id="accept-due-date" class="form-input" value="${req.currentDueDate}" required />
-      </div>
-      <div class="form-group">
-        <label class="form-label">Initial Legal Remark / Acceptance Note</label>
-        <textarea id="accept-comment" class="form-textarea" placeholder="Provide initial instructions, turnaround estimate, or scope confirmation..."></textarea>
-      </div>
-    </div>
-  `;
-
-  const footer = `
-    <button class="btn btn-secondary" onclick="window.activeModalClose()">Cancel</button>
-    <button class="btn btn-primary" id="confirm-accept-btn">Confirm Acceptance</button>
-  `;
-
-  const modal = Modal.open({
-    title: '✓ Accept Legal Request',
-    contentHtml: html,
-    footerHtml: footer,
-    size: 'md'
-  });
-
-  window.activeModalClose = modal.close;
-
-  document.getElementById('confirm-accept-btn').addEventListener('click', () => {
-    const assignedId = document.getElementById('accept-counsel').value;
-    const dueDate = document.getElementById('accept-due-date').value;
-    const comment = document.getElementById('accept-comment').value;
-
-    try {
-      requestService.acceptRequest(requestId, {
-        expectedDueDate: dueDate,
-        assignedLegalId: assignedId,
-        comment
-      });
-      modal.close();
-      Toast.success(`Request ${req.requestId} accepted!`);
-      window.dispatchEvent(new CustomEvent('request:reloaded'));
-    } catch (err) {
-      Toast.error(err.message);
-    }
-  });
-}
-function openRejectModal(requestId) {
-  const req = requestService.getRequestById(requestId);
-  if (!req) return;
-
-  const html = `
-    <div>
-      <div style="font-size: 13.5px; color: #DC2626; margin-bottom: 14px; font-weight: 500;">
-        ⚠️ Rejecting this request will halt the review process and notify the business requestor (${req.requestorName}).
-      </div>
-      <div class="form-group">
-        <label class="form-label">Mandatory Rejection Reason <span class="required">*</span></label>
-        <textarea id="reject-reason" class="form-textarea" placeholder="Explain why this request is being rejected (e.g. Insufficient documentation, wrong department, outside corporate policy scope)..." required></textarea>
-      </div>
-    </div>
-  `;
-
-  const footer = `
-    <button class="btn btn-secondary" onclick="window.activeModalClose()">Cancel</button>
-    <button class="btn btn-danger" id="confirm-reject-btn">Reject Request</button>
-  `;
-
-  const modal = Modal.open({
-    title: '✕ Reject Legal Request',
-    contentHtml: html,
-    footerHtml: footer,
-    size: 'md'
-  });
-
-  window.activeModalClose = modal.close;
-
-  document.getElementById('confirm-reject-btn').addEventListener('click', () => {
-    const reason = document.getElementById('reject-reason').value;
-    if (!reason || !reason.trim()) {
-      Toast.error('Please provide a mandatory rejection reason.');
-      return;
-    }
-
-    try {
-      requestService.rejectRequest(requestId, { rejectionReason: reason });
-      modal.close();
-      Toast.info(`Request ${req.requestId} rejected.`);
-      window.dispatchEvent(new CustomEvent('request:reloaded'));
-    } catch (err) {
-      Toast.error(err.message);
-    }
-  });
-}
-function openRescheduleModal(requestId) {
-  const req = requestService.getRequestById(requestId);
-  if (!req) return;
-
-  const html = `
-    <div>
-      <div style="background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 8px; padding: 12px; margin-bottom: 16px; font-size: 12.5px; color: #1E40AF;">
-        <strong>Original Requested Date:</strong> ${req.originalRequestedDate}<br/>
-        <strong>Current Target Date:</strong> ${req.currentDueDate}
-        <div style="font-size: 11px; margin-top: 4px; color: #60A5FA;">Note: The system preserves original requested timelines and all reschedule history logs.</div>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">New Expected Completion Date <span class="required">*</span></label>
-        <input type="date" id="resched-due-date" class="form-input" value="${req.currentDueDate}" required />
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Mandatory Reschedule Reason <span class="required">*</span></label>
-        <textarea id="resched-reason" class="form-textarea" placeholder="e.g. Additional regulatory review required for cross-border data transfer addenda..." required></textarea>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Additional Instructions / Remarks</label>
-        <input type="text" id="resched-comment" class="form-input" placeholder="Optional notes for the business team..." />
-      </div>
-    </div>
-  `;
-
-  const footer = `
-    <button class="btn btn-secondary" onclick="window.activeModalClose()">Cancel</button>
-    <button class="btn btn-primary" id="confirm-resched-btn">Confirm Reschedule</button>
-  `;
-
-  const modal = Modal.open({
-    title: '⏱️ Reschedule Request Timeline',
-    contentHtml: html,
-    footerHtml: footer,
-    size: 'md'
-  });
-
-  window.activeModalClose = modal.close;
-
-  document.getElementById('confirm-resched-btn').addEventListener('click', () => {
-    const newDate = document.getElementById('resched-due-date').value;
-    const reason = document.getElementById('resched-reason').value;
-    const comment = document.getElementById('resched-comment').value;
-
-    if (!newDate || !reason.trim()) {
-      Toast.error('Please enter both a new date and a mandatory reason.');
-      return;
-    }
-
-    try {
-      requestService.rescheduleRequest(requestId, {
-        newDueDate: newDate,
-        reason,
-        comment
-      });
-      modal.close();
-      Toast.info(`Timeline rescheduled to ${newDate}.`);
-      window.dispatchEvent(new CustomEvent('request:reloaded'));
-    } catch (err) {
-      Toast.error(err.message);
-    }
-  });
-}
-function openExecuteContractModal(requestId) {
-  const req = requestService.getRequestById(requestId);
-  if (!req) return;
-
-  const today = new Date().toISOString().split('T')[0];
-  const nextYear = new Date();
-  nextYear.setFullYear(nextYear.getFullYear() + 1);
-  const defaultExpiry = nextYear.toISOString().split('T')[0];
-
-  const html = `
-    <div>
-      <div style="background: #ECFDF5; border: 1px solid #A7F3D0; border-radius: 8px; padding: 12px; margin-bottom: 16px; font-size: 12.5px; color: #065F46;">
-        ✍️ <strong>Final Executed Contract Upload</strong><br/>
-        Uploading the executed agreement will create an Active Contract record in the centralized legal repository and initiate automated expiry alert tracking.
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Contract / Agreement Title <span class="required">*</span></label>
-        <input type="text" id="exec-name" class="form-input" value="${req.title}" required />
-      </div>
-
-      <div class="modal-form-grid">
-        <div class="form-group">
-          <label class="form-label">Counterparty <span class="required">*</span></label>
-          <input type="text" id="exec-counterparty" class="form-input" value="${req.counterparty || ''}" required />
-        </div>
-        <div class="form-group">
-          <label class="form-label">Contract Value ($ USD) <span class="required">*</span></label>
-          <input type="number" id="exec-value" class="form-input" value="${req.contractValue || 0}" required />
-        </div>
-      </div>
-
-      <div class="modal-form-grid">
-        <div class="form-group">
-          <label class="form-label">Effective Date <span class="required">*</span></label>
-          <input type="date" id="exec-eff-date" class="form-input" value="${today}" required />
-        </div>
-        <div class="form-group">
-          <label class="form-label">Expiry Date <span class="required">*</span></label>
-          <input type="date" id="exec-exp-date" class="form-input" value="${defaultExpiry}" required />
-        </div>
-      </div>
-
-      <div class="modal-form-grid">
-        <div class="form-group">
-          <label class="form-label">Payment Terms</label>
-          <input type="text" id="exec-payment" class="form-input" value="Net 30 Days" />
-        </div>
-        <div class="form-group">
-          <label class="form-label">Notice Period (Days)</label>
-          <input type="number" id="exec-notice" class="form-input" value="30" />
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Termination Clause Summary</label>
-        <textarea id="exec-termination" class="form-textarea" placeholder="e.g. 30 days prior written notice for convenience; immediate termination upon material breach..."></textarea>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Executed / Signed Document File <span class="required">*</span></label>
-        <input type="file" id="exec-file-input" class="form-input" required />
-      </div>
-    </div>
-  `;
-
-  const footer = `
-    <button class="btn btn-secondary" onclick="window.activeModalClose()">Cancel</button>
-    <button class="btn btn-primary" id="confirm-execute-btn">Execute & Store Contract</button>
-  `;
-
-  const modal = Modal.open({
-    title: '📜 Mark Executed & Register Contract',
-    contentHtml: html,
-    footerHtml: footer,
-    size: 'lg'
-  });
-
-  window.activeModalClose = modal.close;
-
-  document.getElementById('confirm-execute-btn').addEventListener('click', () => {
-    const name = document.getElementById('exec-name').value;
-    const counterparty = document.getElementById('exec-counterparty').value;
-    const contractValue = document.getElementById('exec-value').value;
-    const effectiveDate = document.getElementById('exec-eff-date').value;
-    const expiryDate = document.getElementById('exec-exp-date').value;
-    const paymentTerms = document.getElementById('exec-payment').value;
-    const noticePeriodDays = document.getElementById('exec-notice').value;
-    const terminationClause = document.getElementById('exec-termination').value;
-    const fileInput = document.getElementById('exec-file-input');
-
-    if (!name || !counterparty || !effectiveDate || !expiryDate) {
-      Toast.error('Please fill in all mandatory fields.');
-      return;
-    }
-
-    try {
-      // 1. Create document record
-      const doc = documentService.uploadDocument({
-        title: `${name} (Executed Final)`,
-        documentType: req.requestType,
-        category: 'Contracts',
-        departmentId: req.departmentId,
-        linkedRequestId: req.id,
-        confidentialityLevel: 'CONFIDENTIAL',
-        counterparty,
-        effectiveDate,
-        expiryDate,
-        fileName: fileInput.files[0] ? fileInput.files[0].name : 'Executed_Agreement_Final.pdf',
-        changeDescription: 'Final countersigned executed contract file.'
-      });
-
-      doc.isExecuted = true;
-      doc.status = 'EXECUTED';
-
-      // 2. Create CLM Contract record
-      const contract = contractService.createContract({
-        name,
-        contractType: req.requestType,
-        departmentId: req.departmentId,
-        counterparty,
-        effectiveDate,
-        expiryDate,
-        contractValue,
-        paymentTerms,
-        noticePeriodDays,
-        terminationClause,
-        linkedRequestId: req.id,
-        executedDocumentId: doc.id
-      });
-
-      modal.close();
-      Toast.success(`Contract ${contract.contractId} created and marked EXECUTED!`);
-      window.location.hash = `#/contracts`;
-    } catch (err) {
-      Toast.error(err.message);
-    }
-  });
-}
-
-
-// === File: src\js\components\GlobalSearchModal.js ===
-/**
- * Enterprise In-House Legal Management System
- * Global Search Modal (Ctrl+K) with strict RBAC filtering
- */
-function openGlobalSearchModal() {
-  const html = `
-    <div style="padding: 4px 0;">
-      <div style="position: relative; margin-bottom: 16px;">
-        <input type="text" id="global-search-input" class="form-input" 
-          placeholder="Type to search requests, documents, contracts, counterparties..." 
-          style="font-size: 15px; padding: 12px 16px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.04);"
-          autofocus />
-      </div>
-
-      <div id="search-results-container" style="max-height: 380px; overflow-y: auto;">
-        <div style="padding: 24px; text-align: center; color: #94A3B8; font-size: 13px;">
-          Type a search term to find authorized records...
-        </div>
-      </div>
-    </div>
-  `;
-
-  const modal = Modal.open({
-    title: '🔍 Global Enterprise Search (RBAC-Filtered)',
-    contentHtml: html,
-    size: 'lg'
-  });
-
-  window.activeModalClose = modal.close;
-
-  const searchInput = document.getElementById('global-search-input');
-  const resultsContainer = document.getElementById('search-results-container');
-
-  const executeSearch = () => {
-    const query = searchInput.value.trim();
-    if (!query) {
-      resultsContainer.innerHTML = `<div style="padding: 24px; text-align: center; color: #94A3B8; font-size: 13px;">Type a search term to find authorized records...</div>`;
-      return;
-    }
-
-    const requests = requestService.getRequests({ search: query }).slice(0, 4);
-    const documents = documentService.getDocuments({ search: query }).slice(0, 4);
-    const contracts = contractService.getContracts({ search: query }).slice(0, 4);
-
-    if (requests.length === 0 && documents.length === 0 && contracts.length === 0) {
-      resultsContainer.innerHTML = `
-        <div style="padding: 36px; text-align: center; color: #64748B;">
-          <div style="font-size: 24px; margin-bottom: 6px;">🔍</div>
-          <div style="font-size: 14px; font-weight: 600;">No matching authorized records found</div>
-          <div style="font-size: 12px; color: #94A3B8; margin-top: 4px;">Results are strictly filtered according to your role permissions.</div>
-        </div>
-      `;
-      return;
-    }
-
-    let out = '';
-
-    if (requests.length > 0) {
-      out += `<div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #64748B; padding: 6px 10px; background: #F1F5F9; border-radius: 4px; margin-bottom: 6px;">Legal Requests (${requests.length})</div>`;
-      requests.forEach(r => {
-        out += `
-          <div class="search-result-item" style="
-            padding: 10px 12px;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            cursor: pointer;
-            border-bottom: 1px solid #F1F5F9;
-          " onmouseover="this.style.background='#F8FAFC'" onmouseout="this.style.background='transparent'"
-             onclick="window.location.hash='#/requests/${r.id}'; window.activeModalClose();">
-            <div>
-              <span style="font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: #2563EB;">${r.requestId}</span>
-              <span style="font-size: 13px; font-weight: 600; color: #0F172A; margin-left: 8px;">${r.title}</span>
-              <div style="font-size: 11.5px; color: #64748B; margin-top: 2px;">${r.departmentName} • ${r.requestType} • Due ${r.currentDueDate}</div>
-            </div>
-            <span class="badge badge-${r.priority === 'CRITICAL' || r.priority === 'URGENT' ? 'rose' : 'blue'}">${r.priority}</span>
-          </div>
-        `;
-      });
-    }
-
-    if (documents.length > 0) {
-      out += `<div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #64748B; padding: 6px 10px; background: #F1F5F9; border-radius: 4px; margin: 12px 0 6px 0;">Documents (${documents.length})</div>`;
-      documents.forEach(d => {
-        out += `
-          <div class="search-result-item" style="
-            padding: 10px 12px;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            cursor: pointer;
-            border-bottom: 1px solid #F1F5F9;
-          " onmouseover="this.style.background='#F8FAFC'" onmouseout="this.style.background='transparent'"
-             onclick="window.location.hash='#/documents'; window.activeModalClose();">
-            <div>
-              <span style="font-size: 13px; font-weight: 600; color: #0F172A;">📄 ${d.title}</span>
-              <div style="font-size: 11.5px; color: #64748B; margin-top: 2px;">${d.departmentName} • Version ${d.currentVersion} • ${d.confidentialityLevel}</div>
-            </div>
-            <span class="badge badge-slate">${d.status}</span>
-          </div>
-        `;
-      });
-    }
-
-    if (contracts.length > 0) {
-      out += `<div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #64748B; padding: 6px 10px; background: #F1F5F9; border-radius: 4px; margin: 12px 0 6px 0;">Contracts (${contracts.length})</div>`;
-      contracts.forEach(c => {
-        out += `
-          <div class="search-result-item" style="
-            padding: 10px 12px;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            cursor: pointer;
-            border-bottom: 1px solid #F1F5F9;
-          " onmouseover="this.style.background='#F8FAFC'" onmouseout="this.style.background='transparent'"
-             onclick="window.location.hash='#/contracts'; window.activeModalClose();">
-            <div>
-              <span style="font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: #047857;">${c.contractId}</span>
-              <span style="font-size: 13px; font-weight: 600; color: #0F172A; margin-left: 8px;">${c.name}</span>
-              <div style="font-size: 11.5px; color: #64748B; margin-top: 2px;">${c.counterparty} • $${c.contractValue.toLocaleString()} • Expires ${c.expiryDate}</div>
-            </div>
-            <span class="badge badge-${c.status === 'EXPIRING_SOON' ? 'amber' : 'green'}">${c.status}</span>
-          </div>
-        `;
-      });
-    }
-
-    resultsContainer.innerHTML = out;
-  };
-
-  searchInput.addEventListener('input', executeSearch);
-  setTimeout(() => searchInput.focus(), 100);
-}
-
 
 // === File: src\js\components\Sidebar.js ===
 /**
  * Impacteers Legal docs
  * Minimal Dynamic Role-Based Sidebar
  */
+
+
 function renderSidebar(activeRoute = 'dashboard', isCollapsed = false) {
   const user = authService.getCurrentUser();
   if (!user) return '';
@@ -3990,27 +2978,27 @@ function renderSidebar(activeRoute = 'dashboard', isCollapsed = false) {
   if (isLegal) {
     // Monisha - Legal Manager Clean Sidebar
     navItems = [
-      { route: 'dashboard', label: 'Dashboard', icon: '📊' },
-      { route: 'requests', label: 'Requests Queue', icon: '⚖️' },
-      { route: 'documents', label: 'Documents Vault', icon: '📁' },
-      { route: 'departments', label: 'Document Database', icon: '🗄️' },
-      { route: 'calendar', label: 'Calendar', icon: '📅' }
+      { route: 'dashboard', label: 'Dashboard', icon: 'ðŸ“Š' },
+      { route: 'requests', label: 'Requests Queue', icon: 'âš–ï¸' },
+      { route: 'documents', label: 'Documents Vault', icon: 'ðŸ“' },
+      { route: 'departments', label: 'Document Database', icon: 'ðŸ—„ï¸' },
+      { route: 'calendar', label: 'Calendar', icon: 'ðŸ“…' }
     ];
   } else if (isChairman) {
     // Chairman - Executive View-Only Sidebar (Removed Documents Vault and Calendar)
     navItems = [
-      { route: 'dashboard', label: 'Executive Dashboard', icon: '🏛️' },
-      { route: 'requests', label: 'All Requests', icon: '📋' },
-      { route: 'departments', label: 'Document Database', icon: '🗄️' }
+      { route: 'dashboard', label: 'Executive Dashboard', icon: 'ðŸ›ï¸' },
+      { route: 'requests', label: 'All Requests', icon: 'ðŸ“‹' },
+      { route: 'departments', label: 'Document Database', icon: 'ðŸ—„ï¸' }
     ];
   } else {
     // Business User (Edwin, Musthafa, Vinoth, Bala, etc.) - Ultra Minimal 4-item Sidebar
     const deptName = user.departmentName || 'Department';
     navItems = [
-      { route: 'dashboard', label: 'Dashboard', icon: '🏠' },
-      { route: 'my-requests', label: 'My Requests', icon: '📋' },
-      { route: 'department-docs', label: `${deptName} Documents`, icon: '📁' },
-      { route: 'create-request', label: 'Create Request', icon: '➕', highlight: true }
+      { route: 'dashboard', label: 'Dashboard', icon: 'ðŸ ' },
+      { route: 'my-requests', label: 'My Requests', icon: 'ðŸ“‹' },
+      { route: 'department-docs', label: `${deptName} Documents`, icon: 'ðŸ“' },
+      { route: 'create-request', label: 'Create Request', icon: 'âž•', highlight: true }
     ];
   }
 
@@ -4066,7 +3054,7 @@ function renderSidebar(activeRoute = 'dashboard', isCollapsed = false) {
           cursor: pointer;
           font-size: 11px;
         ">
-          ${isCollapsed ? '▶' : '◀'}
+          ${isCollapsed ? 'â–¶' : 'â—€'}
         </button>
       </div>
 
@@ -4139,12 +3127,13 @@ function renderSidebar(activeRoute = 'dashboard', isCollapsed = false) {
   `;
 }
 
-
 // === File: src\js\components\Topbar.js ===
 /**
  * Impacteers Legal docs
  * Clean, Elegant Topbar with Notification Bell & User Profile
  */
+
+
 function renderTopbar() {
   const user = authService.getCurrentUser();
   if (!user) return '';
@@ -4156,7 +3145,7 @@ function renderTopbar() {
       <!-- Left: Mobile Menu Toggle + Clean Active Workspace Context -->
       <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
         <button id="mobile-menu-btn" class="mobile-menu-toggle" title="Toggle Navigation Menu" aria-label="Toggle navigation">
-          ☰
+          â˜°
         </button>
         <span style="font-size: 13.5px; font-weight: 800; color: #0F172A; letter-spacing: -0.01em; white-space: nowrap;">
           Impacteers DMS
@@ -4186,7 +3175,7 @@ function renderTopbar() {
           font-size: 15px;
           transition: all 0.15s ease;
         " onmouseover="this.style.background='#F1F5F9'; this.style.borderColor='#CBD5E1';" onmouseout="this.style.background='#F8FAFC'; this.style.borderColor='#E2E8F0';">
-          <span>🔔</span>
+          <span>ðŸ””</span>
           ${
             unreadCount > 0
               ? `
@@ -4246,7 +3235,7 @@ function renderTopbar() {
                 ${user.name}
               </div>
             </div>
-            <span style="font-size: 9px; color: #94A3B8; margin-left: 2px;">▼</span>
+            <span style="font-size: 9px; color: #94A3B8; margin-left: 2px;">â–¼</span>
           </button>
 
           <!-- User Menu Dropdown -->
@@ -4270,16 +3259,16 @@ function renderTopbar() {
 
             <div style="padding: 4px 0;">
               <a href="javascript:void(0)" class="dropdown-link" onclick="window.showProfileModal(); document.getElementById('topbar-user-dropdown').style.display='none';">
-                👤 Profile Details
+                ðŸ‘¤ Profile Details
               </a>
               <a href="#/about" class="dropdown-link" onclick="document.getElementById('topbar-user-dropdown').style.display='none';">
-                ℹ️ About System
+                â„¹ï¸ About System
               </a>
             </div>
 
             <div style="padding: 4px 0; border-top: 1px solid #F1F5F9;">
               <button class="dropdown-link" style="width: 100%; text-align: left; background: none; border: none; color: #DC2626; font-weight: 600; cursor: pointer;" onclick="window.confirmLogout();">
-                🚪 Logout
+                ðŸšª Logout
               </button>
             </div>
           </div>
@@ -4290,378 +3279,14 @@ function renderTopbar() {
   `;
 }
 
-
-// === File: src\js\components\FloatingLegalAssistant.js ===
-/**
- * Impacteers DMS — Enterprise In-House Legal & Document Management System
- * Floating AI Legal Assistant Widget (Local LLM Ollama Integration)
- */
-
-let isAssistantOpen = false;
-let assistantMessages = [];
-
-function renderFloatingLegalAssistant() {
-  const user = authService.getCurrentUser();
-  if (!user) return '';
-
-  const docs = documentService.getDocuments();
-
-  return `
-    <!-- Floating Legal Assistant Trigger (FAB) -->
-    <div id="floating-assistant-container">
-      <button 
-        id="floating-assistant-fab" 
-        class="floating-fab" 
-        title="Open AI Legal Assistant (Ollama Local LLM)"
-        onclick="window.toggleFloatingAssistant()"
-      >
-        <span class="fab-icon">💬</span>
-        <span class="fab-badge" id="fab-ai-badge">AI</span>
-      </button>
-
-      <!-- Floating Chat Card -->
-      <div id="floating-assistant-window" class="floating-assistant-card ${isAssistantOpen ? 'open' : ''}">
-        
-        <!-- Header -->
-        <div class="floating-assistant-header">
-          <div style="display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0;">
-            <div style="width: 28px; height: 28px; border-radius: 8px; background: #EFF6FF; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0;">
-              🤖
-            </div>
-            <div style="flex: 1; min-width: 0;">
-              <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px;">
-                <div style="font-size: 13.5px; font-weight: 700; color: #0F172A; white-space: nowrap;">Legal AI Assistant</div>
-                <div id="ollama-status-pill" onclick="window.showOllamaSetupModal()" style="font-size: 10.5px; padding: 1.5px 7px; border-radius: 12px; background: #FEF3C7; color: #92400E; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0;" title="Click to view Ollama setup guide">
-                  <span style="width: 6px; height: 6px; border-radius: 50%; background: #F59E0B; display: inline-block;"></span>
-                  <span>Checking...</span>
-                </div>
-              </div>
-              <div style="display: flex; align-items: center; gap: 6px; margin-top: 2px;">
-                <select id="floating-model-select" onchange="window.handleModelChange(this.value)" style="font-size: 11px; padding: 1px 4px; border-radius: 4px; border: 1px solid #CBD5E1; background: #FFFFFF; color: #334155; max-width: 140px; cursor: pointer;">
-                  <option value="llama3.2">llama3.2 (Local)</option>
-                  <option value="mistral">mistral (Local)</option>
-                  <option value="qwen2.5">qwen2.5 (Local)</option>
-                  <option value="deepseek-r1">deepseek-r1 (Local)</option>
-                </select>
-                <button onclick="window.refreshOllamaStatus(true)" style="background: none; border: none; font-size: 11px; color: #64748B; cursor: pointer; padding: 0 2px;" title="Refresh local Ollama connection">🔄</button>
-              </div>
-            </div>
-          </div>
-          <button 
-            class="floating-close-btn" 
-            onclick="window.toggleFloatingAssistant(false)"
-            title="Minimize Assistant"
-            style="margin-left: 6px;"
-          >✕</button>
-        </div>
-
-        <!-- Document RAG Context Selector Bar -->
-        <div style="padding: 6px 12px; background: #F8FAFC; border-bottom: 1px solid #F1F5F9; display: flex; align-items: center; gap: 6px; font-size: 11.5px;">
-          <span style="color: #64748B; font-weight: 600; flex-shrink: 0;">Context:</span>
-          <select id="floating-doc-context-select" style="flex: 1; min-width: 0; font-size: 11.5px; padding: 3px 6px; border-radius: 6px; border: 1px solid #E2E8F0; background: #FFFFFF; color: #1E293B;">
-            <option value="">All Vault Documents & Contracts (Global RAG)</option>
-            ${docs.map(d => `<option value="${d.id}">📄 ${d.title} (${d.departmentName})</option>`).join('')}
-          </select>
-        </div>
-
-        <!-- Chat Message Area -->
-        <div class="floating-assistant-body" id="floating-chat-messages">
-          
-          <!-- Welcome Message -->
-          <div class="chat-msg ai-msg">
-            <div class="chat-msg-header">
-              <span>🤖 Legal Assistant</span>
-              <span>Just now</span>
-            </div>
-            <div class="chat-msg-content">
-              Hello <strong>${user.name}</strong>! I am your real-time corporate Legal AI powered by local Ollama LLM. I can audit contracts, check liability caps, verify notice periods, and draft legal summaries.
-            </div>
-          </div>
-
-          <!-- Suggested Prompt Chips -->
-          <div style="margin: 8px 0 12px 0;">
-            <div style="font-size: 11px; font-weight: 600; color: #64748B; margin-bottom: 6px;">Suggested Prompts:</div>
-            <div style="display: flex; flex-direction: column; gap: 6px;">
-              <button class="suggested-chip" onclick="window.sendFloatingPrompt('What are the standard termination notice periods in our vendor agreements?')">
-                📄 What are standard termination notice periods?
-              </button>
-              <button class="suggested-chip" onclick="window.sendFloatingPrompt('Summarize standard aggregate liability cap policy for Staffing contracts.')">
-                ⚖️ Liability cap policy for Staffing contracts
-              </button>
-              <button class="suggested-chip" onclick="window.sendFloatingPrompt('What non-disclosure and confidentiality obligations are required?')">
-                🔒 Confidentiality and NDA requirements
-              </button>
-              <button class="suggested-chip" onclick="window.sendFloatingPrompt('Show me all contracts expiring in the next 60 days.')">
-                ⏰ Contracts expiring in next 60 days
-              </button>
-            </div>
-          </div>
-
-        </div>
-
-        <!-- Input Footer -->
-        <div class="floating-assistant-footer">
-          <form id="floating-assistant-form" onsubmit="event.preventDefault(); window.submitFloatingAssistantMessage();">
-            <div style="display: flex; gap: 8px; align-items: center;">
-              <input 
-                type="text" 
-                id="floating-chat-input" 
-                class="form-input" 
-                placeholder="Ask legal question (e.g. liability caps)..." 
-                style="height: 38px; font-size: 12.5px; border-radius: 20px; padding: 0 14px;"
-                autocomplete="off"
-              />
-              <button 
-                type="submit" 
-                id="floating-chat-send-btn" 
-                class="btn btn-primary" 
-                style="width: 38px; height: 38px; border-radius: 50%; padding: 0; display: flex; align-items: center; justify-content: center; flex-shrink: 0;"
-                title="Send Message"
-              >
-                ➤
-              </button>
-            </div>
-          </form>
-        </div>
-
-      </div>
-    </div>
-  `;
-}
-
-function formatAiMarkdown(text) {
-  if (!text) return '';
-  return text
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    .replace(/^### (.*$)/gim, '<div style="font-size: 13.5px; font-weight: 800; color: #0F172A; margin: 8px 0 4px 0;">$1</div>')
-    .replace(/^## (.*$)/gim, '<div style="font-size: 14px; font-weight: 800; color: #0F172A; margin: 10px 0 6px 0;">$1</div>')
-    .replace(/^# (.*$)/gim, '<div style="font-size: 15px; font-weight: 800; color: #0F172A; margin: 12px 0 6px 0;">$1</div>')
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.*?)\*/g, '<em>$1</em>')
-    .replace(/`([^`]+)`/g, '<code style="background: #F1F5F9; padding: 1px 5px; border-radius: 4px; font-family: monospace; font-size: 11.5px; color: #1E293B;">$1</code>')
-    .replace(/^\s*-\s+(.*$)/gim, '<li style="margin-left: 16px; margin-bottom: 3px;">$1</li>')
-    .replace(/^\s*\*\s+(.*$)/gim, '<li style="margin-left: 16px; margin-bottom: 3px;">$1</li>')
-    .replace(/&gt; (.*$)/gim, '<blockquote style="border-left: 3px solid #3B82F6; background: #EFF6FF; padding: 6px 10px; border-radius: 4px; margin: 6px 0; font-size: 12px; color: #1E40AF;">$1</blockquote>')
-    .replace(/\n\n/g, '<div style="height: 8px;"></div>')
-    .replace(/\n/g, '<br/>');
-}
-
-window.toggleFloatingAssistant = function(forceState = null) {
-  const win = document.getElementById('floating-assistant-window');
-  if (!win) return;
-
-  if (forceState !== null) {
-    isAssistantOpen = forceState;
-  } else {
-    isAssistantOpen = !isAssistantOpen;
-  }
-
-  if (isAssistantOpen) {
-    win.classList.add('open');
-    const input = document.getElementById('floating-chat-input');
-    if (input) setTimeout(() => input.focus(), 150);
-    window.refreshOllamaStatus(false);
-  } else {
-    win.classList.remove('open');
-  }
-};
-
-window.refreshOllamaStatus = async function(showToast = false) {
-  const pill = document.getElementById('ollama-status-pill');
-  const select = document.getElementById('floating-model-select');
-  
-  if (pill) {
-    pill.innerHTML = `<span style="width: 6px; height: 6px; border-radius: 50%; background: #F59E0B; display: inline-block;"></span><span>Checking...</span>`;
-    pill.style.background = '#FEF3C7';
-    pill.style.color = '#92400E';
-  }
-
-  const res = await legalAssistantService.checkOllamaStatus();
-
-  if (pill) {
-    if (res.connected) {
-      pill.innerHTML = `<span style="width: 6px; height: 6px; border-radius: 50%; background: #10B981; display: inline-block;"></span><span>Ollama Live</span>`;
-      pill.style.background = '#ECFDF5';
-      pill.style.color = '#047857';
-      pill.title = `Connected to local Ollama (${res.activeModel})`;
-
-      if (select && res.models.length > 0) {
-        select.innerHTML = res.models.map(m => `<option value="${m}" ${m === res.activeModel ? 'selected' : ''}>${m}</option>`).join('');
-      }
-    } else {
-      pill.innerHTML = `<span style="width: 6px; height: 6px; border-radius: 50%; background: #EF4444; display: inline-block;"></span><span>Ollama Offline</span>`;
-      pill.style.background = '#FEE2E2';
-      pill.style.color = '#B91C1C';
-      pill.title = 'Ollama is not running. Click to view quick setup guide.';
-    }
-  }
-
-  if (showToast && window.Toast) {
-    if (res.connected) {
-      window.Toast.success(`Connected to local Ollama! Model: ${res.activeModel}`);
-    } else {
-      window.Toast.info('Ollama not detected. Click "Ollama Offline" for 1-click setup.');
-    }
-  }
-};
-
-window.handleModelChange = function(modelName) {
-  legalAssistantService.setModel(modelName);
-  if (window.Toast) {
-    window.Toast.info(`Switched active AI model to: ${modelName}`);
-  }
-};
-
-window.showOllamaSetupModal = function() {
-  Modal.open({
-    title: '🦙 Local Ollama AI Setup Guide',
-    size: 'md',
-    contentHtml: `
-      <div style="font-size: 13.5px; color: #334155; line-height: 1.6;">
-        <div style="background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 8px; padding: 12px; margin-bottom: 16px;">
-          <strong style="color: #1E40AF;">Connect 100% Private, Local AI to Impacteers DMS</strong><br/>
-          Run state-of-the-art open-source LLMs (Llama 3.2, Mistral, DeepSeek-R1, Qwen 2.5) on your local machine with zero data leaving your computer.
-        </div>
-
-        <div style="display: flex; flex-direction: column; gap: 14px;">
-          <div style="border-left: 3px solid #2563EB; padding-left: 12px;">
-            <div style="font-weight: 700; color: #0F172A;">Step 1: Install Ollama on Windows</div>
-            <div style="font-size: 12.5px; color: #64748B; margin-top: 2px;">Open PowerShell and run:</div>
-            <div style="background: #0F172A; color: #38BDF8; font-family: monospace; font-size: 12px; padding: 8px 12px; border-radius: 6px; margin-top: 4px; display: flex; justify-content: space-between; align-items: center;">
-              <code>winget install Ollama.Ollama</code>
-              <button onclick="navigator.clipboard.writeText('winget install Ollama.Ollama'); if(window.Toast) window.Toast.success('Copied to clipboard!');" style="background: rgba(255,255,255,0.15); border: none; color: #fff; padding: 2px 8px; border-radius: 4px; cursor: pointer; font-size: 11px;">Copy</button>
-            </div>
-            <div style="font-size: 11.5px; color: #64748B; margin-top: 4px;">Or download the installer from <a href="https://ollama.com/download/windows" target="_blank" style="color: #2563EB;">ollama.com/download</a>.</div>
-          </div>
-
-          <div style="border-left: 3px solid #10B981; padding-left: 12px;">
-            <div style="font-weight: 700; color: #0F172A;">Step 2: Pull and Run a Local Model</div>
-            <div style="font-size: 12.5px; color: #64748B; margin-top: 2px;">In PowerShell, start your favorite model:</div>
-            <div style="background: #0F172A; color: #34D399; font-family: monospace; font-size: 12px; padding: 8px 12px; border-radius: 6px; margin-top: 4px; display: flex; justify-content: space-between; align-items: center;">
-              <code>ollama run llama3.2</code>
-              <button onclick="navigator.clipboard.writeText('ollama run llama3.2'); if(window.Toast) window.Toast.success('Copied to clipboard!');" style="background: rgba(255,255,255,0.15); border: none; color: #fff; padding: 2px 8px; border-radius: 4px; cursor: pointer; font-size: 11px;">Copy</button>
-            </div>
-            <div style="font-size: 11.5px; color: #64748B; margin-top: 4px;">For other models: <code>ollama run mistral</code> or <code>ollama run deepseek-r1:8b</code>.</div>
-          </div>
-
-          <div style="border-left: 3px solid #7C3AED; padding-left: 12px;">
-            <div style="font-weight: 700; color: #0F172A;">Step 3: Test Connection</div>
-            <div style="font-size: 12.5px; color: #64748B; margin-top: 2px;">Click the button below once Ollama is running:</div>
-            <button class="btn btn-primary btn-sm" onclick="window.refreshOllamaStatus(true); Modal.close();" style="margin-top: 6px;">
-              🔄 Check Connection Now
-            </button>
-          </div>
-        </div>
-      </div>
-    `,
-    footerHtml: `
-      <button class="btn btn-secondary" onclick="Modal.close()">Close</button>
-    `
-  });
-};
-
-window.sendFloatingPrompt = function(promptText) {
-  const input = document.getElementById('floating-chat-input');
-  if (input) {
-    input.value = promptText;
-    window.submitFloatingAssistantMessage();
-  }
-};
-
-window.submitFloatingAssistantMessage = async function() {
-  const input = document.getElementById('floating-chat-input');
-  const container = document.getElementById('floating-chat-messages');
-  const docSelect = document.getElementById('floating-doc-context-select');
-  if (!input || !container) return;
-
-  const query = input.value.trim();
-  if (!query) return;
-
-  const selectedDocId = docSelect ? docSelect.value : null;
-
-  // Append user message
-  const userMsgEl = document.createElement('div');
-  userMsgEl.className = 'chat-msg user-msg';
-  userMsgEl.innerHTML = `
-    <div class="chat-msg-header">
-      <span>You</span>
-      <span>${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-    </div>
-    <div class="chat-msg-content">${query.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
-  `;
-  container.appendChild(userMsgEl);
-  input.value = '';
-  container.scrollTop = container.scrollHeight;
-
-  // Append typing indicator
-  const typingEl = document.createElement('div');
-  typingEl.className = 'chat-msg ai-msg';
-  typingEl.id = 'floating-typing-indicator';
-  typingEl.innerHTML = `
-    <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #64748B;">
-      <span>Thinking with ${legalAssistantService.isConnected ? 'local ' + legalAssistantService.model : 'Legal RAG engine'}</span>
-      <span class="typing-dots">...</span>
-    </div>
-  `;
-  container.appendChild(typingEl);
-  container.scrollTop = container.scrollHeight;
-
-  try {
-    const result = await legalAssistantService.askQuestion({ 
-      question: query,
-      documentId: selectedDocId,
-      conversationHistory: assistantMessages
-    });
-
-    typingEl.remove();
-
-    assistantMessages.push({ role: 'user', content: query });
-    assistantMessages.push({ role: 'assistant', content: result.text });
-
-    const aiMsgEl = document.createElement('div');
-    aiMsgEl.className = 'chat-msg ai-msg';
-    
-    const formattedHtml = formatAiMarkdown(result.text);
-
-    aiMsgEl.innerHTML = `
-      <div class="chat-msg-header">
-        <span style="display: flex; align-items: center; gap: 4px;">
-          <span>🤖 Legal Assistant</span>
-          <span style="font-size: 9.5px; background: ${result.isLiveOllama ? '#ECFDF5' : '#F1F5F9'}; color: ${result.isLiveOllama ? '#047857' : '#475569'}; padding: 1px 5px; border-radius: 4px; font-weight: 700;">
-            ${result.model || 'AI'}
-          </span>
-        </span>
-        <span>${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-      </div>
-      <div class="chat-msg-content" style="line-height: 1.5; font-size: 12.8px;">${formattedHtml}</div>
-      ${result.citations && result.citations.length > 0 ? `
-        <div style="font-size: 11px; color: #64748B; margin-top: 8px; border-top: 1px dashed #CBD5E1; padding-top: 6px;">
-          <strong>Sources Grounded:</strong> ${result.citations.join(', ')}
-        </div>
-      ` : ''}
-    `;
-    container.appendChild(aiMsgEl);
-  } catch (err) {
-    typingEl.remove();
-    const errorEl = document.createElement('div');
-    errorEl.className = 'chat-msg ai-msg';
-    errorEl.innerHTML = `
-      <div class="chat-msg-header" style="color: #BE123C;">Error</div>
-      <div class="chat-msg-content" style="color: #BE123C;">${err.message}</div>
-    `;
-    container.appendChild(errorEl);
-  }
-
-  container.scrollTop = container.scrollHeight;
-};
-
-
 // === File: src\js\components\LoginPage.js ===
 /**
- * Impacteers LMS — Legal Management System
+ * Impacteers LMS â€” Legal Management System
  * World-Class Centered Login & Stakeholder Selection Page
  * Designed with senior UI/UX aesthetics, glassmorphism, and responsive centering
  */
+
+
 function renderLoginPage() {
   return `
     <div style="
@@ -4742,7 +3367,7 @@ function renderLoginPage() {
                 value="monisha@impacteers.club" 
                 required 
               />
-              <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 14px; color: #94A3B8;">✉️</span>
+              <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 14px; color: #94A3B8;">âœ‰ï¸</span>
             </div>
           </div>
 
@@ -4760,12 +3385,12 @@ function renderLoginPage() {
                 type="password" 
                 id="login-password" 
                 class="form-input" 
-                placeholder="••••••••" 
+                placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" 
                 style="padding: 11px 14px 11px 36px; font-size: 13.5px; border-radius: 10px; border: 1.5px solid #CBD5E1;" 
                 value="password123" 
                 required 
               />
-              <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 14px; color: #94A3B8;">🔒</span>
+              <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 14px; color: #94A3B8;">ðŸ”’</span>
             </div>
           </div>
 
@@ -4791,7 +3416,7 @@ function renderLoginPage() {
         <!-- Quick Demo Stakeholder Selector -->
         <div style="margin-top: 26px; padding-top: 20px; border-top: 1px solid #E2E8F0;">
           <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: #64748B; text-align: center; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; gap: 6px;">
-            <span>⚡</span>
+            <span>âš¡</span>
             <span>1-Click Stakeholder Demo Logins</span>
           </div>
 
@@ -4801,7 +3426,7 @@ function renderLoginPage() {
               onclick="window.quickLogin('usr-monisha')"
               title="Legal Manager with Full Access"
             >
-              <span style="font-size: 16px;">👩‍⚖️</span>
+              <span style="font-size: 16px;">ðŸ‘©â€âš–ï¸</span>
               <div style="text-align: left; overflow: hidden;">
                 <div style="font-weight: 700; font-size: 12px; color: #0F172A;">Monisha</div>
                 <div style="font-size: 10px; color: #2563EB; font-weight: 600;">Legal Manager</div>
@@ -4813,7 +3438,7 @@ function renderLoginPage() {
               onclick="window.quickLogin('usr-chairman')"
               title="Executive View-Only Transparency"
             >
-              <span style="font-size: 16px;">🏛️</span>
+              <span style="font-size: 16px;">ðŸ›ï¸</span>
               <div style="text-align: left; overflow: hidden;">
                 <div style="font-weight: 700; font-size: 12px; color: #0F172A;">Chairman</div>
                 <div style="font-size: 10px; color: #64748B; font-weight: 600;">Executive View</div>
@@ -4825,7 +3450,7 @@ function renderLoginPage() {
               onclick="window.quickLogin('usr-bala')"
               title="Staffing Department"
             >
-              <span style="font-size: 16px;">👔</span>
+              <span style="font-size: 16px;">ðŸ‘”</span>
               <div style="text-align: left; overflow: hidden;">
                 <div style="font-weight: 700; font-size: 12px; color: #0F172A;">Bala</div>
                 <div style="font-size: 10px; color: #64748B; font-weight: 600;">Staffing Lead</div>
@@ -4837,7 +3462,7 @@ function renderLoginPage() {
               onclick="window.quickLogin('usr-edwin')"
               title="HR Department"
             >
-              <span style="font-size: 16px;">👥</span>
+              <span style="font-size: 16px;">ðŸ‘¥</span>
               <div style="text-align: left; overflow: hidden;">
                 <div style="font-weight: 700; font-size: 12px; color: #0F172A;">Edwin</div>
                 <div style="font-size: 10px; color: #64748B; font-weight: 600;">HR Head</div>
@@ -4849,7 +3474,7 @@ function renderLoginPage() {
               onclick="window.quickLogin('usr-musthafa')"
               title="IT Department"
             >
-              <span style="font-size: 16px;">💻</span>
+              <span style="font-size: 16px;">ðŸ’»</span>
               <div style="text-align: left; overflow: hidden;">
                 <div style="font-weight: 700; font-size: 12px; color: #0F172A;">Musthafa</div>
                 <div style="font-size: 10px; color: #64748B; font-weight: 600;">IT Lead</div>
@@ -4861,7 +3486,7 @@ function renderLoginPage() {
               onclick="window.quickLogin('usr-vinoth')"
               title="Engineering Department"
             >
-              <span style="font-size: 16px;">⚙️</span>
+              <span style="font-size: 16px;">âš™ï¸</span>
               <div style="text-align: left; overflow: hidden;">
                 <div style="font-weight: 700; font-size: 12px; color: #0F172A;">Vinoth</div>
                 <div style="font-size: 10px; color: #64748B; font-weight: 600;">Engineering</div>
@@ -4873,7 +3498,7 @@ function renderLoginPage() {
               onclick="window.quickLogin('usr-swami')"
               title="Product Department"
             >
-              <span style="font-size: 16px;">📱</span>
+              <span style="font-size: 16px;">ðŸ“±</span>
               <div style="text-align: left; overflow: hidden;">
                 <div style="font-weight: 700; font-size: 12px; color: #0F172A;">Swami</div>
                 <div style="font-size: 10px; color: #64748B; font-weight: 600;">Product Lead</div>
@@ -4885,7 +3510,7 @@ function renderLoginPage() {
               onclick="window.quickLogin('usr-muzammil')"
               title="Courses Department"
             >
-              <span style="font-size: 16px;">🎓</span>
+              <span style="font-size: 16px;">ðŸŽ“</span>
               <div style="text-align: left; overflow: hidden;">
                 <div style="font-weight: 700; font-size: 12px; color: #0F172A;">Muzammil</div>
                 <div style="font-size: 10px; color: #64748B; font-weight: 600;">Courses Lead</div>
@@ -4900,12 +3525,281 @@ function renderLoginPage() {
   `;
 }
 
+// === File: src\js\components\FloatingLegalAssistant.js ===
+/**
+ * Impacteers DMS â€” Enterprise In-House Legal & Document Management System
+ * Floating AI Legal Assistant Widget (Secure Gateway & AI Integration)
+ */
+
+
+let isAssistantOpen = false;
+let assistantMessages = [];
+
+function renderFloatingLegalAssistant() {
+  const user = authService.getCurrentUser();
+  if (!user) return '';
+
+  const docs = documentService.getDocuments();
+
+  return `
+    <!-- Floating Legal Assistant Trigger (FAB) -->
+    <div id="floating-assistant-container">
+      <button 
+        id="floating-assistant-fab" 
+        class="floating-fab" 
+        title="Open AI Legal Assistant"
+        onclick="window.toggleFloatingAssistant()"
+      >
+        <span class="fab-icon">ðŸ’¬</span>
+        <span class="fab-badge" id="fab-ai-badge">AI</span>
+      </button>
+
+      <!-- Floating Chat Card -->
+      <div id="floating-assistant-window" class="floating-assistant-card ${isAssistantOpen ? 'open' : ''}">
+        
+        <!-- Header -->
+        <div class="floating-assistant-header">
+          <div style="display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0;">
+            <div style="width: 28px; height: 28px; border-radius: 8px; background: #EFF6FF; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0;">
+              âš–ï¸
+            </div>
+            <div style="flex: 1; min-width: 0;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px;">
+                <div style="font-size: 13.5px; font-weight: 700; color: #0F172A; white-space: nowrap;">Legal AI Assistant</div>
+                <div id="floating-gateway-status-pill" onclick="window.showAIConfigModal()" style="font-size: 10.5px; padding: 1.5px 7px; border-radius: 12px; background: #ECFDF5; color: #047857; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0;" title="Click to view AI Gateway status">
+                  <span style="width: 6px; height: 6px; border-radius: 50%; background: #10B981; display: inline-block;"></span>
+                  <span>AI Active</span>
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 6px; margin-top: 2px;">
+                <span style="font-size: 11px; color: #64748B;">Jurisdiction:</span>
+                <select id="floating-jur-select" onchange="window.handleJurisdictionChange(this.value)" style="font-size: 11px; padding: 1px 4px; border-radius: 4px; border: 1px solid #CBD5E1; background: #FFFFFF; color: #334155; max-width: 130px; cursor: pointer;">
+                  <option value="India">ðŸ‡®ðŸ‡³ India</option>
+                  <option value="Tamil Nadu">ðŸ‡®ðŸ‡³ Tamil Nadu</option>
+                  <option value="Delaware / US">ðŸ‡ºðŸ‡¸ Delaware</option>
+                  <option value="United Kingdom">ðŸ‡¬ðŸ‡§ UK</option>
+                </select>
+                <button onclick="window.showAIConfigModal()" style="background: none; border: none; font-size: 11px; color: #64748B; cursor: pointer; padding: 0 2px;" title="AI Configuration">âš™ï¸</button>
+              </div>
+            </div>
+          </div>
+          <button 
+            class="floating-close-btn" 
+            onclick="window.toggleFloatingAssistant(false)"
+            title="Minimize Assistant"
+            style="margin-left: 6px;"
+          >âœ•</button>
+        </div>
+
+        <!-- Document RAG Context Selector Bar -->
+        <div style="padding: 6px 12px; background: #F8FAFC; border-bottom: 1px solid #F1F5F9; display: flex; align-items: center; gap: 6px; font-size: 11.5px;">
+          <span style="color: #64748B; font-weight: 600; flex-shrink: 0;">Context:</span>
+          <select id="floating-doc-context-select" style="flex: 1; min-width: 0; font-size: 11.5px; padding: 3px 6px; border-radius: 6px; border: 1px solid #E2E8F0; background: #FFFFFF; color: #1E293B;">
+            <option value="">All Vault Documents & Contracts (Global)</option>
+            ${docs.map(d => `<option value="${d.id}">ðŸ“„ ${d.title} (${d.departmentName})</option>`).join('')}
+          </select>
+        </div>
+
+        <!-- Chat Message Area -->
+        <div class="floating-assistant-body" id="floating-chat-messages">
+          
+          <!-- Welcome Message -->
+          <div class="chat-msg ai-msg">
+            <div class="chat-msg-header">
+              <span>âš–ï¸ AI Legal Counsel</span>
+              <span>Just now</span>
+            </div>
+            <div class="chat-msg-content">
+              Hello <strong>${user.name}</strong>! I am your enterprise AI Legal Assistant. You can ask me to audit clauses, check liability exposure, review notice terms, and analyze contracts.
+            </div>
+          </div>
+
+          <!-- Suggested Prompt Chips -->
+          <div style="margin: 8px 0 12px 0;">
+            <div style="font-size: 11px; font-weight: 600; color: #64748B; margin-bottom: 6px;">Suggested Inquiries:</div>
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              <button class="suggested-chip" onclick="window.sendFloatingPrompt('Review this contract for legal risks')">
+                ðŸ“‘ Review this contract for legal risks
+              </button>
+              <button class="suggested-chip" onclick="window.sendFloatingPrompt('Explain this clause in simple language')">
+                ðŸ” Explain clause in simple language
+              </button>
+              <button class="suggested-chip" onclick="window.sendFloatingPrompt('Identify missing clauses')">
+                âš ï¸ Identify missing clauses
+              </button>
+              <button class="suggested-chip" onclick="window.sendFloatingPrompt('Draft a stronger termination clause')">
+                âœï¸ Draft stronger termination clause
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Input Footer -->
+        <div class="floating-assistant-footer">
+          <form id="floating-assistant-form" onsubmit="event.preventDefault(); window.submitFloatingAssistantMessage();">
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <input 
+                type="text" 
+                id="floating-chat-input" 
+                class="form-input" 
+                placeholder="Ask legal question or request clause audit..." 
+                style="height: 38px; font-size: 12.5px; border-radius: 20px; padding: 0 14px;"
+                autocomplete="off"
+              />
+              <button 
+                type="submit" 
+                id="floating-chat-send-btn" 
+                class="btn btn-primary" 
+                style="width: 38px; height: 38px; border-radius: 50%; padding: 0; display: flex; align-items: center; justify-content: center; flex-shrink: 0;"
+                title="Send Message"
+              >
+                âž¤
+              </button>
+            </div>
+          </form>
+        </div>
+
+      </div>
+    </div>
+  `;
+}
+
+// Markdown formatting helper
+function formatAiMarkdown(text) {
+  if (!text) return '';
+  return text
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/^### (.*$)/gim, '<div style="font-size: 13.5px; font-weight: 800; color: #0F172A; margin: 8px 0 4px 0;">$1</div>')
+    .replace(/^## (.*$)/gim, '<div style="font-size: 14px; font-weight: 800; color: #0F172A; margin: 10px 0 6px 0;">$1</div>')
+    .replace(/^# (.*$)/gim, '<div style="font-size: 15px; font-weight: 800; color: #0F172A; margin: 12px 0 6px 0;">$1</div>')
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/`([^`]+)`/g, '<code style="background: #F1F5F9; padding: 1px 5px; border-radius: 4px; font-family: monospace; font-size: 11.5px; color: #1E293B;">$1</code>')
+    .replace(/^\s*-\s+(.*$)/gim, '<li style="margin-left: 16px; margin-bottom: 3px;">$1</li>')
+    .replace(/\n\n/g, '<div style="height: 8px;"></div>')
+    .replace(/\n/g, '<br/>');
+}
+
+window.toggleFloatingAssistant = function(forceState = null) {
+  const win = document.getElementById('floating-assistant-window');
+  if (!win) return;
+
+  if (forceState !== null) {
+    isAssistantOpen = forceState;
+  } else {
+    isAssistantOpen = !isAssistantOpen;
+  }
+
+  if (isAssistantOpen) {
+    win.classList.add('open');
+    const input = document.getElementById('floating-chat-input');
+    if (input) setTimeout(() => input.focus(), 150);
+  } else {
+    win.classList.remove('open');
+  }
+};
+
+window.sendFloatingPrompt = function(promptText) {
+  const input = document.getElementById('floating-chat-input');
+  if (input) {
+    input.value = promptText;
+    window.submitFloatingAssistantMessage();
+  }
+};
+
+window.submitFloatingAssistantMessage = async function() {
+  const input = document.getElementById('floating-chat-input');
+  const container = document.getElementById('floating-chat-messages');
+  const docSelect = document.getElementById('floating-doc-context-select');
+  const jurSelect = document.getElementById('floating-jur-select');
+  if (!input || !container) return;
+
+  const query = input.value.trim();
+  if (!query) return;
+
+  const selectedDocId = docSelect ? docSelect.value : null;
+  const jurisdiction = jurSelect ? jurSelect.value : 'India';
+
+  // Append user message
+  const userMsgEl = document.createElement('div');
+  userMsgEl.className = 'chat-msg user-msg';
+  userMsgEl.innerHTML = `
+    <div class="chat-msg-header">
+      <span>You</span>
+      <span>${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+    </div>
+    <div class="chat-msg-content">${query.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
+  `;
+  container.appendChild(userMsgEl);
+  input.value = '';
+  container.scrollTop = container.scrollHeight;
+
+  // Append typing indicator
+  const typingEl = document.createElement('div');
+  typingEl.className = 'chat-msg ai-msg';
+  typingEl.id = 'floating-typing-indicator';
+  typingEl.innerHTML = `
+    <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #64748B;">
+      <span>Consulting AI Legal Counsel (${jurisdiction})</span>
+      <span class="typing-dots">...</span>
+    </div>
+  `;
+  container.appendChild(typingEl);
+  container.scrollTop = container.scrollHeight;
+
+  try {
+    const result = await legalAssistantService.queryLegalAI({ 
+      prompt: query,
+      contextDocId: selectedDocId,
+      jurisdiction: jurisdiction,
+      history: assistantMessages
+    });
+
+    typingEl.remove();
+
+    assistantMessages.push({ role: 'user', content: query });
+    assistantMessages.push({ role: 'assistant', content: result.reply });
+
+    const aiMsgEl = document.createElement('div');
+    aiMsgEl.className = 'chat-msg ai-msg';
+    
+    const formattedHtml = formatAiMarkdown(result.reply);
+
+    aiMsgEl.innerHTML = `
+      <div class="chat-msg-header">
+        <span style="display: flex; align-items: center; gap: 4px;">
+          <span>âš–ï¸ AI Legal Counsel</span>
+          <span style="font-size: 9.5px; background: #EFF6FF; color: #1E40AF; padding: 1px 5px; border-radius: 4px; font-weight: 700;">
+            ${result.provider || 'AI'}
+          </span>
+        </span>
+        <span>${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+      </div>
+      <div class="chat-msg-content" style="line-height: 1.5; font-size: 12.8px;">${formattedHtml}</div>
+    `;
+    container.appendChild(aiMsgEl);
+  } catch (err) {
+    typingEl.remove();
+    const errorEl = document.createElement('div');
+    errorEl.className = 'chat-msg ai-msg';
+    errorEl.innerHTML = `
+      <div class="chat-msg-header" style="color: #BE123C;">Error</div>
+      <div class="chat-msg-content" style="color: #BE123C;">Unable to connect to Legal Assistant. Please try again.</div>
+    `;
+    container.appendChild(errorEl);
+  }
+
+  container.scrollTop = container.scrollHeight;
+};
 
 // === File: src\js\pages\BusinessDashboardPage.js ===
 /**
  * Impacteers Legal docs
  * Business User Dashboard (e.g. Edwin - HR, Musthafa - IT)
  */
+
+
 function renderBusinessDashboardPage() {
   const user = authService.getCurrentUser();
   const deptName = user.departmentName || 'Department';
@@ -4918,10 +3812,10 @@ function renderBusinessDashboardPage() {
       <!-- Welcome Header -->
       <div style="margin-bottom: 28px;">
         <h1 style="font-size: 26px; font-weight: 700; color: #0F172A; letter-spacing: -0.02em;">
-          Hello, ${user.name} 👋
+          Hello, ${user.name} ðŸ‘‹
         </h1>
         <p style="font-size: 14px; color: #64748B; margin-top: 2px;">
-          ${deptName} Team Portal • Impacteers In-House Document Management System
+          ${deptName} Team Portal â€¢ Impacteers In-House Document Management System
         </p>
       </div>
 
@@ -4932,7 +3826,7 @@ function renderBusinessDashboardPage() {
         <div class="kpi-card" onclick="window.location.hash='#/my-requests'" style="border-top: 4px solid #2563EB;">
           <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
             <div style="width: 44px; height: 44px; border-radius: 10px; background: #EFF6FF; color: #1D4ED8; display: flex; align-items: center; justify-content: center; font-size: 22px;">
-              📋
+              ðŸ“‹
             </div>
             <span class="badge badge-blue">${pendingRequests.length} Active</span>
           </div>
@@ -4943,7 +3837,7 @@ function renderBusinessDashboardPage() {
             </p>
           </div>
           <div style="margin-top: 16px; font-size: 12.5px; font-weight: 600; color: #2563EB;">
-            View Requests →
+            View Requests â†’
           </div>
         </div>
 
@@ -4951,7 +3845,7 @@ function renderBusinessDashboardPage() {
         <div class="kpi-card" onclick="window.location.hash='#/department-docs'" style="border-top: 4px solid #059669;">
           <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
             <div style="width: 44px; height: 44px; border-radius: 10px; background: #ECFDF5; color: #047857; display: flex; align-items: center; justify-content: center; font-size: 22px;">
-              📁
+              ðŸ“
             </div>
             <span class="badge badge-green">${deptDocs.length} Documents</span>
           </div>
@@ -4962,7 +3856,7 @@ function renderBusinessDashboardPage() {
             </p>
           </div>
           <div style="margin-top: 16px; font-size: 12.5px; font-weight: 600; color: #059669;">
-            Open Repository →
+            Open Repository â†’
           </div>
         </div>
 
@@ -4970,7 +3864,7 @@ function renderBusinessDashboardPage() {
         <div class="kpi-card" onclick="window.location.hash='#/create-request'" style="border-top: 4px solid #7C3AED; background: linear-gradient(180deg, #FFFFFF, #FAF5FF);">
           <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
             <div style="width: 44px; height: 44px; border-radius: 10px; background: #FAF5FF; color: #7C3AED; display: flex; align-items: center; justify-content: center; font-size: 22px;">
-              ➕
+              âž•
             </div>
             <span class="badge badge-purple">Fast Track</span>
           </div>
@@ -4981,7 +3875,7 @@ function renderBusinessDashboardPage() {
             </p>
           </div>
           <div style="margin-top: 16px; font-size: 12.5px; font-weight: 600; color: #7C3AED;">
-            Submit New Request →
+            Submit New Request â†’
           </div>
         </div>
 
@@ -4991,11 +3885,11 @@ function renderBusinessDashboardPage() {
       <div class="enterprise-card">
         <div class="enterprise-card-header">
           <div class="enterprise-card-title">
-            <span>📋</span>
+            <span>ðŸ“‹</span>
             <span>Recent ${deptName} Requests</span>
           </div>
           <a href="#/my-requests" style="font-size: 12.5px; color: #2563EB; font-weight: 600; text-decoration: none;">
-            View All →
+            View All â†’
           </a>
         </div>
         <div class="table-responsive">
@@ -5032,7 +3926,7 @@ function renderBusinessDashboardPage() {
                           </td>
                           <td>
                             <a href="#/requests/${r.id}" class="btn btn-secondary btn-sm" style="padding: 3px 8px; font-size: 11.5px;">
-                              Open Ticket →
+                              Open Ticket â†’
                             </a>
                           </td>
                         </tr>
@@ -5048,12 +3942,13 @@ function renderBusinessDashboardPage() {
   `;
 }
 
-
 // === File: src\js\pages\LegalDashboardPage.js ===
 /**
  * Impacteers Legal docs
  * Legal Manager Dashboard (Monisha)
  */
+
+
 function renderLegalDashboardPage() {
   const allRequests = requestService.getRequests();
   const todayStr = '2026-08-27';
@@ -5070,15 +3965,15 @@ function renderLegalDashboardPage() {
       <div class="page-header">
         <div>
           <h1 style="font-size: 24px; font-weight: 700; color: #0F172A; letter-spacing: -0.02em;">
-            Good Morning, Monisha ⚖️
+            Good Morning, Monisha âš–ï¸
           </h1>
           <p style="font-size: 13.5px; color: #64748B; margin-top: 2px;">
-            Legal Manager • Enterprise Legal Request & Document Triage
+            Legal Manager â€¢ Enterprise Legal Request & Document Triage
           </p>
         </div>
         <div style="display: flex; gap: 8px;">
           <a href="#/requests" class="btn btn-secondary btn-sm">
-            View All Requests Queue →
+            View All Requests Queue â†’
           </a>
         </div>
       </div>
@@ -5088,7 +3983,7 @@ function renderLegalDashboardPage() {
         <div class="kpi-card" onclick="window.location.hash='#/requests'" style="border-left: 4px solid #2563EB;">
           <div class="kpi-card-header">
             <span class="kpi-title">New Requests</span>
-            <div class="kpi-icon-wrapper" style="background: #EFF6FF; color: #1D4ED8;">📥</div>
+            <div class="kpi-icon-wrapper" style="background: #EFF6FF; color: #1D4ED8;">ðŸ“¥</div>
           </div>
           <div class="kpi-value" style="color: ${newRequests.length > 0 ? '#1D4ED8' : '#0F172A'};">${newRequests.length}</div>
           <div class="kpi-subtext">Waiting for acceptance</div>
@@ -5097,7 +3992,7 @@ function renderLegalDashboardPage() {
         <div class="kpi-card" onclick="window.location.hash='#/requests'" style="border-left: 4px solid #7C3AED;">
           <div class="kpi-card-header">
             <span class="kpi-title">In Progress</span>
-            <div class="kpi-icon-wrapper" style="background: #FAF5FF; color: #7C3AED;">⚙️</div>
+            <div class="kpi-icon-wrapper" style="background: #FAF5FF; color: #7C3AED;">âš™ï¸</div>
           </div>
           <div class="kpi-value">${inProgress.length}</div>
           <div class="kpi-subtext">Under active review</div>
@@ -5106,7 +4001,7 @@ function renderLegalDashboardPage() {
         <div class="kpi-card" onclick="window.location.hash='#/requests'" style="border-left: 4px solid #F59E0B;">
           <div class="kpi-card-header">
             <span class="kpi-title">Due Today</span>
-            <div class="kpi-icon-wrapper" style="background: #FFFBEB; color: #B45309;">⏳</div>
+            <div class="kpi-icon-wrapper" style="background: #FFFBEB; color: #B45309;">â³</div>
           </div>
           <div class="kpi-value" style="color: ${dueToday.length > 0 ? '#B45309' : '#0F172A'};">${dueToday.length}</div>
           <div class="kpi-subtext">Target turnaround today</div>
@@ -5115,7 +4010,7 @@ function renderLegalDashboardPage() {
         <div class="kpi-card" onclick="window.location.hash='#/requests'" style="border-left: 4px solid #DC2626;">
           <div class="kpi-card-header">
             <span class="kpi-title">Overdue</span>
-            <div class="kpi-icon-wrapper" style="background: #FFF1F2; color: #BE123C;">🚨</div>
+            <div class="kpi-icon-wrapper" style="background: #FFF1F2; color: #BE123C;">ðŸš¨</div>
           </div>
           <div class="kpi-value" style="color: ${overdue.length > 0 ? '#BE123C' : '#0F172A'};">${overdue.length}</div>
           <div class="kpi-subtext">Past due date</div>
@@ -5124,7 +4019,7 @@ function renderLegalDashboardPage() {
         <div class="kpi-card" onclick="window.location.hash='#/requests'" style="border-left: 4px solid #10B981;">
           <div class="kpi-card-header">
             <span class="kpi-title">Completed</span>
-            <div class="kpi-icon-wrapper" style="background: #ECFDF5; color: #047857;">✓</div>
+            <div class="kpi-icon-wrapper" style="background: #ECFDF5; color: #047857;">âœ“</div>
           </div>
           <div class="kpi-value">${completed.length}</div>
           <div class="kpi-subtext">Stored in department vaults</div>
@@ -5135,7 +4030,7 @@ function renderLegalDashboardPage() {
       <div class="enterprise-card">
         <div class="enterprise-card-header">
           <div class="enterprise-card-title">
-            <span>📥</span>
+            <span>ðŸ“¥</span>
             <span>Requests Requiring Action (${newRequests.length + inProgress.length})</span>
           </div>
         </div>
@@ -5173,7 +4068,7 @@ function renderLegalDashboardPage() {
                           <td><span class="badge ${statusObj.badgeClass}">${statusObj.label}</span></td>
                           <td>
                             <a href="#/requests/${r.id}" class="btn btn-secondary btn-sm" style="padding: 3px 8px; font-size: 11.5px;">
-                              Review Ticket →
+                              Review Ticket â†’
                             </a>
                           </td>
                         </tr>
@@ -5189,12 +4084,13 @@ function renderLegalDashboardPage() {
   `;
 }
 
-
 // === File: src\js\pages\ChairmanDashboardPage.js ===
 /**
  * Impacteers Legal docs
  * Chairman Dashboard (Executive View-Only)
  */
+
+
 function renderChairmanDashboardPage() {
   const allRequests = requestService.getRequests();
   const todayStr = '2026-08-27';
@@ -5210,15 +4106,15 @@ function renderChairmanDashboardPage() {
       <div class="page-header">
         <div>
           <h1 style="font-size: 24px; font-weight: 700; color: #0F172A; letter-spacing: -0.02em;">
-            Executive Overview 🏛️
+            Executive Overview ðŸ›ï¸
           </h1>
           <p style="font-size: 13.5px; color: #64748B; margin-top: 2px;">
-            Chairman • Global View-Only Transparency Across All 11 Departments
+            Chairman â€¢ Global View-Only Transparency Across All 11 Departments
           </p>
         </div>
         <div>
           <span class="badge badge-slate" style="font-size: 12px; padding: 4px 10px;">
-            👁️ Executive View-Only Mode
+            ðŸ‘ï¸ Executive View-Only Mode
           </span>
         </div>
       </div>
@@ -5228,7 +4124,7 @@ function renderChairmanDashboardPage() {
         <div class="kpi-card">
           <div class="kpi-card-header">
             <span class="kpi-title">Total Requests</span>
-            <div class="kpi-icon-wrapper" style="background: #F1F5F9; color: #334155;">📊</div>
+            <div class="kpi-icon-wrapper" style="background: #F1F5F9; color: #334155;">ðŸ“Š</div>
           </div>
           <div class="kpi-value">${allRequests.length}</div>
         </div>
@@ -5236,7 +4132,7 @@ function renderChairmanDashboardPage() {
         <div class="kpi-card">
           <div class="kpi-card-header">
             <span class="kpi-title">Pending</span>
-            <div class="kpi-icon-wrapper" style="background: #EFF6FF; color: #1D4ED8;">⏳</div>
+            <div class="kpi-icon-wrapper" style="background: #EFF6FF; color: #1D4ED8;">â³</div>
           </div>
           <div class="kpi-value" style="color: #1D4ED8;">${pending.length}</div>
         </div>
@@ -5244,7 +4140,7 @@ function renderChairmanDashboardPage() {
         <div class="kpi-card">
           <div class="kpi-card-header">
             <span class="kpi-title">Due Today</span>
-            <div class="kpi-icon-wrapper" style="background: #FFFBEB; color: #B45309;">⏰</div>
+            <div class="kpi-icon-wrapper" style="background: #FFFBEB; color: #B45309;">â°</div>
           </div>
           <div class="kpi-value" style="color: #B45309;">${dueToday.length}</div>
         </div>
@@ -5252,7 +4148,7 @@ function renderChairmanDashboardPage() {
         <div class="kpi-card">
           <div class="kpi-card-header">
             <span class="kpi-title">Overdue</span>
-            <div class="kpi-icon-wrapper" style="background: #FFF1F2; color: #BE123C;">🚨</div>
+            <div class="kpi-icon-wrapper" style="background: #FFF1F2; color: #BE123C;">ðŸš¨</div>
           </div>
           <div class="kpi-value" style="color: #BE123C;">${overdue.length}</div>
         </div>
@@ -5260,7 +4156,7 @@ function renderChairmanDashboardPage() {
         <div class="kpi-card">
           <div class="kpi-card-header">
             <span class="kpi-title">Completed</span>
-            <div class="kpi-icon-wrapper" style="background: #ECFDF5; color: #047857;">✓</div>
+            <div class="kpi-icon-wrapper" style="background: #ECFDF5; color: #047857;">âœ“</div>
           </div>
           <div class="kpi-value" style="color: #047857;">${completed.length}</div>
         </div>
@@ -5273,7 +4169,7 @@ function renderChairmanDashboardPage() {
         <div class="enterprise-card">
           <div class="enterprise-card-header">
             <div class="enterprise-card-title">
-              <span>📋</span>
+              <span>ðŸ“‹</span>
               <span>Pending Legal Requests (${pending.length})</span>
             </div>
           </div>
@@ -5311,7 +4207,7 @@ function renderChairmanDashboardPage() {
                             <td><span class="badge ${statusObj.badgeClass}">${statusObj.label}</span></td>
                             <td>
                               <a href="#/requests/${r.id}" class="btn btn-secondary btn-sm" style="padding: 2px 8px; font-size: 11px;">
-                                View →
+                                View â†’
                               </a>
                             </td>
                           </tr>
@@ -5328,7 +4224,7 @@ function renderChairmanDashboardPage() {
         <div class="enterprise-card">
           <div class="enterprise-card-header">
             <div class="enterprise-card-title">
-              <span>🏢</span>
+              <span>ðŸ¢</span>
               <span>Department Overview</span>
             </div>
           </div>
@@ -5352,12 +4248,13 @@ function renderChairmanDashboardPage() {
   `;
 }
 
-
 // === File: src\js\pages\CreateRequestPage.js ===
 /**
  * Impacteers Legal docs
  * Simple Request Creation Page with Priority & Urgency
  */
+
+
 function renderCreateRequestPage() {
   const user = authService.getCurrentUser();
   const deptName = user.departmentName || 'Department';
@@ -5371,7 +4268,7 @@ function renderCreateRequestPage() {
       <!-- Header -->
       <div style="margin-bottom: 24px;">
         <h1 style="font-size: 24px; font-weight: 700; color: #0F172A; letter-spacing: -0.02em;">
-          ➕ Create Legal Request
+          âž• Create Legal Request
         </h1>
         <p style="font-size: 13.5px; color: #64748B; margin-top: 4px;">
           Submit a document review, drafting, or verification request to <strong>Monisha (Legal Manager)</strong>.
@@ -5410,7 +4307,7 @@ function renderCreateRequestPage() {
               <label style="border: 1px solid #FECDD3; background: #FFF1F2; border-radius: 8px; padding: 10px 12px; display: flex; align-items: flex-start; gap: 8px; cursor: pointer;">
                 <input type="radio" name="req-priority" value="IMMEDIATE" style="margin-top: 3px;" />
                 <div>
-                  <div style="font-size: 12.5px; font-weight: 700; color: #BE123C;">🚨 Immediate Action Required</div>
+                  <div style="font-size: 12.5px; font-weight: 700; color: #BE123C;">ðŸš¨ Immediate Action Required</div>
                   <div style="font-size: 11px; color: #9F1239; margin-top: 2px;">Critical / Blocker</div>
                 </div>
               </label>
@@ -5418,7 +4315,7 @@ function renderCreateRequestPage() {
               <label style="border: 1px solid #FED7AA; background: #FFF7ED; border-radius: 8px; padding: 10px 12px; display: flex; align-items: flex-start; gap: 8px; cursor: pointer;">
                 <input type="radio" name="req-priority" value="HIGH" style="margin-top: 3px;" />
                 <div>
-                  <div style="font-size: 12.5px; font-weight: 700; color: #C2410C;">🔥 High Priority</div>
+                  <div style="font-size: 12.5px; font-weight: 700; color: #C2410C;">ðŸ”¥ High Priority</div>
                   <div style="font-size: 11px; color: #9A3412; margin-top: 2px;">Urgent business need</div>
                 </div>
               </label>
@@ -5426,7 +4323,7 @@ function renderCreateRequestPage() {
               <label style="border: 2px solid #2563EB; background: #EFF6FF; border-radius: 8px; padding: 10px 12px; display: flex; align-items: flex-start; gap: 8px; cursor: pointer;">
                 <input type="radio" name="req-priority" value="MEDIUM" style="margin-top: 3px;" checked />
                 <div>
-                  <div style="font-size: 12.5px; font-weight: 700; color: #1D4ED8;">⚡ Standard Priority</div>
+                  <div style="font-size: 12.5px; font-weight: 700; color: #1D4ED8;">âš¡ Standard Priority</div>
                   <div style="font-size: 11px; color: #1E40AF; margin-top: 2px;">Normal workflow</div>
                 </div>
               </label>
@@ -5434,7 +4331,7 @@ function renderCreateRequestPage() {
               <label style="border: 1px solid #E2E8F0; background: #F8FAFC; border-radius: 8px; padding: 10px 12px; display: flex; align-items: flex-start; gap: 8px; cursor: pointer;">
                 <input type="radio" name="req-priority" value="LOW" style="margin-top: 3px;" />
                 <div>
-                  <div style="font-size: 12.5px; font-weight: 700; color: #475569;">🌱 Low Priority / Flexible</div>
+                  <div style="font-size: 12.5px; font-weight: 700; color: #475569;">ðŸŒ± Low Priority / Flexible</div>
                   <div style="font-size: 11px; color: #64748B; margin-top: 2px;">Leisure / No rush</div>
                 </div>
               </label>
@@ -5472,7 +4369,7 @@ function renderCreateRequestPage() {
               background: #F8FAFC;
               cursor: pointer;
             " onclick="document.getElementById('req-doc-file').click()">
-              <span style="font-size: 28px;">📄</span>
+              <span style="font-size: 28px;">ðŸ“„</span>
               <div style="font-size: 13.5px; font-weight: 600; color: #1E293B; margin-top: 6px;">Click to select agreement or draft file</div>
               <div style="font-size: 11.5px; color: #64748B;">Supported: PDF, DOCX, DOC, XLSX, TXT (Optional)</div>
               <input type="file" id="req-doc-file" style="display: none;" onchange="
@@ -5497,7 +4394,7 @@ function renderCreateRequestPage() {
           <div style="display: flex; justify-content: flex-end; gap: 12px;">
             <a href="#/dashboard" class="btn btn-secondary">Cancel</a>
             <button type="submit" class="btn btn-primary btn-lg" style="font-weight: 600; padding: 10px 24px;">
-              Send Request to Legal →
+              Send Request to Legal â†’
             </button>
           </div>
 
@@ -5507,13 +4404,14 @@ function renderCreateRequestPage() {
   `;
 }
 
-
 // === File: src\js\pages\DepartmentDocumentsPage.js ===
 /**
- * Impacteers DMS — Enterprise In-House Legal & Document Management System
+ * Impacteers DMS â€” Enterprise In-House Legal & Document Management System
  * Department Document Repository Page
  * With Instant Search, Category Filter, Download & Delete Support
  */
+
+
 function renderDepartmentDocumentsPage(targetDeptId = null) {
   const user = authService.getCurrentUser();
   const isLegal = authService.isLegalManager();
@@ -5540,7 +4438,7 @@ function renderDepartmentDocumentsPage(targetDeptId = null) {
       <div class="page-header" style="margin-bottom: 20px;">
         <div>
           <h1 style="font-size: 22px; font-weight: 700; color: #0F172A; letter-spacing: -0.02em;">
-            📁 ${dept.name} Documents
+            ðŸ“ ${dept.name} Documents
           </h1>
           <p style="font-size: 13px; color: #64748B; margin-top: 2px;">
             Secure repository for ${dept.name} executed contracts, verified agreements, and legal records.
@@ -5602,7 +4500,7 @@ function renderDepartmentDocumentsPage(targetDeptId = null) {
       <div class="enterprise-card" style="box-shadow: 0 1px 3px rgba(0,0,0,0.04); border-radius: 10px; overflow: hidden;">
         <div class="enterprise-card-header" style="padding: 12px 18px; background: #FAFAFA; border-bottom: 1px solid #E2E8F0;">
           <div class="enterprise-card-title" style="font-size: 13.5px; font-weight: 700; color: #0F172A;">
-            <span>📑 ${dept.name} Records: <strong id="dept-doc-count" style="color: #2563EB;">${docs.length}</strong></span>
+            <span>ðŸ“‘ ${dept.name} Records: <strong id="dept-doc-count" style="color: #2563EB;">${docs.length}</strong></span>
           </div>
         </div>
         <div class="table-responsive">
@@ -5632,7 +4530,7 @@ function renderDepartmentDocRows(docs) {
 
   if (!docs || docs.length === 0) {
     return `<tr><td colspan="6" style="text-align: center; padding: 40px 16px; color: #94A3B8;">
-      <div style="font-size: 26px; margin-bottom: 4px;">📂</div>
+      <div style="font-size: 26px; margin-bottom: 4px;">ðŸ“‚</div>
       <div style="font-size: 13.5px; font-weight: 600; color: #475569;">No matching documents found.</div>
       <div style="font-size: 12px; color: #94A3B8; margin-top: 2px;">Try adjusting your search terms or filters.</div>
     </td></tr>`;
@@ -5647,7 +4545,7 @@ function renderDepartmentDocRows(docs) {
       <tr style="border-bottom: 1px solid #F1F5F9; transition: background 0.1s ease;" onmouseover="this.style.background='#F8FAFC'" onmouseout="this.style.background='transparent'">
         <td style="padding: 12px 16px; vertical-align: middle;">
           <div style="font-weight: 600; font-size: 13.5px; color: #0F172A; display: flex; align-items: center; gap: 8px;">
-            <span>${doc.isFinal ? '📜' : '📄'}</span>
+            <span>${doc.isFinal ? 'ðŸ“œ' : 'ðŸ“„'}</span>
             <span>${doc.title}</span>
           </div>
           ${doc.counterparty ? `<div style="font-size: 11px; color: #64748B; margin-left: 24px;">Counterparty: ${doc.counterparty}</div>` : ''}
@@ -5669,13 +4567,13 @@ function renderDepartmentDocRows(docs) {
         <td style="padding: 12px 16px; vertical-align: middle; text-align: right; white-space: nowrap;">
           <div style="display: flex; gap: 6px; justify-content: flex-end; align-items: center;">
             <button class="btn btn-secondary btn-sm" style="padding: 3px 8px; font-size: 11px; font-weight: 600;" onclick="window.downloadDocumentFile('${fileName}', '${doc.title.replace(/'/g, "\\'")}')">
-              📥 Download
+              ðŸ“¥ Download
             </button>
             ${
               isLegal
                 ? `
               <button class="btn btn-secondary btn-sm" style="padding: 3px 8px; font-size: 11px; font-weight: 600; color: #DC2626; border-color: #FECDD3;" onclick="window.deleteVaultDocument('${doc.id}', '${doc.title.replace(/'/g, "\\'")}')" title="Delete document">
-                🗑️ Delete
+                ðŸ—‘ï¸ Delete
               </button>
             `
                 : ''
@@ -5688,12 +4586,13 @@ function renderDepartmentDocRows(docs) {
     .join('');
 }
 
-
 // === File: src\js\pages\LegalRequestsPage.js ===
 /**
  * Impacteers Legal docs
  * My Requests & Legal Queue Page (Clean, Perfectly Aligned Jira-style Table)
  */
+
+
 function renderLegalRequestsPage({ myRequestsOnly = false } = {}) {
   const user = authService.getCurrentUser();
   const isLegal = authService.isLegalManager();
@@ -5705,8 +4604,8 @@ function renderLegalRequestsPage({ myRequestsOnly = false } = {}) {
   });
 
   const pageTitle = isLegal
-    ? '⚖️ Legal Requests Queue'
-    : `📋 My ${deptName} Requests`;
+    ? 'âš–ï¸ Legal Requests Queue'
+    : `ðŸ“‹ My ${deptName} Requests`;
 
   const pageSubtitle = isLegal
     ? 'All company legal review, vetting, and contract drafting requests.'
@@ -5810,12 +4709,13 @@ function renderLegalRequestsPage({ myRequestsOnly = false } = {}) {
     </div>
   `;
 }
+
 function renderRequestRows(requests, isLegal = false) {
   if (!requests || requests.length === 0) {
     return `
       <tr>
         <td colspan="${isLegal ? '6' : '5'}" style="text-align: center; padding: 40px 16px; color: #94A3B8;">
-          <div style="font-size: 28px; margin-bottom: 6px;">📂</div>
+          <div style="font-size: 28px; margin-bottom: 6px;">ðŸ“‚</div>
           <div style="font-size: 14px; font-weight: 600; color: #475569;">No requests found.</div>
           <div style="font-size: 12px; color: #94A3B8; margin-top: 2px;">Submit a new request or change your search filters.</div>
         </td>
@@ -5849,7 +4749,7 @@ function renderRequestRows(requests, isLegal = false) {
             ${r.title}
           </a>
           <div style="font-size: 11.5px; color: #64748B; margin-top: 2px;">
-            ${r.requestType} • ${r.attachedDocument ? `📄 ${r.attachedDocument.name}` : 'No initial doc'}
+            ${r.requestType} â€¢ ${r.attachedDocument ? `ðŸ“„ ${r.attachedDocument.name}` : 'No initial doc'}
           </div>
         </td>
         ${
@@ -5871,7 +4771,7 @@ function renderRequestRows(requests, isLegal = false) {
         </td>
         <td style="padding: 12px 16px; vertical-align: middle; text-align: right;">
           <a href="#/requests/${r.id}" class="btn btn-secondary btn-sm" style="padding: 4px 10px; font-size: 11.5px; font-weight: 600;">
-            Open Ticket →
+            Open Ticket â†’
           </a>
         </td>
       </tr>
@@ -5880,12 +4780,13 @@ function renderRequestRows(requests, isLegal = false) {
     .join('');
 }
 
-
 // === File: src\js\pages\RequestDetailPage.js ===
 /**
  * Impacteers Legal docs
  * Simplified Jira-Style Request Detail View & Action Center
  */
+
+
 function renderRequestDetailPage(requestId) {
   let req;
   try {
@@ -5917,7 +4818,7 @@ function renderRequestDetailPage(requestId) {
   const isLegal = authService.isLegalManager();
   const isChairman = authService.isChairman();
   const statusObj = REQUEST_STATUSES[req.status] || { label: req.status, badgeClass: 'badge-blue' };
-  const priorityObj = REQUEST_PRIORITIES[req.priority] || { label: req.priority || 'Standard Priority', badgeClass: 'badge-blue', icon: '⚡' };
+  const priorityObj = REQUEST_PRIORITIES[req.priority] || { label: req.priority || 'Standard Priority', badgeClass: 'badge-blue', icon: 'âš¡' };
 
   return `
     <div class="content-container" style="max-width: 1200px;">
@@ -5932,7 +4833,7 @@ function renderRequestDetailPage(requestId) {
         <!-- Action Toolbar -->
         ${
           isChairman
-            ? `<span class="badge badge-slate">👁️ Executive View-Only Mode</span>`
+            ? `<span class="badge badge-slate">ðŸ‘ï¸ Executive View-Only Mode</span>`
             : `<div style="display: flex; gap: 8px; flex-wrap: wrap;" id="request-action-toolbar">
                 ${renderWorkflowActionButtons(req, isLegal)}
               </div>`
@@ -5951,7 +4852,7 @@ function renderRequestDetailPage(requestId) {
                 ${statusObj.label}
               </span>
               <span class="badge ${priorityObj.badgeClass}" style="font-size: 12px;">
-                ${priorityObj.icon || '⚡'} ${priorityObj.label}
+                ${priorityObj.icon || 'âš¡'} ${priorityObj.label}
               </span>
               <span class="badge badge-slate">${req.departmentName}</span>
             </div>
@@ -5983,7 +4884,7 @@ function renderRequestDetailPage(requestId) {
           <div class="enterprise-card">
             <div class="enterprise-card-header">
               <div class="enterprise-card-title">
-                <span>📝</span>
+                <span>ðŸ“</span>
                 <span>Request Description</span>
               </div>
             </div>
@@ -5996,7 +4897,7 @@ function renderRequestDetailPage(requestId) {
           <div class="enterprise-card">
             <div class="enterprise-card-header">
               <div class="enterprise-card-title">
-                <span>📁</span>
+                <span>ðŸ“</span>
                 <span>Documents & Review Drafts</span>
               </div>
               ${
@@ -6014,7 +4915,7 @@ function renderRequestDetailPage(requestId) {
                 <div style="border: 1px solid #E2E8F0; border-radius: 8px; padding: 12px; background: #FFFFFF; display: flex; justify-content: space-between; align-items: center;">
                   <div>
                     <div style="font-size: 13px; font-weight: 600; color: #0F172A;">
-                      📄 Original Document
+                      ðŸ“„ Original Document
                     </div>
                     <div style="font-size: 11.5px; color: #64748B; margin-top: 2px;">
                       ${req.attachedDocument ? `${req.attachedDocument.name} (${req.attachedDocument.size})` : 'No document uploaded at intake.'}
@@ -6022,7 +4923,7 @@ function renderRequestDetailPage(requestId) {
                   </div>
                   ${
                     req.attachedDocument
-                      ? `<button class="btn btn-secondary btn-sm" style="font-size: 11px; padding: 3px 8px;" onclick="window.downloadDocumentFile('${req.attachedDocument.name}', '${req.title}')">📥 Download</button>`
+                      ? `<button class="btn btn-secondary btn-sm" style="font-size: 11px; padding: 3px 8px;" onclick="window.downloadDocumentFile('${req.attachedDocument.name}', '${req.title}')">ðŸ“¥ Download</button>`
                       : ''
                   }
                 </div>
@@ -6034,13 +4935,13 @@ function renderRequestDetailPage(requestId) {
                   <div style="border: 1px solid #BFDBFE; border-radius: 8px; padding: 12px; background: #EFF6FF; display: flex; justify-content: space-between; align-items: center;">
                     <div>
                       <div style="font-size: 13px; font-weight: 600; color: #1E40AF;">
-                        📝 Legal Reviewed / Revised Version
+                        ðŸ“ Legal Reviewed / Revised Version
                       </div>
                       <div style="font-size: 11.5px; color: #3B82F6; margin-top: 2px;">
-                        ${req.reviewedDocument.name} (${req.reviewedDocument.size}) • Uploaded by ${req.reviewedDocument.uploadedBy}
+                        ${req.reviewedDocument.name} (${req.reviewedDocument.size}) â€¢ Uploaded by ${req.reviewedDocument.uploadedBy}
                       </div>
                     </div>
-                    <button class="btn btn-primary btn-sm" style="font-size: 11px; padding: 3px 8px;" onclick="window.downloadDocumentFile('${req.reviewedDocument.name}', '${req.title} - Reviewed Draft')">📥 Download Reviewed</button>
+                    <button class="btn btn-primary btn-sm" style="font-size: 11px; padding: 3px 8px;" onclick="window.downloadDocumentFile('${req.reviewedDocument.name}', '${req.title} - Reviewed Draft')">ðŸ“¥ Download Reviewed</button>
                   </div>
                 `
                     : ''
@@ -6053,13 +4954,13 @@ function renderRequestDetailPage(requestId) {
                   <div style="border: 1px solid #A7F3D0; border-radius: 8px; padding: 12px; background: #ECFDF5; display: flex; justify-content: space-between; align-items: center;">
                     <div>
                       <div style="font-size: 13px; font-weight: 700; color: #065F46;">
-                        📜 FINAL EXECUTED AGREEMENT
+                        ðŸ“œ FINAL EXECUTED AGREEMENT
                       </div>
                       <div style="font-size: 11.5px; color: #047857; margin-top: 2px;">
-                        ${req.finalDocument.name} (${req.finalDocument.size}) • Uploaded by ${req.finalDocument.uploadedBy}
+                        ${req.finalDocument.name} (${req.finalDocument.size}) â€¢ Uploaded by ${req.finalDocument.uploadedBy}
                       </div>
                     </div>
-                    <button class="btn btn-secondary btn-sm" style="font-size: 11px; padding: 3px 8px;" onclick="window.downloadDocumentFile('${req.finalDocument.name}', '${req.title} - Final Executed')">📥 Download Final</button>
+                    <button class="btn btn-secondary btn-sm" style="font-size: 11px; padding: 3px 8px;" onclick="window.downloadDocumentFile('${req.finalDocument.name}', '${req.title} - Final Executed')">ðŸ“¥ Download Final</button>
                   </div>
                 `
                     : ''
@@ -6073,7 +4974,7 @@ function renderRequestDetailPage(requestId) {
                   ? `
                 <div style="margin-top: 14px; padding-top: 12px; border-top: 1px dashed #E2E8F0; text-align: right;">
                   <button class="btn btn-secondary btn-sm" id="btn-upload-final-signed-doc" style="font-weight: 600;">
-                    ✍️ Upload Final Signed Document
+                    âœï¸ Upload Final Signed Document
                   </button>
                 </div>
               `
@@ -6086,7 +4987,7 @@ function renderRequestDetailPage(requestId) {
           <div class="enterprise-card" style="border-left: 4px solid #7C3AED;">
             <div class="enterprise-card-header">
               <div class="enterprise-card-title">
-                <span>⚖️</span>
+                <span>âš–ï¸</span>
                 <span>Legal Review Remarks (${req.legalRemarks ? req.legalRemarks.length : 0})</span>
               </div>
               ${
@@ -6123,7 +5024,7 @@ function renderRequestDetailPage(requestId) {
           <div class="enterprise-card">
             <div class="enterprise-card-header">
               <div class="enterprise-card-title">
-                <span>💬</span>
+                <span>ðŸ’¬</span>
                 <span>Request Conversation</span>
               </div>
             </div>
@@ -6136,7 +5037,7 @@ function renderRequestDetailPage(requestId) {
                       return `
                         <div class="internal-legal-note">
                           <div style="display: flex; justify-content: space-between; font-size: 11.5px; font-weight: 700; color: #92400E; margin-bottom: 4px;">
-                            <span>🔒 INTERNAL LEGAL NOTE • ${c.authorName} (${c.authorRole})</span>
+                            <span>ðŸ”’ INTERNAL LEGAL NOTE â€¢ ${c.authorName} (${c.authorRole})</span>
                             <span style="font-size: 10px; color: #B45309;">${new Date(c.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                           </div>
                           <div style="font-size: 13px; color: #78350F; line-height: 1.4;">${c.text.replace(/\n/g, '<br/>')}</div>
@@ -6173,7 +5074,7 @@ function renderRequestDetailPage(requestId) {
                         ? `
                       <label style="display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: #92400E; cursor: pointer;">
                         <input type="checkbox" id="comment-is-internal-checkbox" />
-                        <span>🔒 Internal Legal Note (Legal Only)</span>
+                        <span>ðŸ”’ Internal Legal Note (Legal Only)</span>
                       </label>
                     `
                         : `<div></div>`
@@ -6196,7 +5097,7 @@ function renderRequestDetailPage(requestId) {
           <div class="enterprise-card">
             <div class="enterprise-card-header">
               <div class="enterprise-card-title">
-                <span>📋</span>
+                <span>ðŸ“‹</span>
                 <span>Ticket Details</span>
               </div>
             </div>
@@ -6236,10 +5137,10 @@ function renderRequestDetailPage(requestId) {
 
 function renderWorkflowActionButtons(req, isLegal) {
   if (req.status === 'COMPLETED') {
-    return `<span class="badge badge-green" style="font-size: 13px; padding: 6px 12px;">✓ Request Completed</span>`;
+    return `<span class="badge badge-green" style="font-size: 13px; padding: 6px 12px;">âœ“ Request Completed</span>`;
   }
   if (req.status === 'REJECTED') {
-    return `<span class="badge badge-rose" style="font-size: 13px; padding: 6px 12px;">✕ Request Rejected</span>`;
+    return `<span class="badge badge-rose" style="font-size: 13px; padding: 6px 12px;">âœ• Request Rejected</span>`;
   }
 
   let buttons = '';
@@ -6247,18 +5148,18 @@ function renderWorkflowActionButtons(req, isLegal) {
   if (isLegal) {
     if (req.status === 'PENDING_ACCEPTANCE') {
       buttons += `
-        <button class="btn btn-primary btn-sm" onclick="window.legalAcceptRequest('${req.id}')">✓ Accept</button>
-        <button class="btn btn-danger btn-sm" onclick="window.legalRejectRequest('${req.id}')">✕ Reject</button>
-        <button class="btn btn-secondary btn-sm" onclick="window.legalRescheduleRequest('${req.id}')">⏱️ Reschedule</button>
+        <button class="btn btn-primary btn-sm" onclick="window.legalAcceptRequest('${req.id}')">âœ“ Accept</button>
+        <button class="btn btn-danger btn-sm" onclick="window.legalRejectRequest('${req.id}')">âœ• Reject</button>
+        <button class="btn btn-secondary btn-sm" onclick="window.legalRescheduleRequest('${req.id}')">â±ï¸ Reschedule</button>
       `;
     } else if (req.status === 'UNDER_LEGAL_REVIEW' || req.status === 'ACCEPTED') {
       buttons += `
-        <button class="btn btn-primary btn-sm" onclick="window.legalSubmitToBusiness('${req.id}')">🚀 Submit Review to Business</button>
-        <button class="btn btn-secondary btn-sm" onclick="window.legalRescheduleRequest('${req.id}')">⏱️ Reschedule</button>
+        <button class="btn btn-primary btn-sm" onclick="window.legalSubmitToBusiness('${req.id}')">ðŸš€ Submit Review to Business</button>
+        <button class="btn btn-secondary btn-sm" onclick="window.legalRescheduleRequest('${req.id}')">â±ï¸ Reschedule</button>
       `;
     } else if (req.status === 'BUSINESS_ACTION_REQUIRED' || req.status === 'FINAL_DOCUMENT_REQUIRED') {
       buttons += `
-        <button class="btn btn-primary btn-sm" onclick="window.legalMarkCompleted('${req.id}')">✓ Mark Completed & Store in Vault</button>
+        <button class="btn btn-primary btn-sm" onclick="window.legalMarkCompleted('${req.id}')">âœ“ Mark Completed & Store in Vault</button>
       `;
     }
   }
@@ -6286,7 +5187,7 @@ function renderRescheduleProposalBanner(req, isLegal, isChairman) {
           <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px;">
             <div>
               <strong style="font-size: 14.5px; color: #9A3412;">
-                ⚠️ Business Declined Reschedule & Requested ${proposal.counterDate || proposal.originalDate}
+                âš ï¸ Business Declined Reschedule & Requested ${proposal.counterDate || proposal.originalDate}
               </strong>
               <div style="font-size: 13px; color: #C2410C; margin-top: 6px; line-height: 1.5;">
                 Requested Completion Date: <strong style="font-size: 14px;">${proposal.counterDate || proposal.originalDate}</strong><br/>
@@ -6295,10 +5196,10 @@ function renderRescheduleProposalBanner(req, isLegal, isChairman) {
             </div>
             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
               <button class="btn btn-primary btn-sm" onclick="window.legalAcceptBusinessCounterDate('${req.id}')">
-                ✓ Accept Requested Date (${proposal.counterDate || proposal.originalDate})
+                âœ“ Accept Requested Date (${proposal.counterDate || proposal.originalDate})
               </button>
               <button class="btn btn-secondary btn-sm" onclick="window.legalRescheduleRequest('${req.id}')">
-                ⏱️ Propose Revised Date
+                â±ï¸ Propose Revised Date
               </button>
             </div>
           </div>
@@ -6315,7 +5216,7 @@ function renderRescheduleProposalBanner(req, isLegal, isChairman) {
           margin-bottom: 20px;
         ">
           <div style="font-size: 14px; font-weight: 700; color: #15803D;">
-            📨 Counter-Proposal Sent to Monisha (Legal Manager)
+            ðŸ“¨ Counter-Proposal Sent to Monisha (Legal Manager)
           </div>
           <div style="font-size: 13px; color: #166534; margin-top: 4px;">
             You requested completion by <strong>${proposal.counterDate || proposal.originalDate}</strong> (Reason: <em>"${proposal.counterReason}"</em>). Awaiting Legal confirmation.
@@ -6338,10 +5239,10 @@ function renderRescheduleProposalBanner(req, isLegal, isChairman) {
       <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px;">
         <div>
           <strong style="font-size: 14.5px; color: #92400E;">
-            ⏱️ Legal Has Proposed a New Completion Date
+            â±ï¸ Legal Has Proposed a New Completion Date
           </strong>
           <div style="font-size: 13px; color: #78350F; margin-top: 6px;">
-            Original Date: <strong>${proposal.originalDate}</strong> → Proposed Date: <strong>${proposal.proposedDate}</strong><br/>
+            Original Date: <strong>${proposal.originalDate}</strong> â†’ Proposed Date: <strong>${proposal.proposedDate}</strong><br/>
             Reason: <em>"${proposal.reason}"</em>
           </div>
         </div>
@@ -6351,10 +5252,10 @@ function renderRescheduleProposalBanner(req, isLegal, isChairman) {
             ? `
           <div style="display: flex; gap: 8px; flex-wrap: wrap;">
             <button class="btn btn-primary btn-sm" onclick="window.businessAcceptReschedule('${req.id}')">
-              ✓ Accept Proposed Date (${proposal.proposedDate})
+              âœ“ Accept Proposed Date (${proposal.proposedDate})
             </button>
             <button class="btn btn-secondary btn-sm" onclick="window.businessRejectReschedule('${req.id}')">
-              ✕ Decline / Propose Alternative
+              âœ• Decline / Propose Alternative
             </button>
           </div>
         `
@@ -6365,380 +5266,14 @@ function renderRescheduleProposalBanner(req, isLegal, isChairman) {
   `;
 }
 
-
-// === File: src\js\pages\DashboardPage.js ===
-/**
- * Enterprise In-House Legal Management System
- * Dashboard Page
- */
-function renderDashboardPage() {
-  const user = authService.getCurrentUser();
-  const metrics = reportService.getMetrics();
-  const isLegal = authService.isLegalTeam();
-  const recentActivity = authService.isLegalAdmin() ? auditService.getLogs({ limit: 6 }) : [];
-  const urgentRequests = requestService.getRequests().filter(r => ['URGENT', 'CRITICAL', 'HIGH'].includes(r.priority) && !['COMPLETED', 'REJECTED'].includes(r.status)).slice(0, 5);
-  const expiringContracts = contractService.getContracts({ expiringWithinDays: 30 }).slice(0, 4);
-
-  return `
-    <div class="content-container">
-      <!-- Header -->
-      <div class="page-header">
-        <div>
-          <div class="page-title">
-            <span>⚖️</span>
-            <span>${isLegal ? 'Legal Command Dashboard' : `${user.departmentName} Department Dashboard`}</span>
-          </div>
-          <div class="page-subtitle">
-            Welcome back, <strong>${user.name}</strong> • ${user.title} • Operating under ${user.role.replace(/_/g, ' ')} permissions
-          </div>
-        </div>
-        <div style="display: flex; gap: 10px;">
-          <button class="btn btn-secondary btn-sm" onclick="window.location.hash='#/reports'">
-            <span>📊 View Analytics</span>
-          </button>
-          <button class="btn btn-primary btn-sm" id="dash-new-req-btn">
-            <span>+ Submit Request</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Top KPI Cards Grid -->
-      <div class="kpi-grid">
-        <div class="kpi-card" onclick="window.location.hash='#/requests'">
-          <div class="kpi-card-header">
-            <span class="kpi-title">Open Requests</span>
-            <div class="kpi-icon-wrapper" style="background: #EFF6FF; color: #1D4ED8;">📋</div>
-          </div>
-          <div class="kpi-value">${metrics.totalOpenRequests}</div>
-          <div class="kpi-subtext">${metrics.pendingLegalReview} pending initial triage</div>
-        </div>
-
-        <div class="kpi-card" onclick="window.location.hash='#/requests'">
-          <div class="kpi-card-header">
-            <span class="kpi-title">Due This Week</span>
-            <div class="kpi-icon-wrapper" style="background: #FFFBEB; color: #B45309;">⏳</div>
-          </div>
-          <div class="kpi-value" style="color: ${metrics.dueThisWeek > 0 ? '#B45309' : '#0F172A'};">${metrics.dueThisWeek}</div>
-          <div class="kpi-subtext">Active SLA targets</div>
-        </div>
-
-        <div class="kpi-card" onclick="window.location.hash='#/requests'">
-          <div class="kpi-card-header">
-            <span class="kpi-title">Overdue</span>
-            <div class="kpi-icon-wrapper" style="background: #FFF1F2; color: #BE123C;">🚨</div>
-          </div>
-          <div class="kpi-value" style="color: ${metrics.overdue > 0 ? '#BE123C' : '#0F172A'};">${metrics.overdue}</div>
-          <div class="kpi-subtext">Requires immediate escalation</div>
-        </div>
-
-        <div class="kpi-card" onclick="window.location.hash='#/contracts'">
-          <div class="kpi-card-header">
-            <span class="kpi-title">Active Contracts</span>
-            <div class="kpi-icon-wrapper" style="background: #ECFDF5; color: #047857;">📜</div>
-          </div>
-          <div class="kpi-value">${metrics.activeContracts}</div>
-          <div class="kpi-subtext">$${(metrics.totalContractValue / 1000).toFixed(0)}k total portfolio value</div>
-        </div>
-
-        <div class="kpi-card" onclick="window.location.hash='#/contracts'">
-          <div class="kpi-card-header">
-            <span class="kpi-title">Expiring Soon (30d)</span>
-            <div class="kpi-icon-wrapper" style="background: #FFF7ED; color: #C2410C;">⚠️</div>
-          </div>
-          <div class="kpi-value" style="color: ${metrics.contractsExpiringSoon > 0 ? '#C2410C' : '#0F172A'};">${metrics.contractsExpiringSoon}</div>
-          <div class="kpi-subtext">Requires renewal or notice</div>
-        </div>
-
-        <div class="kpi-card" onclick="window.location.hash='#/requests'">
-          <div class="kpi-card-header">
-            <span class="kpi-title">Completed</span>
-            <div class="kpi-icon-wrapper" style="background: #FAF5FF; color: #6B21A8;">✓</div>
-          </div>
-          <div class="kpi-value">${metrics.completed}</div>
-          <div class="kpi-subtext">Avg TAT: ${metrics.averageTurnaroundDays} days</div>
-        </div>
-      </div>
-
-      <!-- Main Dashboard Grid -->
-      <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
-        
-        <!-- Left Column: Pipeline & Priorities -->
-        <div>
-          <!-- Request Pipeline Stage Stepper Overview -->
-          <div class="enterprise-card">
-            <div class="enterprise-card-header">
-              <div class="enterprise-card-title">
-                <span>🔄</span>
-                <span>Request Workflow Pipeline Overview</span>
-              </div>
-              <a href="#/requests" style="font-size: 12px; color: #2563EB; font-weight: 600; text-decoration: none;">View Request Board →</a>
-            </div>
-            <div style="padding: 20px;">
-              <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
-                <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 14px; text-align: center;">
-                  <div style="font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase;">1. New / Pending</div>
-                  <div style="font-size: 22px; font-weight: 700; color: #1E40AF; margin-top: 4px;">${metrics.pendingLegalReview}</div>
-                  <div style="font-size: 11px; color: #94A3B8;">Awaiting triage</div>
-                </div>
-                <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 14px; text-align: center;">
-                  <div style="font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase;">2. Under Review</div>
-                  <div style="font-size: 22px; font-weight: 700; color: #7C3AED; margin-top: 4px;">${metrics.accepted}</div>
-                  <div style="font-size: 11px; color: #94A3B8;">Redlining & Remarks</div>
-                </div>
-                <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 14px; text-align: center;">
-                  <div style="font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase;">3. Signing Pending</div>
-                  <div style="font-size: 22px; font-weight: 700; color: #047857; margin-top: 4px;">1</div>
-                  <div style="font-size: 11px; color: #94A3B8;">Awaiting signatures</div>
-                </div>
-                <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 14px; text-align: center;">
-                  <div style="font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase;">4. Finalized & CLM</div>
-                  <div style="font-size: 22px; font-weight: 700; color: #0F172A; margin-top: 4px;">${metrics.completed}</div>
-                  <div style="font-size: 11px; color: #94A3B8;">Stored in Vault</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Priority Action Queue -->
-          <div class="enterprise-card">
-            <div class="enterprise-card-header">
-              <div class="enterprise-card-title">
-                <span>🔥</span>
-                <span>My High-Priority & Urgent Legal Requests</span>
-              </div>
-              <span class="badge badge-rose">${urgentRequests.length} High Priority</span>
-            </div>
-            <div class="table-responsive">
-              <table class="enterprise-table">
-                <thead>
-                  <tr>
-                    <th>Request ID</th>
-                    <th>Title</th>
-                    <th>Department</th>
-                    <th>Priority</th>
-                    <th>Target Due Date</th>
-                    <th>Status</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${
-                    urgentRequests.length === 0
-                      ? `<tr><td colspan="7" style="text-align: center; padding: 32px; color: #94A3B8;">No urgent requests pending.</td></tr>`
-                      : urgentRequests
-                          .map(
-                            r => `
-                        <tr>
-                          <td>
-                            <a href="#/requests/${r.id}" style="font-family: var(--font-mono); font-weight: 700; color: #2563EB; text-decoration: none;">
-                              ${r.requestId}
-                            </a>
-                          </td>
-                          <td style="font-weight: 600; max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                            ${r.title}
-                          </td>
-                          <td>
-                            <span class="badge badge-slate">${r.departmentName}</span>
-                          </td>
-                          <td>
-                            <span class="badge badge-${r.priority === 'CRITICAL' || r.priority === 'URGENT' ? 'rose' : 'orange'}">
-                              ${r.priority}
-                            </span>
-                          </td>
-                          <td style="font-family: var(--font-mono); font-size: 12px; color: #B45309; font-weight: 600;">
-                            ${r.currentDueDate}
-                          </td>
-                          <td>
-                            <span class="badge badge-blue">${r.status.replace(/_/g, ' ')}</span>
-                          </td>
-                          <td>
-                            <a href="#/requests/${r.id}" class="btn btn-secondary btn-sm" style="padding: 3px 8px; font-size: 11.5px;">
-                              Open Ticket →
-                            </a>
-                          </td>
-                        </tr>
-                      `
-                          )
-                          .join('')
-                  }
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <!-- Department Request Distribution (All 11 Departments) -->
-          <div class="enterprise-card">
-            <div class="enterprise-card-header">
-              <div class="enterprise-card-title">
-                <span>🏢</span>
-                <span>Department Workload & Active Portfolio Overview</span>
-              </div>
-              <a href="#/departments" style="font-size: 12px; color: #2563EB; font-weight: 600; text-decoration: none;">View All 11 Departments →</a>
-            </div>
-            <div style="padding: 16px;">
-              <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px;">
-                ${metrics.departmentDistribution
-                  .map(
-                    d => `
-                  <div style="
-                    background: #FFFFFF;
-                    border: 1px solid #E2E8F0;
-                    border-radius: 8px;
-                    padding: 12px;
-                    cursor: pointer;
-                    transition: all 0.15s ease;
-                  " onmouseover="this.style.borderColor='#2563EB'; this.style.transform='translateY(-2px)'"
-                     onmouseout="this.style.borderColor='#E2E8F0'; this.style.transform='translateY(0)'"
-                     onclick="window.location.hash='#/departments';">
-                    <div style="font-size: 12.5px; font-weight: 700; color: #0F172A;">${d.name}</div>
-                    <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 11.5px; color: #64748B;">
-                      <span>Requests:</span>
-                      <strong style="color: #2563EB;">${d.totalRequests}</strong>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; font-size: 11.5px; color: #64748B;">
-                      <span>Contracts:</span>
-                      <strong style="color: #047857;">${d.activeContracts}</strong>
-                    </div>
-                  </div>
-                `
-                  )
-                  .join('')}
-              </div>
-            </div>
-          </div>
-
-        </div>
-
-        <!-- Right Column: Expiring Contracts & Activity Feed -->
-        <div>
-          <!-- Contracts Expiring Soon Alert Box -->
-          <div class="enterprise-card" style="border-left: 4px solid #F59E0B;">
-            <div class="enterprise-card-header">
-              <div class="enterprise-card-title">
-                <span>⚠️</span>
-                <span>Contracts Expiring Soon</span>
-              </div>
-              <a href="#/contracts" style="font-size: 12px; color: #B45309; font-weight: 600; text-decoration: none;">CLM Module →</a>
-            </div>
-            <div style="padding: 12px 16px;">
-              ${
-                expiringContracts.length === 0
-                  ? '<div style="padding: 16px; text-align: center; color: #94A3B8; font-size: 12.5px;">No contracts expiring in next 30 days.</div>'
-                  : expiringContracts
-                      .map(
-                        c => `
-                    <div style="padding: 10px 0; border-bottom: 1px solid #F1F5F9;">
-                      <div style="display: flex; justify-content: space-between; align-items: start;">
-                        <div>
-                          <div style="font-size: 12.5px; font-weight: 700; color: #0F172A;">${c.name}</div>
-                          <div style="font-size: 11px; color: #64748B;">${c.counterparty} • ${c.departmentName}</div>
-                        </div>
-                        <span class="badge badge-amber">Exp: ${c.expiryDate}</span>
-                      </div>
-                      <div style="font-size: 11px; color: #047857; font-weight: 600; margin-top: 4px;">
-                        Value: $${c.contractValue.toLocaleString()}
-                      </div>
-                    </div>
-                  `
-                      )
-                      .join('')
-              }
-            </div>
-          </div>
-
-          <!-- AI Legal Assistant Quick Teaser -->
-          <div class="enterprise-card" style="background: linear-gradient(135deg, #1E293B, #0F172A); color: #FFFFFF; border: none;">
-            <div style="padding: 20px;">
-              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                <span style="font-size: 20px;">✨</span>
-                <h4 style="color: #FFFFFF; font-size: 15px; font-weight: 700;">Legal AI Assistant</h4>
-              </div>
-              <p style="font-size: 12px; color: #94A3B8; margin-bottom: 14px; line-height: 1.4;">
-                Search clause obligations, summarize draft agreements, or check liability limits across authorized documents.
-              </p>
-              <button class="btn btn-sm" style="background: #2563EB; color: #FFFFFF; width: 100%; font-weight: 600;" onclick="window.location.hash='#/assistant'">
-                Launch Legal Assistant →
-              </button>
-            </div>
-          </div>
-
-          <!-- Recent Activity & Audit Logs -->
-          ${
-            isLegal
-              ? `
-            <div class="enterprise-card">
-              <div class="enterprise-card-header">
-                <div class="enterprise-card-title">
-                  <span>🛡️</span>
-                  <span>Recent Audit Activity</span>
-                </div>
-                <a href="#/audit-logs" style="font-size: 12px; color: #2563EB; font-weight: 600; text-decoration: none;">View Full Audit →</a>
-              </div>
-              <div style="padding: 10px 16px;">
-                ${recentActivity
-                  .map(
-                    a => `
-                  <div style="padding: 8px 0; border-bottom: 1px solid #F1F5F9; font-size: 12px;">
-                    <div style="display: flex; justify-content: space-between;">
-                      <strong>${a.actorName}</strong>
-                      <span style="font-size: 10.5px; color: #94A3B8;">${new Date(a.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                    </div>
-                    <div style="color: #475569; margin-top: 2px;">
-                      ${a.action.replace(/_/g, ' ')} on <code style="font-family: var(--font-mono); color: #2563EB;">${a.objectId}</code>
-                    </div>
-                  </div>
-                `
-                  )
-                  .join('')}
-              </div>
-            </div>
-          `
-              : ''
-          }
-
-        </div>
-
-      </div>
-    </div>
-  `;
-}
-
-
 // === File: src\js\pages\DocumentsPage.js ===
 /**
- * Impacteers Legal docs
- * Centralized Legal Document Repository & Vault Page
- * With "+ Add Document" Dialog & Department Sharing Permissions
- */
-function renderDocumentsPage() {
-  const user = authService.getCurrentUser();
-  const isLegal = authService.isLegalManager();
-  const isChairman = authService.isChairman();
-  const docs = documentService.getDocuments();
-
-  return `
-    <div class="content-container" style="max-width: 1200px;">
-      
-      <!-- Page Header -->
-      <div class="page-header" style="margin-bottom: 20px;">
-        <div>
-          <h1 class="page-title" style="font-size: 22px; font-weight: 700; color: #0F172A;">
-            📁 Documents Vault & Repository
-          </h1>
-          <p class="page-subtitle" style="font-size: 13px; color: #64748B; margin-top: 2px;">
-            Central repository of executed agreements, master contracts, and company legal records.
-          </p>
-        </div>
-        <div>
-          ${
-            isLegal
-              ? `
-// === File: src\js\pages\DocumentsPage.js ===
-/**
- * Impacteers DMS — Enterprise In-House Legal & Document Management System
+ * Impacteers DMS â€” Enterprise In-House Legal & Document Management System
  * Centralized Legal Document Repository & Vault Page
  * With "+ Add Document" Dialog, Department Sharing Permissions & Delete Actions
  */
+
+
 function renderDocumentsPage() {
   const user = authService.getCurrentUser();
   const isLegal = authService.isLegalManager();
@@ -6752,7 +5287,7 @@ function renderDocumentsPage() {
       <div class="page-header" style="margin-bottom: 20px;">
         <div>
           <h1 class="page-title" style="font-size: 22px; font-weight: 700; color: #0F172A;">
-            📁 Documents Vault & Repository
+            ðŸ“ Documents Vault & Repository
           </h1>
           <p class="page-subtitle" style="font-size: 13px; color: #64748B; margin-top: 2px;">
             Central repository of executed agreements, master contracts, and company legal records.
@@ -6763,7 +5298,7 @@ function renderDocumentsPage() {
             isLegal
               ? `
             <button class="btn btn-secondary btn-sm" id="btn-purge-all-docs" onclick="window.deleteAllVaultDocuments()" style="font-size: 12px; color: #DC2626; border-color: #FECDD3; background: #FFF1F2;">
-              🗑️ Clear All Old Documents
+              ðŸ—‘ï¸ Clear All Old Documents
             </button>
             <button class="btn btn-primary btn-sm" id="btn-vault-add-doc" style="font-size: 12.5px; padding: 7px 14px; font-weight: 600;">
               + Add Document
@@ -6792,13 +5327,14 @@ function renderDocumentsPage() {
             type="text" 
             id="doc-search-input" 
             class="form-input" 
-            placeholder="Search documents by title, file name, or type..." 
+            placeholder="Search documents by title, file name, keyword, or counterparty..." 
+            oninput="window.filterVaultDocs()"
             style="height: 36px; font-size: 13px; padding: 6px 12px;"
           />
         </div>
 
         <div>
-          <select id="doc-dept-filter" class="form-select" style="min-width: 170px; height: 36px; font-size: 12.5px; padding: 6px 10px;">
+          <select id="doc-dept-filter" class="form-select" onchange="window.filterVaultDocs()" style="min-width: 170px; height: 36px; font-size: 12.5px; padding: 6px 10px;">
             <option value="">All Scopes & Departments</option>
             <option value="ALL">Company-Wide (All)</option>
             <option value="LEGAL_ONLY">Confidential Legal Only</option>
@@ -6807,7 +5343,7 @@ function renderDocumentsPage() {
         </div>
 
         <div>
-          <select id="doc-type-filter" class="form-select" style="min-width: 150px; height: 36px; font-size: 12.5px; padding: 6px 10px;">
+          <select id="doc-type-filter" class="form-select" onchange="window.filterVaultDocs()" style="min-width: 150px; height: 36px; font-size: 12.5px; padding: 6px 10px;">
             <option value="">All Document Types</option>
             <option value="Agreement">Agreement</option>
             <option value="MSA">Master Services Agreement (MSA)</option>
@@ -6818,7 +5354,15 @@ function renderDocumentsPage() {
           </select>
         </div>
 
-        <button id="doc-reset-filter-btn" class="btn btn-secondary btn-sm" style="height: 36px; padding: 0 12px; font-size: 12px;">
+        <button id="doc-reset-filter-btn" class="btn btn-secondary btn-sm" onclick="
+          const s = document.getElementById('doc-search-input');
+          const d = document.getElementById('doc-dept-filter');
+          const t = document.getElementById('doc-type-filter');
+          if (s) s.value = '';
+          if (d) d.value = '';
+          if (t) t.value = '';
+          window.filterVaultDocs();
+        " style="height: 36px; padding: 0 12px; font-size: 12px;">
           Reset
         </button>
       </div>
@@ -6861,7 +5405,7 @@ function renderVaultDocRows(docs) {
     return `
       <tr>
         <td colspan="6" style="text-align: center; padding: 40px 16px; color: #94A3B8;">
-          <div style="font-size: 28px; margin-bottom: 6px;">📂</div>
+          <div style="font-size: 28px; margin-bottom: 6px;">ðŸ“‚</div>
           <div style="font-size: 14px; font-weight: 600; color: #475569;">No documents found in vault.</div>
           <div style="font-size: 12px; color: #94A3B8; margin-top: 2px;">Click "+ Add Document" above to upload a new record.</div>
         </td>
@@ -6876,16 +5420,16 @@ function renderVaultDocRows(docs) {
 
       let scopeBadge = `<span class="badge badge-slate" style="font-size: 11px;">${doc.departmentName}</span>`;
       if (doc.departmentId === 'ALL') {
-        scopeBadge = `<span class="badge badge-blue" style="font-size: 11px;">🌐 All Departments</span>`;
+        scopeBadge = `<span class="badge badge-blue" style="font-size: 11px;">ðŸŒ All Departments</span>`;
       } else if (doc.departmentId === 'LEGAL_ONLY' || doc.isPrivilegedOnly) {
-        scopeBadge = `<span class="badge badge-rose" style="font-size: 11px;">🔒 Legal & Chairman</span>`;
+        scopeBadge = `<span class="badge badge-rose" style="font-size: 11px;">ðŸ”’ Legal & Chairman</span>`;
       }
 
       return `
       <tr style="border-bottom: 1px solid #F1F5F9; transition: background 0.1s ease;" onmouseover="this.style.background='#F8FAFC'" onmouseout="this.style.background='transparent'">
         <td style="padding: 12px 16px; vertical-align: middle;">
           <div style="font-weight: 600; font-size: 13.5px; color: #0F172A; display: flex; align-items: center; gap: 6px;">
-            <span>📜</span>
+            <span>ðŸ“œ</span>
             <span>${doc.title}</span>
           </div>
           <div style="font-size: 11.5px; color: #64748B; margin-top: 2px; margin-left: 22px;">
@@ -6911,7 +5455,7 @@ function renderVaultDocRows(docs) {
               style="padding: 3px 8px; font-size: 11px; font-weight: 600;" 
               onclick="window.downloadDocumentFile('${fileName}', '${doc.title.replace(/'/g, "\\'")}')"
             >
-              📥 Download
+              ðŸ“¥ Download
             </button>
             ${
               isLegal
@@ -6922,7 +5466,7 @@ function renderVaultDocRows(docs) {
                 onclick="window.deleteVaultDocument('${doc.id}', '${doc.title.replace(/'/g, "\\'")}')"
                 title="Delete this document"
               >
-                🗑️ Delete
+                ðŸ—‘ï¸ Delete
               </button>
             `
                 : ''
@@ -6935,214 +5479,14 @@ function renderVaultDocRows(docs) {
     .join('');
 }
 
-
-// === File: src\js\pages\ContractsPage.js ===
-/**
- * Enterprise In-House Legal Management System
- * Contract Lifecycle Management (CLM) Page
- */
-function renderContractsPage() {
-  const user = authService.getCurrentUser();
-  const isLegal = authService.isLegalTeam();
-  const contracts = contractService.getContracts();
-  const expiringSoon = contracts.filter(c => c.status === 'EXPIRING_SOON');
-
-  return `
-    <div class="content-container">
-      <div class="page-header">
-        <div>
-          <div class="page-title">
-            <span>📜</span>
-            <span>Contract Lifecycle Management (CLM)</span>
-          </div>
-          <div class="page-subtitle">
-            Central repository of active agreements, automated expiry tracking, renewal notices, and commercial metadata.
-          </div>
-        </div>
-        <div style="display: flex; gap: 10px;">
-          <button class="btn btn-secondary btn-sm" onclick="window.exportContractsCsv()">
-            <span>📥 Export Contracts CSV</span>
-          </button>
-          <button class="btn btn-primary btn-sm" id="create-contract-btn">
-            <span>+ Create Contract Record</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Expiry Alert Banner -->
-      ${
-        expiringSoon.length > 0
-          ? `
-        <div style="
-          background: #FFFBEB;
-          border: 1px solid #FDE68A;
-          border-left: 4px solid #F59E0B;
-          border-radius: 8px;
-          padding: 16px;
-          margin-bottom: 24px;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-        ">
-          <div style="display: flex; align-items: center; gap: 12px;">
-            <span style="font-size: 24px;">⚠️</span>
-            <div>
-              <strong style="color: #92400E; font-size: 14px;">
-                ${expiringSoon.length} Active Contract${expiringSoon.length > 1 ? 's are' : ' is'} Expiring Soon!
-              </strong>
-              <div style="font-size: 12px; color: #B45309; margin-top: 2px;">
-                Review renewal deadlines and notice period requirements to prevent unexpected lapse or automatic rollover.
-              </div>
-            </div>
-          </div>
-          <button class="btn btn-secondary btn-sm" onclick="document.getElementById('contract-status-filter').value='EXPIRING_SOON'; window.filterContracts();">
-            View Expiring Contracts
-          </button>
-        </div>
-      `
-          : ''
-      }
-
-      <!-- Filter Toolbar -->
-      <div style="
-        background: #FFFFFF;
-        border: 1px solid #E2E8F0;
-        border-radius: 12px;
-        padding: 16px;
-        margin-bottom: 20px;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        flex-wrap: wrap;
-      ">
-        <div style="flex: 1; min-width: 240px;">
-          <input type="text" id="contract-search-input" class="form-input" placeholder="Search by contract ID, title, vendor, counterparty..." />
-        </div>
-
-        <div>
-          <select id="contract-status-filter" class="form-select" style="min-width: 160px;">
-            <option value="">All Statuses</option>
-            ${Object.keys(CONTRACT_STATUSES).map(k => `<option value="${k}">${CONTRACT_STATUSES[k].label}</option>`).join('')}
-          </select>
-        </div>
-
-        ${
-          isLegal
-            ? `
-          <div>
-            <select id="contract-dept-filter" class="form-select" style="min-width: 160px;">
-              <option value="">All Departments</option>
-              ${DEPARTMENTS.map(d => `<option value="${d.id}">${d.name}</option>`).join('')}
-            </select>
-          </div>
-        `
-            : ''
-        }
-      </div>
-
-      <!-- Contracts Table -->
-      <div class="enterprise-card">
-        <div class="enterprise-card-header">
-          <div class="enterprise-card-title">
-            <span>📑</span>
-            <span>Active Contract Portfolio (<span id="contract-count">${contracts.length}</span>)</span>
-          </div>
-        </div>
-        <div class="table-responsive">
-          <table class="enterprise-table">
-            <thead>
-              <tr>
-                <th>Contract ID</th>
-                <th>Contract Name & Type</th>
-                <th>Department</th>
-                <th>Counterparty</th>
-                <th>Effective Date</th>
-                <th>Expiry Date</th>
-                <th>Contract Value</th>
-                <th>Status</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody id="contracts-tbody">
-              ${renderContractRows(contracts)}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  `;
-}
-
-function renderContractRows(contracts) {
-  if (contracts.length === 0) {
-    return `
-      <tr>
-        <td colspan="9" style="text-align: center; padding: 48px; color: #94A3B8;">
-          <div style="font-size: 32px; margin-bottom: 8px;">📜</div>
-          <div style="font-size: 15px; font-weight: 600; color: #475569;">No contracts found in this view.</div>
-        </td>
-      </tr>
-    `;
-  }
-
-  return contracts
-    .map(c => {
-      const statusStyle =
-        c.status === 'ACTIVE'
-          ? 'green'
-          : c.status === 'EXPIRING_SOON'
-          ? 'amber'
-          : c.status === 'EXPIRED'
-          ? 'rose'
-          : 'slate';
-
-      return `
-      <tr>
-        <td>
-          <span style="font-family: var(--font-mono); font-weight: 700; color: #047857; font-size: 12.5px;">
-            ${c.contractId}
-          </span>
-        </td>
-        <td style="max-width: 260px;">
-          <div style="font-weight: 600; color: #0F172A; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-            ${c.name}
-          </div>
-          <div style="font-size: 11px; color: #64748B;">
-            ${c.contractType}
-          </div>
-        </td>
-        <td><span class="badge badge-slate">${c.departmentName}</span></td>
-        <td style="font-size: 12.5px; font-weight: 500;">${c.counterparty}</td>
-        <td style="font-family: var(--font-mono); font-size: 12px; color: #475569;">${c.effectiveDate}</td>
-        <td style="font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: ${c.status === 'EXPIRING_SOON' ? '#B45309' : '#0F172A'};">
-          ${c.expiryDate}
-        </td>
-        <td style="font-family: var(--font-mono); font-size: 12.5px; font-weight: 700; color: #047857;">
-          $${c.contractValue.toLocaleString()} ${c.currency}
-        </td>
-        <td>
-          <span class="badge badge-${statusStyle}">
-            ${c.status.replace(/_/g, ' ')}
-          </span>
-        </td>
-        <td>
-          <button class="btn btn-secondary btn-sm" style="padding: 3px 8px; font-size: 11px;" onclick="window.viewContractModal('${c.id}')">
-            View Details →
-          </button>
-        </td>
-      </tr>
-    `;
-    })
-    .join('');
-}
-
-
 // === File: src\js\pages\DepartmentsPage.js ===
 /**
- * Impacteers DMS — Enterprise In-House Legal & Document Management System
+ * Impacteers DMS â€” Enterprise In-House Legal & Document Management System
  * Document Database & Contracts Repository Page
  * Shows all company legal agreements across departments with search and filtering
  */
+
+
 function renderDepartmentsPage(selectedDeptId = null) {
   const user = authService.getCurrentUser();
   const isLegal = authService.isLegalManager();
@@ -7161,7 +5505,7 @@ function renderDepartmentsPage(selectedDeptId = null) {
       <div class="page-header" style="margin-bottom: 20px;">
         <div>
           <h1 class="page-title" style="font-size: 22px; font-weight: 700; color: #0F172A;">
-            🗄️ Document & Contracts Database
+            ðŸ—„ï¸ Document & Contracts Database
           </h1>
           <p class="page-subtitle" style="font-size: 13px; color: #64748B; margin-top: 2px;">
             Central enterprise database indexing all active contracts, department agreements, and approved legal records.
@@ -7207,7 +5551,7 @@ function renderDepartmentsPage(selectedDeptId = null) {
             style="border-radius: 20px; padding: 5px 14px; font-size: 12px; font-weight: 600; white-space: nowrap;"
             onclick="window.filterDatabaseDept('LEGAL_ONLY')"
           >
-            🔒 Legal Vault
+            ðŸ”’ Legal Vault
           </button>
         `
             : ''
@@ -7281,7 +5625,7 @@ function renderDatabaseDocRows(allDocs) {
 
   if (!allDocs || allDocs.length === 0) {
     return `<tr><td colspan="6" style="text-align: center; padding: 40px 16px; color: #94A3B8;">
-      <div style="font-size: 26px; margin-bottom: 4px;">📂</div>
+      <div style="font-size: 26px; margin-bottom: 4px;">ðŸ“‚</div>
       <div style="font-size: 13.5px; font-weight: 600; color: #475569;">No documents found.</div>
       <div style="font-size: 12px; color: #94A3B8; margin-top: 2px;">Try adjusting your search terms or department filters.</div>
     </td></tr>`;
@@ -7295,7 +5639,7 @@ function renderDatabaseDocRows(allDocs) {
     <tr style="border-bottom: 1px solid #F1F5F9; transition: background 0.1s ease;" onmouseover="this.style.background='#F8FAFC'" onmouseout="this.style.background='transparent'">
       <td style="padding: 12px 16px; vertical-align: middle;">
         <div style="font-weight: 600; font-size: 13.5px; color: #0F172A; display: flex; align-items: center; gap: 6px;">
-          <span>📜</span>
+          <span>ðŸ“œ</span>
           <span>${doc.title}</span>
         </div>
         <div style="font-size: 11.5px; color: #64748B; margin-top: 2px; margin-left: 22px;">
@@ -7321,7 +5665,7 @@ function renderDatabaseDocRows(allDocs) {
             style="padding: 3px 8px; font-size: 11px; font-weight: 600;" 
             onclick="window.downloadDocumentFile('${fileName}', '${doc.title.replace(/'/g, "\\'")}')"
           >
-            📥 Download
+            ðŸ“¥ Download
           </button>
           ${
             isLegal
@@ -7332,7 +5676,7 @@ function renderDatabaseDocRows(allDocs) {
               onclick="window.deleteVaultDocument('${doc.id}', '${doc.title.replace(/'/g, "\\'")}')"
               title="Delete this document"
             >
-              🗑️ Delete
+              ðŸ—‘ï¸ Delete
             </button>
           `
               : ''
@@ -7345,16 +5689,16 @@ function renderDatabaseDocRows(allDocs) {
     .join('');
 }
 
-
 // === File: src\js\pages\CalendarPage.js ===
 /**
- * Impacteers LMS — Legal Management System
+ * Impacteers LMS â€” Legal Management System
  * Senior UI/UX Designer Grade Centered Calendar
  * Symmetrical 7-Column Grid, Pixel-Perfect Centering, Real Date Math (Day 1 to 31)
  */
 
 
 let calendarMonthOffset = 0;
+
 function renderCalendarPage(monthOffset = 0) {
   calendarMonthOffset = monthOffset;
   const requests = requestService.getRequests();
@@ -7427,14 +5771,14 @@ function renderCalendarPage(monthOffset = 0) {
               font-size: 20px;
               box-shadow: inset 0 0 0 1px rgba(37, 99, 235, 0.1);
             ">
-              🗓️
+              ðŸ—“ï¸
             </div>
             <div>
               <h1 style="font-size: 20px; font-weight: 800; color: #0F172A; margin: 0; letter-spacing: -0.02em;">
                 ${currentMonthName} ${year}
               </h1>
               <div style="font-size: 12px; color: #64748B; margin-top: 1px; font-weight: 500;">
-                ${daysInMonth} Days • ${dueRequests.length} Scheduled Contract Deadlines
+                ${daysInMonth} Days â€¢ ${dueRequests.length} Scheduled Contract Deadlines
               </div>
             </div>
           </div>
@@ -7447,7 +5791,7 @@ function renderCalendarPage(monthOffset = 0) {
               onclick="window.navigateCalendar(${monthOffset - 1})"
               title="Previous Month"
             >
-              ‹ Prev
+              â€¹ Prev
             </button>
 
             <button 
@@ -7465,7 +5809,7 @@ function renderCalendarPage(monthOffset = 0) {
               onclick="window.navigateCalendar(${monthOffset + 1})"
               title="Next Month"
             >
-              Next ›
+              Next â€º
             </button>
           </div>
 
@@ -7533,7 +5877,7 @@ function renderCalendarPage(monthOffset = 0) {
             </div>
           </div>
           <div>
-            <span style="color: #64748B; font-weight: 500;">💡 Click any agreement tag to jump straight into the task review.</span>
+            <span style="color: #64748B; font-weight: 500;">ðŸ’¡ Click any agreement tag to jump straight into the task review.</span>
           </div>
         </div>
 
@@ -7643,7 +5987,7 @@ function renderCenteredCalendarCells(year, month, firstDayIndex, daysInMonth, pr
               onmouseover="this.style.transform='scale(1.02)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.06)';"
               onmouseout="this.style.transform='none'; this.style.boxShadow='none';"
             >
-              📄 ${ev.title}
+              ðŸ“„ ${ev.title}
             </a>
           `;
           }).join('')}
@@ -7683,201 +6027,621 @@ window.navigateCalendar = function(offset) {
   }
 };
 
-
 // === File: src\js\pages\LegalAssistantPage.js ===
 /**
- * Impacteers DMS — Enterprise In-House Legal & Document Management System
- * Full Page Legal AI Assistant (Local Ollama LLM + RAG Grounding Engine)
+ * Impacteers DMS â€” Enterprise In-House Legal & Document Management System
+ * Full 3-Panel Enterprise AI Legal Assistant & Contract Audit Workspace
  */
+
 
 function renderLegalAssistantPage() {
   const user = authService.getCurrentUser();
+  const sessions = aiService.getSessions();
+  const currentSession = aiService.getCurrentSession() || (sessions.length ? sessions[0] : null);
+  const activeJurisdiction = currentSession ? currentSession.jurisdiction : aiService.getJurisdiction();
+  const activeMode = aiService.getMode();
   const suggestedPrompts = legalAssistantService.getSuggestedPrompts();
-  const authorizedDocs = legalAssistantService.getAuthorizedContextDocuments();
+  const vaultDocs = legalAssistantService.getAuthorizedContextDocuments();
   const disclaimer = legalAssistantService.getSafetyDisclaimer();
 
+  const attachedDoc = currentSession ? currentSession.attachedDocument : null;
+  const messages = currentSession ? currentSession.messages : [];
+  const extractedClauses = attachedDoc ? legalAssistantService.extractClauses(attachedDoc.text) : [];
+
   return `
-    <div class="content-container" style="max-width: 1200px;">
-      <!-- Header -->
-      <div class="page-header" style="margin-bottom: 16px;">
-        <div>
-          <div class="page-title">
-            <span>🤖</span>
-            <span>Local AI Legal Assistant (Ollama Powered)</span>
-          </div>
-          <div class="page-subtitle">
-            100% private, on-device enterprise intelligence across contracts, NDAs, and corporate policies.
-          </div>
+    <div class="content-container" style="max-width: 1440px; padding: 0 16px 24px 16px;">
+      
+      <!-- Top Page Breadcrumb & Quick Info -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <h1 style="font-size: 22px; font-weight: 700; color: #0F172A; margin: 0; display: flex; align-items: center; gap: 8px;">
+            <span>âš–ï¸</span>
+            <span>AI Legal Assistant & Contract Workspace</span>
+          </h1>
+          <span class="badge badge-blue" style="font-size: 11.5px; font-weight: 700; padding: 3px 10px;">Enterprise AI</span>
         </div>
-        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-          <div id="page-ollama-status-pill" onclick="window.showOllamaSetupModal()" style="font-size: 12px; padding: 4px 12px; border-radius: 20px; background: #FEF3C7; color: #92400E; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px;" title="Click for Ollama setup guide">
-            <span style="width: 8px; height: 8px; border-radius: 50%; background: #F59E0B; display: inline-block;"></span>
-            <span>Checking Ollama...</span>
+
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div id="ai-backend-status-pill" style="font-size: 12px; padding: 4px 12px; border-radius: 20px; background: #ECFDF5; color: #065F46; font-weight: 700; display: flex; align-items: center; gap: 6px; border: 1px solid #A7F3D0;">
+            <span style="width: 8px; height: 8px; border-radius: 50%; background: #10B981; display: inline-block;"></span>
+            <span>AI Gateway Connected</span>
           </div>
-          <button class="btn btn-secondary btn-sm" onclick="window.showOllamaSetupModal()">
-            ⚙️ Ollama Setup Guide
+          <button class="btn btn-secondary btn-sm" onclick="window.showAIConfigModal()" style="font-size: 12px;">
+            âš™ï¸ AI & Provider Settings
           </button>
         </div>
       </div>
 
-      <!-- Regulatory Safety Disclaimer Banner -->
+      <!-- Mandatory Safety & Regulatory Disclaimer Banner -->
       <div style="
         background: #EFF6FF;
         border: 1px solid #BFDBFE;
         border-left: 4px solid #2563EB;
         border-radius: 8px;
-        padding: 12px 16px;
-        margin-bottom: 20px;
+        padding: 10px 16px;
+        margin-bottom: 16px;
         display: flex;
         align-items: center;
         gap: 12px;
       ">
-        <span style="font-size: 20px;">🛡️</span>
-        <div style="font-size: 12.5px; color: #1E40AF; line-height: 1.4;">
-          <strong>Private AI Legal Intelligence:</strong> ${disclaimer}
+        <span style="font-size: 18px;">ðŸ›¡ï¸</span>
+        <div style="font-size: 12px; color: #1E40AF; line-height: 1.45;">
+          <strong>Legal Information Notice:</strong> ${disclaimer}
         </div>
       </div>
 
-      <!-- Main Chat Area -->
+      <!-- 3-Panel Main Layout Container -->
       <div style="
-        background: #FFFFFF;
-        border: 1px solid #E2E8F0;
-        border-radius: 12px;
-        display: flex;
-        flex-direction: column;
-        height: calc(100vh - 270px);
-        min-height: 540px;
-        box-shadow: var(--shadow-sm);
-        overflow: hidden;
-      ">
-        
-        <!-- Context Document Selector & Model Picker Bar -->
+        display: grid;
+        grid-template-columns: 280px 1fr 300px;
+        gap: 16px;
+        height: calc(100vh - 230px);
+        min-height: 600px;
+      " id="ai-three-panel-grid">
+
+        <!-- ================================================================= -->
+        <!-- PANEL 1 (LEFT): Chat Sessions & Jurisdiction Controls -->
+        <!-- ================================================================= -->
         <div style="
-          padding: 12px 20px;
-          background: #F8FAFC;
-          border-bottom: 1px solid #E2E8F0;
+          background: #FFFFFF;
+          border: 1px solid #E2E8F0;
+          border-radius: 12px;
           display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 16px;
-          flex-wrap: wrap;
+          flex-direction: column;
+          overflow: hidden;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.03);
         ">
-          <!-- Document Context Selector -->
-          <div style="display: flex; align-items: center; gap: 8px; flex: 1; min-width: 260px;">
-            <span style="font-size: 13px; font-weight: 600; color: #334155; white-space: nowrap;">📄 Grounding Context:</span>
-            <select id="ai-document-context-select" class="form-select" style="font-size: 12.5px; padding: 6px 10px; max-width: 380px;">
-              <option value="">All Authorized Vault Documents (${authorizedDocs.length} indexed)</option>
-              ${authorizedDocs
-                .map(
-                  d => `
-                <option value="${d.id}">
-                  ${d.title} (${d.departmentName} • v${d.currentVersion || 1})
-                </option>
-              `
-                )
-                .join('')}
+          <!-- New Chat Button -->
+          <div style="padding: 14px; border-bottom: 1px solid #E2E8F0;">
+            <button class="btn btn-primary" style="width: 100%; justify-content: center; font-weight: 600; font-size: 13px;" onclick="window.handleCreateNewChat()">
+              âž• New Legal Chat
+            </button>
+          </div>
+
+          <!-- Jurisdiction Selector Card -->
+          <div style="padding: 12px 14px; background: #F8FAFC; border-bottom: 1px solid #E2E8F0;">
+            <label style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #475569; letter-spacing: 0.05em; display: block; margin-bottom: 6px;">
+              ðŸ“ Active Jurisdiction
+            </label>
+            <select id="ai-jurisdiction-select" class="form-select" onchange="window.handleJurisdictionChange(this.value)" style="font-size: 12.5px; padding: 6px 10px; font-weight: 600; color: #0F172A;">
+              <option value="India" ${activeJurisdiction === 'India' ? 'selected' : ''}>ðŸ‡®ðŸ‡³ India (National Law)</option>
+              <option value="Tamil Nadu" ${activeJurisdiction === 'Tamil Nadu' ? 'selected' : ''}>ðŸ‡®ðŸ‡³ Tamil Nadu (State Law & Regulations)</option>
+              <option value="Delaware / US" ${activeJurisdiction === 'Delaware / US' ? 'selected' : ''}>ðŸ‡ºðŸ‡¸ Delaware / US (Corporate Law)</option>
+              <option value="United Kingdom" ${activeJurisdiction === 'United Kingdom' ? 'selected' : ''}>ðŸ‡¬ðŸ‡§ United Kingdom (Common Law)</option>
+              <option value="Custom" ${activeJurisdiction === 'Custom' ? 'selected' : ''}>ðŸŒ Custom / International</option>
             </select>
           </div>
 
-          <!-- Model Picker & Controls -->
-          <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-            <div style="display: flex; align-items: center; gap: 6px;">
-              <span style="font-size: 12.5px; font-weight: 600; color: #475569;">Model:</span>
-              <select id="ai-page-model-select" class="form-select" onchange="window.handleModelChange(this.value)" style="font-size: 12px; padding: 4px 8px; width: auto; min-width: 130px;">
-                <option value="llama3.2">llama3.2</option>
-                <option value="mistral">mistral</option>
-                <option value="qwen2.5">qwen2.5</option>
-                <option value="deepseek-r1">deepseek-r1</option>
-              </select>
-            </div>
+          <!-- Analysis Mode Switcher -->
+          <div style="padding: 10px 14px; border-bottom: 1px solid #E2E8F0; background: #FFFFFF;">
+            <label style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #475569; letter-spacing: 0.05em; display: block; margin-bottom: 6px;">
+              ðŸŽ¯ Analysis Focus
+            </label>
+            <select id="ai-mode-select" class="form-select" onchange="window.handleModeChange(this.value)" style="font-size: 12px; padding: 5px 8px;">
+              <option value="general" ${activeMode === 'general' ? 'selected' : ''}>âš–ï¸ General Legal Q&A</option>
+              <option value="review" ${activeMode === 'review' ? 'selected' : ''}>ðŸ“‘ Full Contract Audit</option>
+              <option value="explainer" ${activeMode === 'explainer' ? 'selected' : ''}>ðŸ” Clause Explainer</option>
+              <option value="compare" ${activeMode === 'compare' ? 'selected' : ''}>âš–ï¸ Compare Clauses</option>
+              <option value="missing_clauses" ${activeMode === 'missing_clauses' ? 'selected' : ''}>âš ï¸ Missing Clauses Audit</option>
+              <option value="checklist" ${activeMode === 'checklist' ? 'selected' : ''}>ðŸ“‹ Compliance Checklist</option>
+            </select>
+          </div>
 
-            <button class="btn btn-secondary btn-sm" id="ai-clear-chat-btn" style="font-size: 12px; padding: 4px 10px;">
-              🗑️ Clear Chat
+          <!-- Sessions List Header -->
+          <div style="padding: 10px 14px; font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.05em; display: flex; justify-content: space-between; align-items: center;">
+            <span>Recent Consultations</span>
+            <span style="font-size: 10.5px; background: #E2E8F0; padding: 1px 6px; border-radius: 10px; color: #334155;">${sessions.length}</span>
+          </div>
+
+          <!-- Sessions List -->
+          <div style="flex: 1; overflow-y: auto; padding: 0 8px;" id="ai-sessions-list-container">
+            ${sessions
+              .map(s => {
+                const isActive = currentSession && currentSession.id === s.id;
+                const msgCount = s.messages ? s.messages.length : 0;
+                return `
+                <div 
+                  onclick="window.handleSelectSession('${s.id}')"
+                  style="
+                    padding: 10px 12px;
+                    border-radius: 8px;
+                    margin-bottom: 4px;
+                    cursor: pointer;
+                    background: ${isActive ? '#EFF6FF' : 'transparent'};
+                    border: 1px solid ${isActive ? '#BFDBFE' : 'transparent'};
+                    transition: all 0.15s ease;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    gap: 8px;
+                  "
+                  onmouseover="if(!${isActive}) this.style.background='#F8FAFC'"
+                  onmouseout="if(!${isActive}) this.style.background='transparent'"
+                >
+                  <div style="flex: 1; min-width: 0;">
+                    <div style="font-size: 12.5px; font-weight: ${isActive ? '700' : '500'}; color: ${isActive ? '#1E40AF' : '#1E293B'}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                      ${s.title}
+                    </div>
+                    <div style="font-size: 11px; color: #64748B; margin-top: 2px;">
+                      ${new Date(s.updatedAt).toLocaleDateString()} â€¢ ${s.jurisdiction || 'India'}
+                    </div>
+                  </div>
+                  <button 
+                    onclick="event.stopPropagation(); window.handleDeleteSession('${s.id}')"
+                    style="background: transparent; border: none; font-size: 12px; cursor: pointer; color: #94A3B8; padding: 2px 4px; border-radius: 4px;"
+                    title="Delete consultation"
+                    onmouseover="this.style.color='#DC2626'"
+                    onmouseout="this.style.color='#94A3B8'"
+                  >
+                    ðŸ—‘ï¸
+                  </button>
+                </div>
+              `;
+              })
+              .join('')}
+          </div>
+
+          <!-- Left Panel Footer -->
+          <div style="padding: 10px 14px; border-top: 1px solid #E2E8F0; background: #FAFAFA;">
+            <button class="btn btn-secondary btn-sm" style="width: 100%; font-size: 11.5px; justify-content: center; color: #64748B;" onclick="window.handleClearAllSessions()">
+              ðŸ§¹ Clear All History
             </button>
           </div>
         </div>
 
-        <!-- Chat Messages Container -->
-        <div id="ai-messages-container" style="
-          flex: 1;
-          overflow-y: auto;
-          padding: 24px;
+        <!-- ================================================================= -->
+        <!-- PANEL 2 (CENTER): Active Chat Stream & Composer -->
+        <!-- ================================================================= -->
+        <div style="
+          background: #FFFFFF;
+          border: 1px solid #E2E8F0;
+          border-radius: 12px;
           display: flex;
           flex-direction: column;
-          gap: 16px;
-          background: #FFFFFF;
+          overflow: hidden;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.03);
         ">
-          <!-- Initial Welcome Message -->
-          <div style="display: flex; gap: 14px; max-width: 85%;">
-            <div style="
-              width: 36px;
-              height: 36px;
-              border-radius: 8px;
-              background: linear-gradient(135deg, #2563EB, #1D4ED8);
-              color: #FFFFFF;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              font-size: 18px;
-              flex-shrink: 0;
-            ">🤖</div>
-            <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 16px;">
-              <div style="font-weight: 600; font-size: 13px; color: #0F172A; margin-bottom: 6px;">Impacteers AI Legal Counsel</div>
-              <div style="font-size: 13.5px; color: #334155; line-height: 1.6;">
-                Hello <strong>${user.name}</strong>. I am your corporate legal assistant powered by local Ollama LLM. I have full permission-scoped visibility into your authorized documents.
-                <br/><br/>
-                You can ask me to:
-                <ul style="margin: 6px 0 0 18px; font-size: 13px; color: #475569;">
-                  <li>Audit liability caps and indemnification obligations</li>
-                  <li>Verify termination rights, cure periods, and transition requirements</li>
-                  <li>Check payment and invoice dispute terms</li>
-                  <li>Flag upcoming contract renewals and expirations</li>
-                </ul>
+          <!-- Active Conversation Header Bar -->
+          <div style="
+            padding: 12px 18px;
+            background: #F8FAFC;
+            border-bottom: 1px solid #E2E8F0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+          ">
+            <div style="display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0;">
+              <div style="font-size: 14px; font-weight: 700; color: #0F172A; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                ${currentSession ? currentSession.title : 'Legal Consultation'}
               </div>
+              <span class="badge badge-slate" style="font-size: 11px;">
+                ðŸ“ ${activeJurisdiction}
+              </span>
+            </div>
+
+            <!-- Attached Document Pill / Status -->
+            <div style="display: flex; align-items: center; gap: 8px;">
+              ${
+                attachedDoc
+                  ? `
+                <div style="font-size: 12px; padding: 4px 10px; border-radius: 6px; background: #EFF6FF; border: 1px solid #BFDBFE; color: #1E40AF; display: flex; align-items: center; gap: 6px;">
+                  <span>ðŸ“„ ${attachedDoc.name}</span>
+                  <span style="cursor: pointer; color: #DC2626; font-weight: 700;" onclick="window.handleRemoveAttachedDocument()" title="Remove document">âœ–</span>
+                </div>
+              `
+                  : `
+                <button class="btn btn-secondary btn-sm" onclick="window.openDocumentAttachModal()" style="font-size: 11.5px; padding: 4px 10px;">
+                  ðŸ“Ž Attach Agreement / Clause
+                </button>
+              `
+              }
+              <button class="btn btn-secondary btn-sm" onclick="window.toggleRightInspector()" style="font-size: 11.5px; padding: 4px 10px;">
+                ðŸ“Š Inspector
+              </button>
+            </div>
+          </div>
+
+          <!-- Chat Messages Container -->
+          <div id="ai-chat-messages-scroll" style="
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            background: #FAFAFA;
+          ">
+            ${messages
+              .map(msg => renderLegalMessageBubble(msg))
+              .join('')}
+          </div>
+
+          <!-- Suggested Prompts Quick Bar -->
+          <div style="
+            padding: 8px 16px;
+            background: #FFFFFF;
+            border-top: 1px solid #F1F5F9;
+            overflow-x: auto;
+            display: flex;
+            gap: 8px;
+            white-space: nowrap;
+          ">
+            ${suggestedPrompts
+              .map(
+                p => `
+              <button 
+                class="btn btn-sm" 
+                style="border-radius: 16px; padding: 4px 12px; font-size: 11.5px; background: #F1F5F9; color: #334155; border: 1px solid #E2E8F0;"
+                onclick="window.handlePromptClick('${p.replace(/'/g, "\\'")}')"
+              >
+                ðŸ’¡ ${p}
+              </button>
+            `
+              )
+              .join('')}
+          </div>
+
+          <!-- Input Composer Area -->
+          <div style="
+            padding: 12px 16px;
+            background: #FFFFFF;
+            border-top: 1px solid #E2E8F0;
+          ">
+            <div style="display: flex; gap: 10px; align-items: flex-end;">
+              <div style="flex: 1; position: relative;">
+                <textarea 
+                  id="ai-chat-input" 
+                  class="form-textarea" 
+                  rows="2" 
+                  placeholder="Ask a legal question, paste a contract clause, or request drafting recommendations..."
+                  style="resize: none; font-size: 13.5px; padding: 10px 12px; line-height: 1.45; border-radius: 8px;"
+                  onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); window.handleSendLegalQuery(); }"
+                ></textarea>
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: 6px;">
+                <button 
+                  class="btn btn-primary" 
+                  id="ai-send-query-btn"
+                  onclick="window.handleSendLegalQuery()"
+                  style="height: 40px; padding: 0 18px; font-weight: 600;"
+                >
+                  <span>Send</span>
+                  <span>ðŸš€</span>
+                </button>
+                <button 
+                  class="btn btn-secondary btn-sm" 
+                  onclick="window.openDocumentAttachModal()"
+                  style="padding: 2px 8px; font-size: 11px;"
+                  title="Attach or paste agreement"
+                >
+                  ðŸ“Ž Attach
+                </button>
+              </div>
+            </div>
+            
+            <div style="font-size: 11px; color: #94A3B8; margin-top: 6px; display: flex; justify-content: space-between;">
+              <span>Press <strong>Enter</strong> to send â€¢ <strong>Shift+Enter</strong> for newline</span>
+              <span>All uploads evaluated in secure server sandbox</span>
             </div>
           </div>
         </div>
 
-        <!-- Suggested Questions Carousel -->
-        <div style="
-          padding: 10px 20px;
-          background: #F8FAFC;
-          border-top: 1px solid #E2E8F0;
+        <!-- ================================================================= -->
+        <!-- PANEL 3 (RIGHT): Document & Clause Risk Inspector (Collapsible) -->
+        <!-- ================================================================= -->
+        <div id="ai-right-inspector-panel" style="
+          background: #FFFFFF;
+          border: 1px solid #E2E8F0;
+          border-radius: 12px;
           display: flex;
-          gap: 8px;
-          overflow-x: auto;
-          white-space: nowrap;
+          flex-direction: column;
+          overflow: hidden;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.03);
         ">
-          ${suggestedPrompts
-            .map(
-              p => `
-            <button class="btn btn-secondary btn-sm" style="font-size: 11.5px; padding: 4px 12px; border-radius: 20px; background: #FFFFFF;" onclick="window.usePageSuggestedPrompt(this.innerText)">
-              ${p}
-            </button>
-          `
-            )
-            .join('')}
+          <div style="padding: 12px 16px; background: #F8FAFC; border-bottom: 1px solid #E2E8F0; display: flex; justify-content: space-between; align-items: center;">
+            <div style="font-size: 13px; font-weight: 700; color: #0F172A; display: flex; align-items: center; gap: 6px;">
+              <span>ðŸ“Š</span>
+              <span>Document & Risk Audit</span>
+            </div>
+          </div>
+
+          <div style="flex: 1; overflow-y: auto; padding: 14px;">
+            ${
+              attachedDoc
+                ? `
+              <!-- Document Metadata Card -->
+              <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 12px; margin-bottom: 14px;">
+                <div style="font-size: 13px; font-weight: 700; color: #0F172A;">${attachedDoc.name}</div>
+                <div style="font-size: 11.5px; color: #64748B; margin-top: 4px;">
+                  Length: <strong>${attachedDoc.charCount || attachedDoc.text.length} chars</strong> â€¢ Words: <strong>~${Math.round(attachedDoc.text.split(/\s+/).length)}</strong>
+                </div>
+              </div>
+
+              <!-- Clause Checklist Breakdown -->
+              <div style="font-size: 11.5px; font-weight: 700; text-transform: uppercase; color: #475569; letter-spacing: 0.05em; margin-bottom: 8px;">
+                Key Contractual Clauses
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: 6px;">
+                ${extractedClauses
+                  .map(
+                    c => `
+                  <div style="
+                    padding: 8px 10px;
+                    border-radius: 6px;
+                    background: ${c.status === 'Present' ? '#F0FDF4' : '#FFFBEB'};
+                    border: 1px solid ${c.status === 'Present' ? '#BBF7D0' : '#FDE68A'};
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    gap: 8px;
+                  ">
+                    <div>
+                      <div style="font-size: 12px; font-weight: 600; color: #1E293B;">
+                        ${c.icon} ${c.type}
+                      </div>
+                      <div style="font-size: 10.5px; color: #64748B;">
+                        ${c.description}
+                      </div>
+                    </div>
+                    <span class="badge ${c.status === 'Present' ? 'badge-green' : 'badge-amber'}" style="font-size: 10px; padding: 2px 6px;">
+                      ${c.status === 'Present' ? 'Detected' : 'Review'}
+                    </span>
+                  </div>
+                `
+                  )
+                  .join('')}
+              </div>
+
+              <div style="margin-top: 16px;">
+                <button class="btn btn-secondary btn-sm" style="width: 100%; font-size: 11.5px; justify-content: center;" onclick="window.handlePromptClick('Review this contract for legal risks')">
+                  ðŸ” Perform Full Risk Audit
+                </button>
+              </div>
+            `
+                : `
+              <!-- Empty State in Inspector -->
+              <div style="text-align: center; padding: 40px 12px; color: #94A3B8;">
+                <div style="font-size: 32px; margin-bottom: 8px;">ðŸ“„</div>
+                <div style="font-size: 13px; font-weight: 600; color: #475569;">No Document Attached</div>
+                <div style="font-size: 11.5px; color: #64748B; margin-top: 4px; line-height: 1.4;">
+                  Attach an agreement or paste contract text to extract clauses, audit liability limits, and inspect missing protections.
+                </div>
+                <button class="btn btn-primary btn-sm" onclick="window.openDocumentAttachModal()" style="margin-top: 14px; font-size: 12px;">
+                  âž• Attach Document
+                </button>
+              </div>
+            `
+            }
+          </div>
         </div>
 
-        <!-- Input Box -->
-        <div style="padding: 16px 20px; background: #FFFFFF; border-top: 1px solid #E2E8F0; display: flex; gap: 12px;">
-          <input type="text" id="ai-chat-input" class="form-input" placeholder="Ask a legal question (e.g. What is the liability cap in our Staffing agreements?)..." style="font-size: 14px; padding: 11px 16px; border-radius: 8px;" autocomplete="off" />
-          <button class="btn btn-primary" id="ai-send-btn" style="padding: 0 20px; font-weight: 600; white-space: nowrap;">
-            <span>Send Question ➔</span>
+      </div>
+
+    </div>
+  `;
+}
+
+/**
+ * Render structured Legal Message bubble with risk badge, Markdown tables, and action tools
+ */
+function renderLegalMessageBubble(msg) {
+  const isUser = msg.role === 'user';
+
+  if (isUser) {
+    return `
+      <div style="display: flex; justify-content: flex-end; margin-bottom: 8px;">
+        <div style="
+          max-width: 80%;
+          background: #2563EB;
+          color: #FFFFFF;
+          border-radius: 12px 12px 2px 12px;
+          padding: 12px 16px;
+          font-size: 13.5px;
+          line-height: 1.5;
+          box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        ">
+          ${msg.content.replace(/\n/g, '<br/>')}
+          <div style="font-size: 10.5px; color: #BFDBFE; text-align: right; margin-top: 4px;">
+            ${new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // Format Assistant Response
+  const formattedHtml = formatLegalMarkdown(msg.content);
+  const rawCleanText = msg.content.replace(/"/g, '&quot;');
+
+  return `
+    <div style="display: flex; gap: 12px; max-width: 92%; margin-bottom: 12px;">
+      <div style="
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #1E40AF, #2563EB);
+        color: #FFFFFF;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        flex-shrink: 0;
+        margin-top: 2px;
+      ">âš–ï¸</div>
+
+      <div style="
+        background: #FFFFFF;
+        border: 1px solid #E2E8F0;
+        border-radius: 2px 12px 12px 12px;
+        padding: 16px 18px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+        flex: 1;
+      ">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #F1F5F9; padding-bottom: 6px;">
+          <div style="font-size: 12.5px; font-weight: 700; color: #0F172A; display: flex; align-items: center; gap: 6px;">
+            <span>Impacteers AI Legal Counsel</span>
+            <span style="font-size: 11px; font-weight: 400; color: #64748B;">â€¢ ${msg.provider || 'AI Gateway'}</span>
+          </div>
+          <span class="badge badge-slate" style="font-size: 10.5px;">
+            ${new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </span>
+        </div>
+
+        <div class="legal-markdown-body" style="font-size: 13.5px; color: #1E293B; line-height: 1.6;">
+          ${formattedHtml}
+        </div>
+
+        <!-- Action Bar per AI Response -->
+        <div style="
+          margin-top: 14px;
+          padding-top: 10px;
+          border-top: 1px solid #F1F5F9;
+          display: flex;
+          justify-content: flex-end;
+          gap: 8px;
+        ">
+          <button 
+            class="btn btn-secondary btn-sm" 
+            style="font-size: 11px; padding: 3px 8px;"
+            onclick="window.copyToClipboard('${msg.id}')"
+            title="Copy answer to clipboard"
+          >
+            ðŸ“‹ Copy Response
+          </button>
+          <button 
+            class="btn btn-secondary btn-sm" 
+            style="font-size: 11px; padding: 3px 8px;"
+            onclick="window.handleRegenerateResponse('${msg.id}')"
+            title="Regenerate this response"
+          >
+            ðŸ”„ Regenerate
           </button>
         </div>
-
+        <textarea id="raw-msg-${msg.id}" style="display:none;">${msg.content}</textarea>
       </div>
     </div>
   `;
 }
 
+/**
+ * Convert structured legal markdown into clean, styled HTML with tables and risk badges
+ */
+function formatLegalMarkdown(md) {
+  if (!md) return '';
+
+  let html = md;
+
+  // 1. Headers
+  html = html.replace(/^### (.*$)/gim, '<h4 style="font-size: 14px; font-weight: 700; color: #0F172A; margin: 12px 0 4px 0; border-bottom: 1px solid #F1F5F9; padding-bottom: 3px;">$1</h4>');
+  html = html.replace(/^## (.*$)/gim, '<h3 style="font-size: 15px; font-weight: 700; color: #1E3A8A; margin: 14px 0 6px 0;">$1</h3>');
+  html = html.replace(/^# (.*$)/gim, '<h2 style="font-size: 16px; font-weight: 700; color: #1E3A8A; margin: 16px 0 8px 0;">$1</h2>');
+
+  // 2. Risk Badges
+  html = html.replace(/\*\*(Low Risk)\*\*/gi, '<span class="badge badge-green" style="font-size: 12px; padding: 3px 8px;">ðŸŸ¢ Low Risk</span>');
+  html = html.replace(/\*\*(Medium Risk)\*\*/gi, '<span class="badge badge-amber" style="font-size: 12px; padding: 3px 8px;">ðŸŸ¡ Medium Risk</span>');
+  html = html.replace(/\*\*(High Risk)\*\*/gi, '<span class="badge badge-red" style="font-size: 12px; padding: 3px 8px; background: #FFF1F2; color: #BE123C; border: 1px solid #FECDD3;">ðŸŸ  High Risk</span>');
+  html = html.replace(/\*\*(Critical Risk)\*\*/gi, '<span class="badge badge-red" style="font-size: 12px; padding: 3px 8px; background: #991B1B; color: #FFFFFF;">ðŸ”´ Critical Risk</span>');
+
+  // 3. Bold & Italic
+  html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+
+  // 4. Code / Suggested Wording Blocks
+  html = html.replace(/```(?:text|markdown)?([\s\S]*?)```/g, (match, code) => {
+    return `
+      <div style="position: relative; margin: 10px 0;">
+        <div style="background: #1E293B; color: #F8FAFC; border-radius: 8px; padding: 12px 14px; font-family: var(--font-mono); font-size: 12px; line-height: 1.5; overflow-x: auto; white-space: pre-wrap;">${code.trim()}</div>
+      </div>
+    `;
+  });
+
+  // 5. Unordered lists
+  html = html.replace(/^\s*-\s+(.*$)/gim, '<li style="margin-bottom: 4px;">$1</li>');
+  html = html.replace(/(<li.*<\/li>)/s, '<ul style="margin: 6px 0 10px 18px; padding-left: 4px;">$1</ul>');
+
+  // 6. Tables
+  const lines = html.split('\n');
+  let inTable = false;
+  let tableRows = [];
+  let outputLines = [];
+
+  for (let line of lines) {
+    if (line.trim().startsWith('|') && line.trim().endsWith('|')) {
+      inTable = true;
+      if (line.includes('---')) continue; // skip markdown divider
+      const cells = line.split('|').map(c => c.trim()).filter((c, i, arr) => i > 0 && i < arr.length - 1);
+      tableRows.push(cells);
+    } else {
+      if (inTable) {
+        outputLines.push(renderHtmlTable(tableRows));
+        tableRows = [];
+        inTable = false;
+      }
+      outputLines.push(line);
+    }
+  }
+  if (inTable && tableRows.length > 0) {
+    outputLines.push(renderHtmlTable(tableRows));
+  }
+
+  return outputLines.join('\n').replace(/\n\n/g, '<br/>');
+}
+
+function renderHtmlTable(rows) {
+  if (!rows || rows.length === 0) return '';
+  const header = rows[0];
+  const body = rows.slice(1);
+
+  return `
+    <div style="overflow-x: auto; margin: 12px 0; border: 1px solid #E2E8F0; border-radius: 8px;">
+      <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: left;">
+        <thead>
+          <tr style="background: #F1F5F9; border-bottom: 1px solid #E2E8F0;">
+            ${header.map(h => `<th style="padding: 8px 12px; font-weight: 700; color: #334155;">${h}</th>`).join('')}
+          </tr>
+        </thead>
+        <tbody>
+          ${body.map(row => `
+            <tr style="border-bottom: 1px solid #F1F5F9;">
+              ${row.map(cell => `<td style="padding: 8px 12px; color: #1E293B;">${cell}</td>`).join('')}
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
 
 // === File: src\js\pages\NotificationsPage.js ===
 /**
  * Enterprise In-House Legal Management System
  * Notifications Center Page
  */
+
+
 function renderNotificationsPage() {
   const notifs = notificationService.getMyNotifications();
 
@@ -7886,7 +6650,7 @@ function renderNotificationsPage() {
       <div class="page-header">
         <div>
           <div class="page-title">
-            <span>🔔</span>
+            <span>ðŸ””</span>
             <span>Notification Center</span>
           </div>
           <div class="page-subtitle">
@@ -7895,7 +6659,7 @@ function renderNotificationsPage() {
         </div>
         <div>
           <button class="btn btn-secondary btn-sm" id="page-mark-all-read-btn">
-            <span>✓ Mark All as Read</span>
+            <span>âœ“ Mark All as Read</span>
           </button>
         </div>
       </div>
@@ -7903,7 +6667,7 @@ function renderNotificationsPage() {
       <div class="enterprise-card">
         <div class="enterprise-card-header">
           <div class="enterprise-card-title">
-            <span>📬</span>
+            <span>ðŸ“¬</span>
             <span>All Notifications (${notifs.length})</span>
           </div>
         </div>
@@ -7926,7 +6690,7 @@ function renderNotificationsPage() {
                   cursor: pointer;
                 " onclick="window.location.hash='${n.linkUrl || '#/notifications'}';">
                   <div style="display: flex; align-items: center; gap: 12px;">
-                    <span style="font-size: 20px;">${n.category === 'CONTRACT' ? '📜' : n.category === 'REMARK' ? '💬' : '📋'}</span>
+                    <span style="font-size: 20px;">${n.category === 'CONTRACT' ? 'ðŸ“œ' : n.category === 'REMARK' ? 'ðŸ’¬' : 'ðŸ“‹'}</span>
                     <div>
                       <div style="font-size: 13.5px; font-weight: 600; color: #0F172A;">${n.title}</div>
                       <div style="font-size: 12.5px; color: #475569; margin-top: 2px;">${n.message}</div>
@@ -7949,12 +6713,13 @@ function renderNotificationsPage() {
   `;
 }
 
-
 // === File: src\js\pages\AuditLogsPage.js ===
 /**
  * Enterprise In-House Legal Management System
  * Immutable Audit Logs & Security Trail Page
  */
+
+
 function renderAuditLogsPage() {
   let logs = [];
   try {
@@ -7975,7 +6740,7 @@ function renderAuditLogsPage() {
       <div class="page-header">
         <div>
           <div class="page-title">
-            <span>🛡️</span>
+            <span>ðŸ›¡ï¸</span>
             <span>Immutable Security Audit Logs</span>
           </div>
           <div class="page-subtitle">
@@ -7987,7 +6752,7 @@ function renderAuditLogsPage() {
       <div class="enterprise-card">
         <div class="enterprise-card-header">
           <div class="enterprise-card-title">
-            <span>📜</span>
+            <span>ðŸ“œ</span>
             <span>Recorded Events (<span id="audit-count">${logs.length}</span>)</span>
           </div>
         </div>
@@ -8044,90 +6809,69 @@ function renderAuditLogsPage() {
   `;
 }
 
-
 // === File: src\js\pages\AdminSettingsPage.js ===
 /**
- * Impacteers DMS — Enterprise In-House Legal & Document Management System
- * Admin Settings & System Configuration Page
+ * Impacteers DMS â€” Enterprise In-House Legal & Document Management System
+ * Admin Settings & AI Gateway Configuration Page
  */
+
+
 function renderAdminSettingsPage() {
-  if (!authService.isLegalAdmin()) {
-    return `
-      <div class="content-container">
-        <div style="padding: 48px; text-align: center; background: #FFF1F2; border-radius: 12px; border: 1px solid #FECDD3;">
-          <h2 style="color: #BE123C;">Access Denied</h2>
-          <p style="color: #9F1239; margin-top: 6px;">Only System Administrators and Legal Administrators have access to this configuration console.</p>
-        </div>
-      </div>
-    `;
-  }
-
-  const users = db.data.users;
-  const requestTypes = db.data.requestTypes;
-  const alertDays = db.data.expiryAlertDays || [90, 60, 30, 15, 7];
-
-  const currentEndpoint = legalAssistantService.endpoint;
-  const currentModel = legalAssistantService.model;
-  const currentTemp = legalAssistantService.temperature;
+  const user = authService.getCurrentUser();
+  const alertDays = db.data.contractAlertDays || [60, 30, 15, 7];
 
   return `
     <div class="content-container">
       <div class="page-header">
         <div>
           <div class="page-title">
-            <span>⚙️</span>
+            <span>âš™ï¸</span>
             <span>Enterprise System Administration & Settings</span>
           </div>
           <div class="page-subtitle">
-            Configure system users, departments, request types, CLM alert thresholds, and local Ollama AI settings.
+            Configure system users, departments, request types, CLM alert thresholds, and AI Legal Assistant Gateway.
           </div>
         </div>
         <div>
           <button class="btn btn-secondary btn-sm" id="reset-database-btn" style="color: #DC2626;">
-            <span>🔄 Reset to Fresh Seed State</span>
+            <span>ðŸ”„ Reset to Fresh Seed State</span>
           </button>
         </div>
       </div>
 
       <div class="grid-2-col">
         
-        <!-- Local Ollama AI Settings Card -->
+        <!-- Enterprise AI Legal Assistant Gateway Card -->
         <div class="enterprise-card">
           <div class="enterprise-card-header">
             <div class="enterprise-card-title">
-              <span>🦙</span>
-              <span>Local Ollama AI Configuration</span>
+              <span>ðŸ¤–</span>
+              <span>Enterprise Legal AI Gateway</span>
             </div>
-            <span class="badge badge-purple">On-Device LLM</span>
+            <span class="badge badge-blue">Secure Server-Side</span>
           </div>
           <div style="padding: 20px;">
-            <div class="form-group">
-              <label class="form-label">Ollama Server Endpoint</label>
-              <input type="text" id="ai-endpoint-input" class="form-input" value="${currentEndpoint}" placeholder="http://127.0.0.1:11434" />
-              <div class="form-hint" style="font-size: 11.5px; color: #64748B; margin-top: 4px;">Default local endpoint with auto-reverse proxy at <code>/api/ollama</code>.</div>
-            </div>
+            <p style="font-size: 13px; color: #475569; margin-bottom: 14px; line-height: 1.5;">
+              The AI Legal Assistant connects via the secure backend API (<code>/api/legal-assistant/chat</code>) with zero client-side credential exposure.
+            </p>
 
-            <div class="form-group">
-              <label class="form-label">Active Local Model</label>
-              <input type="text" id="ai-model-input" class="form-input" value="${currentModel}" placeholder="llama3.2" />
-              <div class="form-hint" style="font-size: 11.5px; color: #64748B; margin-top: 4px;">e.g., <code>llama3.2</code>, <code>mistral</code>, <code>deepseek-r1:8b</code>, <code>qwen2.5:7b</code>.</div>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Creativity / Temperature (0.0 to 1.0)</label>
-              <input type="number" id="ai-temp-input" class="form-input" value="${currentTemp}" step="0.1" min="0" max="1" />
-              <div class="form-hint" style="font-size: 11.5px; color: #64748B; margin-top: 4px;">Lower (0.2-0.3) is recommended for strict legal clause extraction.</div>
+            <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 12px 14px; margin-bottom: 16px;">
+              <div style="font-size: 12.5px; font-weight: 700; color: #0F172A; margin-bottom: 4px;">Supported AI Providers:</div>
+              <ul style="margin: 0 0 0 16px; font-size: 12px; color: #475569; line-height: 1.6;">
+                <li><strong>Google Gemini</strong>: <code>gemini-1.5-flash</code>, <code>gemini-2.0-flash</code></li>
+                <li><strong>OpenAI</strong>: <code>gpt-4o</code>, <code>gpt-4o-mini</code></li>
+                <li><strong>Groq</strong>: <code>llama-3.3-70b-versatile</code>, <code>mixtral-8x7b-32768</code></li>
+                <li><strong>OpenRouter</strong>: Multi-model router with free & pro endpoints</li>
+                <li><strong>Local Ollama</strong>: <code>llama3.2</code>, <code>mistral</code>, <code>qwen2.5</code> (100% private on-device)</li>
+              </ul>
             </div>
 
             <div style="display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap;">
-              <button class="btn btn-primary btn-sm" id="save-ai-endpoint-btn">
-                💾 Save Ollama Config
+              <button class="btn btn-primary btn-sm" onclick="window.showAIConfigModal()">
+                âš™ï¸ View AI Gateway Configuration
               </button>
-              <button class="btn btn-secondary btn-sm" id="test-ollama-btn">
-                🔄 Test Connection
-              </button>
-              <button class="btn btn-secondary btn-sm" onclick="window.showOllamaSetupModal()">
-                📖 Setup Guide
+              <button class="btn btn-secondary btn-sm" id="test-ai-gateway-btn" onclick="window.testAIGatewayConnection()">
+                ðŸ”„ Test AI Connection
               </button>
             </div>
           </div>
@@ -8137,7 +6881,7 @@ function renderAdminSettingsPage() {
         <div class="enterprise-card">
           <div class="enterprise-card-header">
             <div class="enterprise-card-title">
-              <span>⏰</span>
+              <span>â°</span>
               <span>Contract Expiry Alert Thresholds</span>
             </div>
           </div>
@@ -8146,7 +6890,7 @@ function renderAdminSettingsPage() {
               The system automatically sends in-app notifications and alerts before contract expiry:
             </p>
             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-              ${alertDays.map(d => `<span class="badge badge-amber" style="font-size: 13px; padding: 6px 12px;">⏳ ${d} Days Before</span>`).join('')}
+              ${alertDays.map(d => `<span class="badge badge-amber" style="font-size: 13px; padding: 6px 12px;">â³ ${d} Days Before</span>`).join('')}
             </div>
             <div style="margin-top: 20px; font-size: 12px; color: #64748B;">
               Alerts are broadcast to Legal Administrators and the corresponding Business Department Head.
@@ -8154,67 +6898,54 @@ function renderAdminSettingsPage() {
           </div>
         </div>
 
-        <!-- Request Types Config -->
-        <div class="enterprise-card">
-          <div class="enterprise-card-header">
-            <div class="enterprise-card-title">
-              <span>📋</span>
-              <span>Configured Request Types (${requestTypes.length})</span>
-            </div>
-            <button class="btn btn-secondary btn-sm" id="add-request-type-btn">
-              + Add Type
-            </button>
-          </div>
-          <div style="padding: 16px; max-height: 280px; overflow-y: auto;">
-            ${requestTypes
-              .map(
-                t => `
-              <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #F1F5F9; font-size: 13px;">
-                <span style="font-weight: 600; color: #0F172A;">${t.name}</span>
-                <span class="badge badge-blue">SLA: ${t.slaDays} Days</span>
-              </div>
-            `
-              )
-              .join('')}
+      </div>
+
+      <!-- Department Directory -->
+      <div class="enterprise-card" style="margin-top: 20px;">
+        <div class="enterprise-card-header">
+          <div class="enterprise-card-title">
+            <span>ðŸ¢</span>
+            <span>Registered Business Departments (${db.data.departments.length})</span>
           </div>
         </div>
-
-        <!-- Active Users & Roles -->
-        <div class="enterprise-card">
-          <div class="enterprise-card-header">
-            <div class="enterprise-card-title">
-              <span>👥</span>
-              <span>System Users & Roles (${users.length})</span>
-            </div>
-          </div>
-          <div style="padding: 12px 16px; max-height: 280px; overflow-y: auto;">
-            ${users
-              .map(
-                u => `
-              <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #F1F5F9; font-size: 12.5px;">
-                <div>
-                  <strong style="color: #0F172A;">${u.name}</strong>
-                  <div style="font-size: 11px; color: #64748B;">${u.email}</div>
-                </div>
-                <span class="badge badge-slate">${u.role.replace(/_/g, ' ')}</span>
-              </div>
-            `
-              )
-              .join('')}
-          </div>
+        <div class="table-responsive">
+          <table class="enterprise-table">
+            <thead>
+              <tr>
+                <th>Department Name</th>
+                <th>Department Code</th>
+                <th>Active Head</th>
+                <th>Total Contracts</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${db.data.departments
+                .map(d => {
+                  const docCount = db.data.documents.filter(doc => doc.departmentId === d.id).length;
+                  return `
+                  <tr>
+                    <td style="font-weight: 600;">${d.name}</td>
+                    <td style="font-family: var(--font-mono); font-size: 12px; color: #64748B;">${d.id}</td>
+                    <td>${d.headName || 'Assigned'}</td>
+                    <td><span class="badge badge-blue">${docCount} Documents</span></td>
+                  </tr>
+                `;
+                })
+                .join('')}
+            </tbody>
+          </table>
         </div>
-
       </div>
     </div>
   `;
 }
-
 
 // === File: src\js\pages\AboutPage.js ===
 /**
  * Impacteers Legal docs
  * Simple About System Page
  */
+
 function renderAboutPage() {
   return `
     <div class="content-container" style="max-width: 720px;">
@@ -8222,17 +6953,17 @@ function renderAboutPage() {
         <img src="./assets/impacteers-logo.png" alt="Impacteers Logo" style="height: 54px; width: auto; display: block; margin: 0 auto 20px auto;" />
         <h1 style="font-size: 24px; font-weight: 800; color: #0F172A;">Impacteers DMS</h1>
         <div style="font-size: 13.5px; color: #64748B; font-weight: 600; margin-top: 4px;">Document Management System</div>
-        <div style="font-size: 12px; color: #2563EB; font-weight: 600; margin-top: 2px;">Version 2026.8 • Enterprise Edition</div>
+        <div style="font-size: 12px; color: #2563EB; font-weight: 600; margin-top: 2px;">Version 2026.8 â€¢ Enterprise Edition</div>
         
         <p style="font-size: 14px; color: #475569; line-height: 1.6; max-width: 520px; margin: 20px auto 28px auto;">
           Internal platform for managing legal review requests, document vetting, contract lifecycle management (CLM), and secure company legal documents.
         </p>
 
         <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 18px; text-align: left; font-size: 13px; color: #334155; line-height: 1.6;">
-          <div>🏢 <strong>Organization:</strong> Impacteers</div>
-          <div>⚖️ <strong>Legal Operations Lead:</strong> Monisha (Legal Manager)</div>
-          <div>🛡️ <strong>Security:</strong> Role-Based Access Control & Department Isolation</div>
-          <div>📁 <strong>Storage:</strong> Centralized Repository with Version Tracking</div>
+          <div>ðŸ¢ <strong>Organization:</strong> Impacteers</div>
+          <div>âš–ï¸ <strong>Legal Operations Lead:</strong> Monisha (Legal Manager)</div>
+          <div>ðŸ›¡ï¸ <strong>Security:</strong> Role-Based Access Control & Department Isolation</div>
+          <div>ðŸ“ <strong>Storage:</strong> Centralized Repository with Version Tracking</div>
         </div>
 
         <div style="margin-top: 28px;">
@@ -8243,177 +6974,11 @@ function renderAboutPage() {
   `;
 }
 
-
-// === File: src\js\pages\ReportsPage.js ===
-/**
- * Enterprise In-House Legal Management System
- * Reports & Legal Operations Analytics Page
- */
-function renderReportsPage() {
-  const metrics = reportService.getMetrics();
-
-  return `
-    <div class="content-container">
-      <div class="page-header">
-        <div>
-          <div class="page-title">
-            <span>📈</span>
-            <span>Legal Operations & Workload Analytics</span>
-          </div>
-          <div class="page-subtitle">
-            Executive metrics on turnaround times, department demand, contract portfolio value, and counsel workload.
-          </div>
-        </div>
-        <div style="display: flex; gap: 10px;">
-          <button class="btn btn-secondary btn-sm" onclick="window.exportReportCsv('requests')">
-            <span>📥 Export Requests CSV</span>
-          </button>
-          <button class="btn btn-primary btn-sm" onclick="window.exportReportCsv('contracts')">
-            <span>📥 Export Contracts CSV</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Top Summary Metrics Grid -->
-      <div class="kpi-grid">
-        <div class="kpi-card">
-          <div class="kpi-card-header">
-            <span class="kpi-title">Average Turnaround Time</span>
-            <div class="kpi-icon-wrapper" style="background: #EFF6FF; color: #1D4ED8;">⚡</div>
-          </div>
-          <div class="kpi-value">${metrics.averageTurnaroundDays} <span style="font-size: 16px; font-weight: 500; color: #64748B;">days</span></div>
-          <div class="kpi-subtext">Target SLA: 5.0 days</div>
-        </div>
-
-        <div class="kpi-card">
-          <div class="kpi-card-header">
-            <span class="kpi-title">Total Active Portfolio</span>
-            <div class="kpi-icon-wrapper" style="background: #ECFDF5; color: #047857;">💰</div>
-          </div>
-          <div class="kpi-value">$${(metrics.totalContractValue / 1000000).toFixed(2)}M</div>
-          <div class="kpi-subtext">Across ${metrics.activeContracts} active agreements</div>
-        </div>
-
-        <div class="kpi-card">
-          <div class="kpi-card-header">
-            <span class="kpi-title">Total Requests Handled</span>
-            <div class="kpi-icon-wrapper" style="background: #FAF5FF; color: #6B21A8;">📂</div>
-          </div>
-          <div class="kpi-value">${metrics.totalRequests}</div>
-          <div class="kpi-subtext">${metrics.completed} successfully executed</div>
-        </div>
-
-        <div class="kpi-card">
-          <div class="kpi-card-header">
-            <span class="kpi-title">Reschedule Rate</span>
-            <div class="kpi-icon-wrapper" style="background: #FFFBEB; color: #B45309;">⏱️</div>
-          </div>
-          <div class="kpi-value">${Math.round((metrics.rescheduled / (metrics.totalRequests || 1)) * 100)}%</div>
-          <div class="kpi-subtext">${metrics.rescheduled} requests rescheduled</div>
-        </div>
-      </div>
-
-      <!-- Analytics Breakdown Grids -->
-      <div class="grid-2-col">
-        
-        <!-- Department Workload Table -->
-        <div class="enterprise-card">
-          <div class="enterprise-card-header">
-            <div class="enterprise-card-title">
-              <span>🏢</span>
-              <span>Demand by Business Department</span>
-            </div>
-          </div>
-          <div class="table-responsive">
-            <table class="enterprise-table">
-              <thead>
-                <tr>
-                  <th>Department</th>
-                  <th>Open Requests</th>
-                  <th>Active Contracts</th>
-                  <th>Portfolio Value</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${metrics.departmentDistribution
-                  .map(
-                    d => `
-                  <tr>
-                    <td style="font-weight: 600;">${d.name}</td>
-                    <td style="color: #2563EB; font-weight: 700;">${d.openRequests}</td>
-                    <td style="color: #047857; font-weight: 700;">${d.activeContracts}</td>
-                    <td style="font-family: var(--font-mono); font-size: 12px;">$${d.contractValue.toLocaleString()}</td>
-                  </tr>
-                `
-                  )
-                  .join('')}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- Legal Counsel Workload & Capacity -->
-        <div class="enterprise-card">
-          <div class="enterprise-card-header">
-            <div class="enterprise-card-title">
-              <span>⚖️</span>
-              <span>Legal Counsel Active Workload</span>
-            </div>
-          </div>
-          <div style="padding: 20px;">
-            ${metrics.legalWorkload
-              .map(
-                counsel => `
-              <div style="margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid #F1F5F9;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                  <div>
-                    <strong style="font-size: 14px; color: #0F172A;">${counsel.name}</strong>
-                    <div style="font-size: 11.5px; color: #64748B;">${counsel.title}</div>
-                  </div>
-                  <span class="badge badge-blue">${counsel.activeCases} Active Matters</span>
-                </div>
-                <div style="background: #E2E8F0; border-radius: 9999px; height: 8px; overflow: hidden; margin-top: 8px;">
-                  <div style="background: #2563EB; height: 100%; width: ${Math.min(counsel.activeCases * 25, 100)}%;"></div>
-                </div>
-              </div>
-            `
-              )
-              .join('')}
-          </div>
-        </div>
-
-      </div>
-    </div>
-  `;
-}
-
-
 // === File: src\js\app.js ===
 /**
  * Impacteers Legal docs
  * Main Application Orchestrator & Role-Based Router
  */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -8452,7 +7017,7 @@ class App {
     // Logout confirmation
     window.confirmLogout = () => {
       Modal.open({
-        title: '🚪 Confirm Logout',
+        title: 'ðŸšª Confirm Logout',
         contentHtml: `
           <div style="font-size: 14px; color: #334155; padding: 6px 0;">
             Are you sure you want to log out of <strong>Impacteers DMS</strong> (Document Management System)?
@@ -8486,7 +7051,7 @@ class App {
       const user = authService.getCurrentUser();
       if (!user) return;
       Modal.open({
-        title: '👤 User Profile',
+        title: 'ðŸ‘¤ User Profile',
         contentHtml: `
           <div style="font-size: 13.5px; line-height: 1.6;">
             <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 16px; padding-bottom: 14px; border-bottom: 1px solid #E2E8F0;">
@@ -8537,7 +7102,7 @@ class App {
       if (!req) return;
 
       Modal.open({
-        title: '⏱️ Propose Rescheduled Completion Date',
+        title: 'â±ï¸ Propose Rescheduled Completion Date',
         contentHtml: `
           <div>
             <div style="background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 8px; padding: 12px; margin-bottom: 14px; font-size: 12.5px; color: #1E40AF;">
@@ -8594,7 +7159,7 @@ class App {
       if (!req || !req.rescheduleProposal) return;
 
       Modal.open({
-        title: '⏱️ Decline Reschedule & Request Timeline',
+        title: 'â±ï¸ Decline Reschedule & Request Timeline',
         contentHtml: `
           <div>
             <div style="background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 8px; padding: 12px; margin-bottom: 14px; font-size: 12.5px; color: #92400E;">
@@ -8863,13 +7428,297 @@ In-House Legal & Document Management System (DMS).
       }
     };
 
+    // -------------------------------------------------------------------------
+    // AI Legal Assistant Event Handlers & Orchestrator
+    // -------------------------------------------------------------------------
+    window.handleCreateNewChat = () => {
+      aiService.createSession('General Legal Consultation', aiService.getJurisdiction());
+      this.handleRoute();
+      Toast.info('Created new legal chat session.');
+    };
+
+    window.handleSelectSession = (sessionId) => {
+      aiService.setCurrentSessionId(sessionId);
+      this.handleRoute();
+    };
+
+    window.handleDeleteSession = (sessionId) => {
+      aiService.deleteSession(sessionId);
+      this.handleRoute();
+      Toast.info('Deleted consultation.');
+    };
+
+    window.handleClearAllSessions = () => {
+      if (confirm('Are you sure you want to clear all consultation history?')) {
+        aiService.clearAllSessions();
+        this.handleRoute();
+        Toast.info('All chat history cleared.');
+      }
+    };
+
+    window.handleJurisdictionChange = (jurisdiction) => {
+      aiService.setJurisdiction(jurisdiction);
+      Toast.info(`Switched jurisdiction to ${jurisdiction}.`);
+      this.handleRoute();
+    };
+
+    window.handleModeChange = (mode) => {
+      aiService.setMode(mode);
+      Toast.info(`Switched focus to ${mode.replace(/_/g, ' ')}.`);
+    };
+
+    window.handlePromptClick = (text) => {
+      const input = document.getElementById('ai-chat-input');
+      if (input) {
+        input.value = text;
+        window.handleSendLegalQuery();
+      }
+    };
+
+    window.copyToClipboard = (msgId) => {
+      const rawTextEl = document.getElementById(`raw-msg-${msgId}`);
+      if (rawTextEl) {
+        navigator.clipboard.writeText(rawTextEl.value || rawTextEl.innerText);
+        Toast.success('Copied legal response to clipboard.');
+      }
+    };
+
+    window.toggleRightInspector = () => {
+      const panel = document.getElementById('ai-right-inspector-panel');
+      const grid = document.getElementById('ai-three-panel-grid');
+      if (panel && grid) {
+        if (panel.style.display === 'none') {
+          panel.style.display = 'flex';
+          grid.style.gridTemplateColumns = '280px 1fr 300px';
+        } else {
+          panel.style.display = 'none';
+          grid.style.gridTemplateColumns = '280px 1fr';
+        }
+      }
+    };
+
+    window.handleRemoveAttachedDocument = () => {
+      const session = aiService.getCurrentSession();
+      if (session) {
+        aiService.removeAttachedDocument(session.id);
+        this.handleRoute();
+        Toast.info('Removed attached document.');
+      }
+    };
+
+    window.openDocumentAttachModal = () => {
+      const docs = documentService.getDocuments();
+      Modal.open({
+        title: 'ðŸ“Ž Attach Document or Paste Agreement',
+        contentHtml: `
+          <div>
+            <div class="form-group" style="margin-bottom: 14px;">
+              <label class="form-label">Option A: Select Document from Legal Vault</label>
+              <select id="modal-attach-vault-doc" class="form-select" onchange="
+                if(this.value) {
+                  const d = ${JSON.stringify(docs)}.find(x => x.id === this.value);
+                  if (d) {
+                    document.getElementById('modal-attach-doc-title').value = d.title;
+                    document.getElementById('modal-attach-doc-text').value = d.content || d.summary || (d.title + ' executed legal agreement.');
+                  }
+                }
+              ">
+                <option value="">-- Choose a vault document --</option>
+                ${docs.map(d => `<option value="${d.id}">${d.title} (${d.departmentName})</option>`).join('')}
+              </select>
+            </div>
+
+            <div style="text-align: center; font-size: 11px; font-weight: 700; color: #94A3B8; margin: 8px 0;">â€” OR â€”</div>
+
+            <div class="form-group" style="margin-bottom: 14px;">
+              <label class="form-label">Option B: Document / Clause Title</label>
+              <input type="text" id="modal-attach-doc-title" class="form-input" placeholder="e.g. Master Services Agreement v2.0" />
+            </div>
+
+            <div class="form-group" style="margin-bottom: 14px;">
+              <label class="form-label">Option C: Paste Contract Text / Clause</label>
+              <textarea id="modal-attach-doc-text" class="form-textarea" rows="6" placeholder="Paste contractual provisions, liability clauses, termination terms..."></textarea>
+            </div>
+          </div>
+        `,
+        footerHtml: `
+          <button class="btn btn-secondary" onclick="window.activeModalClose()">Cancel</button>
+          <button class="btn btn-primary" id="confirm-attach-doc-btn">Attach to Conversation</button>
+        `,
+        size: 'lg'
+      });
+
+      document.getElementById('confirm-attach-doc-btn').addEventListener('click', () => {
+        const title = document.getElementById('modal-attach-doc-title').value || 'Pasted Agreement Excerpt';
+        const text = document.getElementById('modal-attach-doc-text').value;
+
+        if (!text.trim()) {
+          Toast.error('Please paste or select some contract text.');
+          return;
+        }
+
+        const session = aiService.getCurrentSession();
+        if (session) {
+          aiService.attachDocumentToSession(session.id, {
+            name: title.trim(),
+            text: text.trim(),
+            charCount: text.trim().length
+          });
+          Modal.close();
+          this.handleRoute();
+          Toast.success(`Attached "${title}" to consultation.`);
+        }
+      });
+    };
+
+    window.showAIConfigModal = async () => {
+      const status = await aiService.getStatus();
+      Modal.open({
+        title: 'âš™ï¸ Enterprise Legal AI & Gateway Configuration',
+        contentHtml: `
+          <div style="font-size: 13px; line-height: 1.6;">
+            <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 14px; margin-bottom: 16px;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <strong>Server Gateway Status:</strong>
+                <span class="badge ${status.status === 'online' ? 'badge-green' : 'badge-amber'}">${status.status.toUpperCase()}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <strong>Active Provider:</strong>
+                <span style="font-family: monospace; font-size: 12px; color: #1E293B;">${status.provider || 'openai_compatible'}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <strong>Active Model:</strong>
+                <span style="font-family: monospace; font-size: 12px; color: #1E293B;">${status.model || 'gemini-1.5-flash'}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <strong>Server API Key:</strong>
+                <span class="badge ${status.apiKeyConfigured ? 'badge-green' : 'badge-slate'}">${status.apiKeyConfigured ? 'Configured in .env' : 'Fallback Engine / Local AI'}</span>
+              </div>
+            </div>
+
+            <div style="background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 8px; padding: 12px; margin-bottom: 16px; font-size: 12.5px; color: #1E40AF;">
+              <strong>ðŸ”’ Zero Client-Side Exposure:</strong> All API keys are loaded server-side from <code>.env</code>. Keys are never sent to the browser or logged in client network traffic.
+            </div>
+
+            <div style="font-size: 12.5px; color: #334155;">
+              <strong>How to Configure Any AI Model:</strong>
+              <ol style="margin: 6px 0 0 18px; line-height: 1.6;">
+                <li>Open the <code>.env</code> file in your project folder.</li>
+                <li>Set your <code>AI_API_KEY</code> and desired <code>AI_MODEL</code> (e.g. <code>gemini-1.5-flash</code>, <code>gpt-4o</code>, <code>llama-3.3-70b-versatile</code>).</li>
+                <li>For local on-device AI, set <code>AI_PROVIDER=ollama</code> and run <code>ollama run llama3.2</code> in your terminal.</li>
+              </ol>
+            </div>
+          </div>
+        `,
+        footerHtml: `
+          <button class="btn btn-primary" onclick="window.activeModalClose()">Close</button>
+        `,
+        size: 'md'
+      });
+    };
+
+    window.testAIGatewayConnection = async () => {
+      Toast.info('Testing AI Gateway connection...');
+      try {
+        const res = await aiService.generateLegalResponse({
+          message: 'Connection test: ping legal AI assistant.'
+        });
+        if (res.success) {
+          Toast.success(`AI Gateway Active! Provider: ${res.provider}`);
+        } else {
+          Toast.info('AI Gateway operating in safe offline rule-engine mode.');
+        }
+      } catch (err) {
+        Toast.error('Gateway test failed: ' + err.message);
+      }
+    };
+
+    window.handleSendLegalQuery = async () => {
+      const input = document.getElementById('ai-chat-input');
+      const sendBtn = document.getElementById('ai-send-query-btn');
+      if (!input) return;
+
+      const userText = input.value.trim();
+      if (!userText) return;
+
+      const session = aiService.getCurrentSession();
+      if (!session) return;
+
+      aiService.addMessage(session.id, {
+        role: 'user',
+        content: userText
+      });
+
+      input.value = '';
+      this.handleRoute();
+
+      const scrollEl = document.getElementById('ai-chat-messages-scroll');
+      if (scrollEl) scrollEl.scrollTop = scrollEl.scrollHeight;
+
+      if (sendBtn) {
+        sendBtn.disabled = true;
+        sendBtn.innerHTML = `<span>Thinking...</span> <span class="spinner" style="width:12px; height:12px; border:2px solid #fff; border-top-color:transparent; border-radius:50%; display:inline-block; animation:spin 1s linear infinite;"></span>`;
+      }
+
+      const docText = session.attachedDocument ? session.attachedDocument.text : '';
+      const history = session.messages.map(m => ({ role: m.role, content: m.content }));
+
+      const res = await aiService.generateLegalResponse({
+        message: userText,
+        documentText: docText,
+        jurisdiction: session.jurisdiction,
+        mode: aiService.getMode(),
+        history
+      });
+
+      aiService.addMessage(session.id, {
+        role: 'assistant',
+        content: res.reply,
+        provider: res.provider
+      });
+
+      this.handleRoute();
+
+      const scrollElAfter = document.getElementById('ai-chat-messages-scroll');
+      if (scrollElAfter) scrollElAfter.scrollTop = scrollElAfter.scrollHeight;
+    };
+
+    window.handleRegenerateResponse = async (msgId) => {
+      const session = aiService.getCurrentSession();
+      if (!session) return;
+
+      const userMsgs = session.messages.filter(m => m.role === 'user');
+      const lastUserMsg = userMsgs.length ? userMsgs[userMsgs.length - 1].content : 'Review this contract';
+
+      Toast.info('Regenerating legal response...');
+
+      const docText = session.attachedDocument ? session.attachedDocument.text : '';
+      const history = session.messages.map(m => ({ role: m.role, content: m.content }));
+
+      const res = await aiService.generateLegalResponse({
+        message: lastUserMsg,
+        documentText: docText,
+        jurisdiction: session.jurisdiction,
+        mode: aiService.getMode(),
+        history
+      });
+
+      aiService.addMessage(session.id, {
+        role: 'assistant',
+        content: res.reply,
+        provider: res.provider
+      });
+
+      this.handleRoute();
+      Toast.success('Response regenerated.');
+    };
+
     // AI suggestions helper
     window.useSuggestedPrompt = text => {
       const input = document.getElementById('ai-chat-input');
       if (input) {
         input.value = text;
-        const btn = document.getElementById('ai-send-btn');
-        if (btn) btn.click();
+        window.handleSendLegalQuery();
       }
     };
   }
@@ -9094,7 +7943,7 @@ In-House Legal & Document Management System (DMS).
     const addRemarkBtn = document.getElementById('btn-add-legal-remark');
     if (addRemarkBtn) {
       addRemarkBtn.addEventListener('click', () => {
-        const text = prompt('Enter Legal Review Remark (e.g. Clause 5 — Payment terms should be revised):');
+        const text = prompt('Enter Legal Review Remark (e.g. Clause 5 â€” Payment terms should be revised):');
         if (text && text.trim()) {
           try {
             requestService.addRemark(requestId, text.trim());
@@ -9136,7 +7985,7 @@ In-House Legal & Document Management System (DMS).
           : `${req.title.replace(/\s+/g, '_')}_Legal_Reviewed.docx`;
 
         Modal.open({
-          title: '📝 Upload Reviewed / Revised Document',
+          title: 'ðŸ“ Upload Reviewed / Revised Document',
           contentHtml: `
             <div>
               <!-- File Picker -->
@@ -9145,7 +7994,7 @@ In-House Legal & Document Management System (DMS).
                   1. Select Reviewed Document from Computer <span class="required">*</span>
                 </label>
                 <div style="border: 2px dashed #CBD5E1; border-radius: 8px; padding: 18px; text-align: center; background: #F8FAFC; cursor: pointer;" onclick="document.getElementById('modal-rev-file-input').click()">
-                  <span style="font-size: 26px;">📄</span>
+                  <span style="font-size: 26px;">ðŸ“„</span>
                   <div style="font-size: 13px; font-weight: 600; color: #1E293B; margin-top: 4px;">Click to browse and choose file</div>
                   <div style="font-size: 11.5px; color: #64748B;">Supported: PDF, DOCX, DOC, XLSX, TXT</div>
                   <input type="file" id="modal-rev-file-input" style="display: none;" onchange="
@@ -9227,7 +8076,7 @@ In-House Legal & Document Management System (DMS).
           : `${req.title.replace(/\s+/g, '_')}_Final_Executed.pdf`;
 
         Modal.open({
-          title: '✍️ Upload Final Executed / Signed Document',
+          title: 'âœï¸ Upload Final Executed / Signed Document',
           contentHtml: `
             <div>
               <!-- File Picker -->
@@ -9236,7 +8085,7 @@ In-House Legal & Document Management System (DMS).
                   1. Select Final Signed PDF from Computer <span class="required">*</span>
                 </label>
                 <div style="border: 2px dashed #CBD5E1; border-radius: 8px; padding: 18px; text-align: center; background: #F8FAFC; cursor: pointer;" onclick="document.getElementById('modal-final-file-input').click()">
-                  <span style="font-size: 26px;">✍️</span>
+                  <span style="font-size: 26px;">âœï¸</span>
                   <div style="font-size: 13px; font-weight: 600; color: #1E293B; margin-top: 4px;">Click to browse and choose signed document</div>
                   <div style="font-size: 11.5px; color: #64748B;">Supported: PDF, DOCX, DOC (Executed & Signed)</div>
                   <input type="file" id="modal-final-file-input" style="display: none;" onchange="
@@ -9321,7 +8170,7 @@ In-House Legal & Document Management System (DMS).
     if (addDocBtn) {
       addDocBtn.addEventListener('click', () => {
         Modal.open({
-          title: '📁 Add Document to Central Vault',
+          title: 'ðŸ“ Add Document to Central Vault',
           contentHtml: `
             <div>
               <!-- 1. Document Title -->
@@ -9359,9 +8208,9 @@ In-House Legal & Document Management System (DMS).
                     deptPicker.style.display = this.value === 'SPECIFIC_DEPT' ? 'block' : 'none';
                   }
                 " required>
-                  <option value="SPECIFIC_DEPT">🏢 Specific Department (e.g. Staffing, Finance, HR...)</option>
-                  <option value="ALL_DEPTS">🌐 All Departments (Company-Wide Access)</option>
-                  <option value="LEGAL_ONLY">🔒 Only Legal Manager & Chairman (Confidential Legal Vault)</option>
+                  <option value="SPECIFIC_DEPT">ðŸ¢ Specific Department (e.g. Staffing, Finance, HR...)</option>
+                  <option value="ALL_DEPTS">ðŸŒ All Departments (Company-Wide Access)</option>
+                  <option value="LEGAL_ONLY">ðŸ”’ Only Legal Manager & Chairman (Confidential Legal Vault)</option>
                 </select>
               </div>
 
@@ -9390,7 +8239,7 @@ In-House Legal & Document Management System (DMS).
                   4. Select Document File from Computer <span class="required">*</span>
                 </label>
                 <div style="border: 2px dashed #CBD5E1; border-radius: 8px; padding: 18px; text-align: center; background: #F8FAFC; cursor: pointer;" onclick="document.getElementById('vault-file-input').click()">
-                  <span style="font-size: 26px;">📄</span>
+                  <span style="font-size: 26px;">ðŸ“„</span>
                   <div style="font-size: 13px; font-weight: 600; color: #1E293B; margin-top: 4px;">Click to browse and choose file</div>
                   <div style="font-size: 11.5px; color: #64748B;">Supported: PDF, DOCX, DOC, XLSX, TXT</div>
                   <input type="file" id="vault-file-input" style="display: none;" onchange="
@@ -9473,6 +8322,7 @@ In-House Legal & Document Management System (DMS).
 
     let pageConversationHistory = [];
 
+    // Helper for formatting markdown
     const formatMd = text => {
       if (!text) return '';
       return text
@@ -9490,6 +8340,7 @@ In-House Legal & Document Management System (DMS).
         .replace(/\n/g, '<br/>');
     };
 
+    // Update status pill & model list
     const updatePageStatus = async () => {
       const status = await legalAssistantService.checkOllamaStatus();
       if (statusPill) {
@@ -9509,6 +8360,7 @@ In-House Legal & Document Management System (DMS).
     };
     updatePageStatus();
 
+    // Suggested prompt click handler
     window.usePageSuggestedPrompt = text => {
       if (input) {
         input.value = text;
@@ -9516,13 +8368,14 @@ In-House Legal & Document Management System (DMS).
       }
     };
 
+    // Clear chat handler
     if (clearBtn) {
       clearBtn.addEventListener('click', () => {
         pageConversationHistory = [];
         const user = authService.getCurrentUser();
         container.innerHTML = `
           <div style="display: flex; gap: 14px; max-width: 85%;">
-            <div style="width: 36px; height: 36px; border-radius: 8px; background: linear-gradient(135deg, #2563EB, #1D4ED8); color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;">🤖</div>
+            <div style="width: 36px; height: 36px; border-radius: 8px; background: linear-gradient(135deg, #2563EB, #1D4ED8); color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;">ðŸ¤–</div>
             <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 16px;">
               <div style="font-weight: 600; font-size: 13px; color: #0F172A; margin-bottom: 6px;">Impacteers AI Legal Counsel</div>
               <div style="font-size: 13.5px; color: #334155; line-height: 1.6;">
@@ -9542,6 +8395,7 @@ In-House Legal & Document Management System (DMS).
       input.value = '';
       const selectedDocId = docSelect ? docSelect.value : null;
 
+      // Render user question
       const userMsg = document.createElement('div');
       userMsg.style.cssText = 'display: flex; justify-content: flex-end;';
       userMsg.innerHTML = `
@@ -9552,11 +8406,12 @@ In-House Legal & Document Management System (DMS).
       container.appendChild(userMsg);
       container.scrollTop = container.scrollHeight;
 
+      // Render typing indicator
       const typingMsg = document.createElement('div');
       typingMsg.id = 'page-typing-indicator';
       typingMsg.style.cssText = 'display: flex; gap: 14px; max-width: 85%;';
       typingMsg.innerHTML = `
-        <div style="width: 36px; height: 36px; border-radius: 8px; background: #EFF6FF; color: #2563EB; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;">⏳</div>
+        <div style="width: 36px; height: 36px; border-radius: 8px; background: #EFF6FF; color: #2563EB; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;">â³</div>
         <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 14px; font-size: 13px; color: #64748B; display: flex; align-items: center; gap: 8px;">
           <span>Reasoning with ${legalAssistantService.isConnected ? 'local ' + legalAssistantService.model : 'Legal RAG engine'}</span>
           <span class="typing-dots">...</span>
@@ -9579,7 +8434,7 @@ In-House Legal & Document Management System (DMS).
         const aiMsg = document.createElement('div');
         aiMsg.style.cssText = 'display: flex; gap: 14px; max-width: 85%;';
         aiMsg.innerHTML = `
-          <div style="width: 36px; height: 36px; border-radius: 8px; background: linear-gradient(135deg, #2563EB, #1D4ED8); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;">🤖</div>
+          <div style="width: 36px; height: 36px; border-radius: 8px; background: linear-gradient(135deg, #2563EB, #1D4ED8); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;">ðŸ¤–</div>
           <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 16px; font-size: 13.5px; color: #1E293B; line-height: 1.6; flex: 1;">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
               <span style="font-weight: 700; font-size: 13px; color: #0F172A;">Impacteers AI Legal Counsel</span>
@@ -9601,7 +8456,7 @@ In-House Legal & Document Management System (DMS).
         const errEl = document.createElement('div');
         errEl.style.cssText = 'display: flex; gap: 14px; max-width: 85%;';
         errEl.innerHTML = `
-          <div style="width: 36px; height: 36px; border-radius: 8px; background: #FEE2E2; color: #DC2626; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;">⚠️</div>
+          <div style="width: 36px; height: 36px; border-radius: 8px; background: #FEE2E2; color: #DC2626; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;">âš ï¸</div>
           <div style="background: #FFF1F2; border: 1px solid #FECDD3; border-radius: 12px; padding: 14px; font-size: 13px; color: #BE123C; flex: 1;">
             <strong>Error:</strong> ${err.message}
           </div>
@@ -9643,7 +8498,7 @@ In-House Legal & Document Management System (DMS).
         testBtn.innerText = 'Testing...';
         const res = await legalAssistantService.checkOllamaStatus();
         testBtn.disabled = false;
-        testBtn.innerText = '🔄 Test Connection';
+        testBtn.innerText = 'ðŸ”„ Test Connection';
 
         if (res.connected) {
           Toast.success(`Connected to Ollama! Found ${res.models.length} model(s): ${res.models.join(', ')}`);
@@ -9674,6 +8529,5 @@ if (document.readyState === 'loading') {
   window.impacteersApp = new App();
 }
 
-
-
+window.impacteersApp = new App();
 })();

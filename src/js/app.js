@@ -9,6 +9,8 @@ import { requestService } from './services/requestService.js';
 import { documentService } from './services/documentService.js';
 import { contractService } from './services/contractService.js';
 import { notificationService } from './services/notificationService.js';
+import { aiService } from './services/aiService.js';
+import { legalAssistantService } from './services/legalAssistantService.js';
 
 import { renderSidebar } from './components/Sidebar.js';
 import { renderTopbar } from './components/Topbar.js';
@@ -478,13 +480,297 @@ In-House Legal & Document Management System (DMS).
       }
     };
 
+    // -------------------------------------------------------------------------
+    // AI Legal Assistant Event Handlers & Orchestrator
+    // -------------------------------------------------------------------------
+    window.handleCreateNewChat = () => {
+      aiService.createSession('General Legal Consultation', aiService.getJurisdiction());
+      this.handleRoute();
+      Toast.info('Created new legal chat session.');
+    };
+
+    window.handleSelectSession = (sessionId) => {
+      aiService.setCurrentSessionId(sessionId);
+      this.handleRoute();
+    };
+
+    window.handleDeleteSession = (sessionId) => {
+      aiService.deleteSession(sessionId);
+      this.handleRoute();
+      Toast.info('Deleted consultation.');
+    };
+
+    window.handleClearAllSessions = () => {
+      if (confirm('Are you sure you want to clear all consultation history?')) {
+        aiService.clearAllSessions();
+        this.handleRoute();
+        Toast.info('All chat history cleared.');
+      }
+    };
+
+    window.handleJurisdictionChange = (jurisdiction) => {
+      aiService.setJurisdiction(jurisdiction);
+      Toast.info(`Switched jurisdiction to ${jurisdiction}.`);
+      this.handleRoute();
+    };
+
+    window.handleModeChange = (mode) => {
+      aiService.setMode(mode);
+      Toast.info(`Switched focus to ${mode.replace(/_/g, ' ')}.`);
+    };
+
+    window.handlePromptClick = (text) => {
+      const input = document.getElementById('ai-chat-input');
+      if (input) {
+        input.value = text;
+        window.handleSendLegalQuery();
+      }
+    };
+
+    window.copyToClipboard = (msgId) => {
+      const rawTextEl = document.getElementById(`raw-msg-${msgId}`);
+      if (rawTextEl) {
+        navigator.clipboard.writeText(rawTextEl.value || rawTextEl.innerText);
+        Toast.success('Copied legal response to clipboard.');
+      }
+    };
+
+    window.toggleRightInspector = () => {
+      const panel = document.getElementById('ai-right-inspector-panel');
+      const grid = document.getElementById('ai-three-panel-grid');
+      if (panel && grid) {
+        if (panel.style.display === 'none') {
+          panel.style.display = 'flex';
+          grid.style.gridTemplateColumns = '280px 1fr 300px';
+        } else {
+          panel.style.display = 'none';
+          grid.style.gridTemplateColumns = '280px 1fr';
+        }
+      }
+    };
+
+    window.handleRemoveAttachedDocument = () => {
+      const session = aiService.getCurrentSession();
+      if (session) {
+        aiService.removeAttachedDocument(session.id);
+        this.handleRoute();
+        Toast.info('Removed attached document.');
+      }
+    };
+
+    window.openDocumentAttachModal = () => {
+      const docs = documentService.getDocuments();
+      Modal.open({
+        title: '📎 Attach Document or Paste Agreement',
+        contentHtml: `
+          <div>
+            <div class="form-group" style="margin-bottom: 14px;">
+              <label class="form-label">Option A: Select Document from Legal Vault</label>
+              <select id="modal-attach-vault-doc" class="form-select" onchange="
+                if(this.value) {
+                  const d = ${JSON.stringify(docs)}.find(x => x.id === this.value);
+                  if (d) {
+                    document.getElementById('modal-attach-doc-title').value = d.title;
+                    document.getElementById('modal-attach-doc-text').value = d.content || d.summary || (d.title + ' executed legal agreement.');
+                  }
+                }
+              ">
+                <option value="">-- Choose a vault document --</option>
+                ${docs.map(d => `<option value="${d.id}">${d.title} (${d.departmentName})</option>`).join('')}
+              </select>
+            </div>
+
+            <div style="text-align: center; font-size: 11px; font-weight: 700; color: #94A3B8; margin: 8px 0;">— OR —</div>
+
+            <div class="form-group" style="margin-bottom: 14px;">
+              <label class="form-label">Option B: Document / Clause Title</label>
+              <input type="text" id="modal-attach-doc-title" class="form-input" placeholder="e.g. Master Services Agreement v2.0" />
+            </div>
+
+            <div class="form-group" style="margin-bottom: 14px;">
+              <label class="form-label">Option C: Paste Contract Text / Clause</label>
+              <textarea id="modal-attach-doc-text" class="form-textarea" rows="6" placeholder="Paste contractual provisions, liability clauses, termination terms..."></textarea>
+            </div>
+          </div>
+        `,
+        footerHtml: `
+          <button class="btn btn-secondary" onclick="window.activeModalClose()">Cancel</button>
+          <button class="btn btn-primary" id="confirm-attach-doc-btn">Attach to Conversation</button>
+        `,
+        size: 'lg'
+      });
+
+      document.getElementById('confirm-attach-doc-btn').addEventListener('click', () => {
+        const title = document.getElementById('modal-attach-doc-title').value || 'Pasted Agreement Excerpt';
+        const text = document.getElementById('modal-attach-doc-text').value;
+
+        if (!text.trim()) {
+          Toast.error('Please paste or select some contract text.');
+          return;
+        }
+
+        const session = aiService.getCurrentSession();
+        if (session) {
+          aiService.attachDocumentToSession(session.id, {
+            name: title.trim(),
+            text: text.trim(),
+            charCount: text.trim().length
+          });
+          Modal.close();
+          this.handleRoute();
+          Toast.success(`Attached "${title}" to consultation.`);
+        }
+      });
+    };
+
+    window.showAIConfigModal = async () => {
+      const status = await aiService.getStatus();
+      Modal.open({
+        title: '⚙️ Enterprise Legal AI & Gateway Configuration',
+        contentHtml: `
+          <div style="font-size: 13px; line-height: 1.6;">
+            <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 14px; margin-bottom: 16px;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <strong>Server Gateway Status:</strong>
+                <span class="badge ${status.status === 'online' ? 'badge-green' : 'badge-amber'}">${status.status.toUpperCase()}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <strong>Active Provider:</strong>
+                <span style="font-family: monospace; font-size: 12px; color: #1E293B;">${status.provider || 'openai_compatible'}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <strong>Active Model:</strong>
+                <span style="font-family: monospace; font-size: 12px; color: #1E293B;">${status.model || 'gemini-1.5-flash'}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <strong>Server API Key:</strong>
+                <span class="badge ${status.apiKeyConfigured ? 'badge-green' : 'badge-slate'}">${status.apiKeyConfigured ? 'Configured in .env' : 'Fallback Engine / Local AI'}</span>
+              </div>
+            </div>
+
+            <div style="background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 8px; padding: 12px; margin-bottom: 16px; font-size: 12.5px; color: #1E40AF;">
+              <strong>🔒 Zero Client-Side Exposure:</strong> All API keys are loaded server-side from <code>.env</code>. Keys are never sent to the browser or logged in client network traffic.
+            </div>
+
+            <div style="font-size: 12.5px; color: #334155;">
+              <strong>How to Configure Any AI Model:</strong>
+              <ol style="margin: 6px 0 0 18px; line-height: 1.6;">
+                <li>Open the <code>.env</code> file in your project folder.</li>
+                <li>Set your <code>AI_API_KEY</code> and desired <code>AI_MODEL</code> (e.g. <code>gemini-1.5-flash</code>, <code>gpt-4o</code>, <code>llama-3.3-70b-versatile</code>).</li>
+                <li>For local on-device AI, set <code>AI_PROVIDER=ollama</code> and run <code>ollama run llama3.2</code> in your terminal.</li>
+              </ol>
+            </div>
+          </div>
+        `,
+        footerHtml: `
+          <button class="btn btn-primary" onclick="window.activeModalClose()">Close</button>
+        `,
+        size: 'md'
+      });
+    };
+
+    window.testAIGatewayConnection = async () => {
+      Toast.info('Testing AI Gateway connection...');
+      try {
+        const res = await aiService.generateLegalResponse({
+          message: 'Connection test: ping legal AI assistant.'
+        });
+        if (res.success) {
+          Toast.success(`AI Gateway Active! Provider: ${res.provider}`);
+        } else {
+          Toast.info('AI Gateway operating in safe offline rule-engine mode.');
+        }
+      } catch (err) {
+        Toast.error('Gateway test failed: ' + err.message);
+      }
+    };
+
+    window.handleSendLegalQuery = async () => {
+      const input = document.getElementById('ai-chat-input');
+      const sendBtn = document.getElementById('ai-send-query-btn');
+      if (!input) return;
+
+      const userText = input.value.trim();
+      if (!userText) return;
+
+      const session = aiService.getCurrentSession();
+      if (!session) return;
+
+      aiService.addMessage(session.id, {
+        role: 'user',
+        content: userText
+      });
+
+      input.value = '';
+      this.handleRoute();
+
+      const scrollEl = document.getElementById('ai-chat-messages-scroll');
+      if (scrollEl) scrollEl.scrollTop = scrollEl.scrollHeight;
+
+      if (sendBtn) {
+        sendBtn.disabled = true;
+        sendBtn.innerHTML = `<span>Thinking...</span> <span class="spinner" style="width:12px; height:12px; border:2px solid #fff; border-top-color:transparent; border-radius:50%; display:inline-block; animation:spin 1s linear infinite;"></span>`;
+      }
+
+      const docText = session.attachedDocument ? session.attachedDocument.text : '';
+      const history = session.messages.map(m => ({ role: m.role, content: m.content }));
+
+      const res = await aiService.generateLegalResponse({
+        message: userText,
+        documentText: docText,
+        jurisdiction: session.jurisdiction,
+        mode: aiService.getMode(),
+        history
+      });
+
+      aiService.addMessage(session.id, {
+        role: 'assistant',
+        content: res.reply,
+        provider: res.provider
+      });
+
+      this.handleRoute();
+
+      const scrollElAfter = document.getElementById('ai-chat-messages-scroll');
+      if (scrollElAfter) scrollElAfter.scrollTop = scrollElAfter.scrollHeight;
+    };
+
+    window.handleRegenerateResponse = async (msgId) => {
+      const session = aiService.getCurrentSession();
+      if (!session) return;
+
+      const userMsgs = session.messages.filter(m => m.role === 'user');
+      const lastUserMsg = userMsgs.length ? userMsgs[userMsgs.length - 1].content : 'Review this contract';
+
+      Toast.info('Regenerating legal response...');
+
+      const docText = session.attachedDocument ? session.attachedDocument.text : '';
+      const history = session.messages.map(m => ({ role: m.role, content: m.content }));
+
+      const res = await aiService.generateLegalResponse({
+        message: lastUserMsg,
+        documentText: docText,
+        jurisdiction: session.jurisdiction,
+        mode: aiService.getMode(),
+        history
+      });
+
+      aiService.addMessage(session.id, {
+        role: 'assistant',
+        content: res.reply,
+        provider: res.provider
+      });
+
+      this.handleRoute();
+      Toast.success('Response regenerated.');
+    };
+
     // AI suggestions helper
     window.useSuggestedPrompt = text => {
       const input = document.getElementById('ai-chat-input');
       if (input) {
         input.value = text;
-        const btn = document.getElementById('ai-send-btn');
-        if (btn) btn.click();
+        window.handleSendLegalQuery();
       }
     };
   }

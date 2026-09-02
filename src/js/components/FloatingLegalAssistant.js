@@ -1,9 +1,10 @@
 /**
  * Impacteers DMS — Enterprise In-House Legal & Document Management System
- * Floating AI Legal Assistant Widget (Local LLM Ollama Integration)
+ * Floating AI Legal Assistant Widget (Secure Gateway & AI Integration)
  */
 
 import { legalAssistantService } from '../services/legalAssistantService.js';
+import { aiService } from '../services/aiService.js';
 import { authService } from '../services/authService.js';
 import { documentService } from '../services/documentService.js';
 import { Modal } from './Modal.js';
@@ -23,7 +24,7 @@ export function renderFloatingLegalAssistant() {
       <button 
         id="floating-assistant-fab" 
         class="floating-fab" 
-        title="Open AI Legal Assistant (Ollama Local LLM)"
+        title="Open AI Legal Assistant"
         onclick="window.toggleFloatingAssistant()"
       >
         <span class="fab-icon">💬</span>
@@ -37,24 +38,25 @@ export function renderFloatingLegalAssistant() {
         <div class="floating-assistant-header">
           <div style="display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0;">
             <div style="width: 28px; height: 28px; border-radius: 8px; background: #EFF6FF; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0;">
-              🤖
+              ⚖️
             </div>
             <div style="flex: 1; min-width: 0;">
               <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px;">
                 <div style="font-size: 13.5px; font-weight: 700; color: #0F172A; white-space: nowrap;">Legal AI Assistant</div>
-                <div id="ollama-status-pill" onclick="window.showOllamaSetupModal()" style="font-size: 10.5px; padding: 1.5px 7px; border-radius: 12px; background: #FEF3C7; color: #92400E; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0;" title="Click to view Ollama setup guide">
-                  <span style="width: 6px; height: 6px; border-radius: 50%; background: #F59E0B; display: inline-block;"></span>
-                  <span>Checking...</span>
+                <div id="floating-gateway-status-pill" onclick="window.showAIConfigModal()" style="font-size: 10.5px; padding: 1.5px 7px; border-radius: 12px; background: #ECFDF5; color: #047857; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0;" title="Click to view AI Gateway status">
+                  <span style="width: 6px; height: 6px; border-radius: 50%; background: #10B981; display: inline-block;"></span>
+                  <span>AI Active</span>
                 </div>
               </div>
               <div style="display: flex; align-items: center; gap: 6px; margin-top: 2px;">
-                <select id="floating-model-select" onchange="window.handleModelChange(this.value)" style="font-size: 11px; padding: 1px 4px; border-radius: 4px; border: 1px solid #CBD5E1; background: #FFFFFF; color: #334155; max-width: 140px; cursor: pointer;">
-                  <option value="llama3.2">llama3.2 (Local)</option>
-                  <option value="mistral">mistral (Local)</option>
-                  <option value="qwen2.5">qwen2.5 (Local)</option>
-                  <option value="deepseek-r1">deepseek-r1 (Local)</option>
+                <span style="font-size: 11px; color: #64748B;">Jurisdiction:</span>
+                <select id="floating-jur-select" onchange="window.handleJurisdictionChange(this.value)" style="font-size: 11px; padding: 1px 4px; border-radius: 4px; border: 1px solid #CBD5E1; background: #FFFFFF; color: #334155; max-width: 130px; cursor: pointer;">
+                  <option value="India">🇮🇳 India</option>
+                  <option value="Tamil Nadu">🇮🇳 Tamil Nadu</option>
+                  <option value="Delaware / US">🇺🇸 Delaware</option>
+                  <option value="United Kingdom">🇬🇧 UK</option>
                 </select>
-                <button onclick="window.refreshOllamaStatus(true)" style="background: none; border: none; font-size: 11px; color: #64748B; cursor: pointer; padding: 0 2px;" title="Refresh local Ollama connection">🔄</button>
+                <button onclick="window.showAIConfigModal()" style="background: none; border: none; font-size: 11px; color: #64748B; cursor: pointer; padding: 0 2px;" title="AI Configuration">⚙️</button>
               </div>
             </div>
           </div>
@@ -70,7 +72,7 @@ export function renderFloatingLegalAssistant() {
         <div style="padding: 6px 12px; background: #F8FAFC; border-bottom: 1px solid #F1F5F9; display: flex; align-items: center; gap: 6px; font-size: 11.5px;">
           <span style="color: #64748B; font-weight: 600; flex-shrink: 0;">Context:</span>
           <select id="floating-doc-context-select" style="flex: 1; min-width: 0; font-size: 11.5px; padding: 3px 6px; border-radius: 6px; border: 1px solid #E2E8F0; background: #FFFFFF; color: #1E293B;">
-            <option value="">All Vault Documents & Contracts (Global RAG)</option>
+            <option value="">All Vault Documents & Contracts (Global)</option>
             ${docs.map(d => `<option value="${d.id}">📄 ${d.title} (${d.departmentName})</option>`).join('')}
           </select>
         </div>
@@ -81,29 +83,29 @@ export function renderFloatingLegalAssistant() {
           <!-- Welcome Message -->
           <div class="chat-msg ai-msg">
             <div class="chat-msg-header">
-              <span>🤖 Legal Assistant</span>
+              <span>⚖️ AI Legal Counsel</span>
               <span>Just now</span>
             </div>
             <div class="chat-msg-content">
-              Hello <strong>${user.name}</strong>! I am your real-time corporate Legal AI powered by local Ollama LLM. I can audit contracts, check liability caps, verify notice periods, and draft legal summaries.
+              Hello <strong>${user.name}</strong>! I am your enterprise AI Legal Assistant. You can ask me to audit clauses, check liability exposure, review notice terms, and analyze contracts.
             </div>
           </div>
 
           <!-- Suggested Prompt Chips -->
           <div style="margin: 8px 0 12px 0;">
-            <div style="font-size: 11px; font-weight: 600; color: #64748B; margin-bottom: 6px;">Suggested Prompts:</div>
+            <div style="font-size: 11px; font-weight: 600; color: #64748B; margin-bottom: 6px;">Suggested Inquiries:</div>
             <div style="display: flex; flex-direction: column; gap: 6px;">
-              <button class="suggested-chip" onclick="window.sendFloatingPrompt('What are the standard termination notice periods in our vendor agreements?')">
-                📄 What are standard termination notice periods?
+              <button class="suggested-chip" onclick="window.sendFloatingPrompt('Review this contract for legal risks')">
+                📑 Review this contract for legal risks
               </button>
-              <button class="suggested-chip" onclick="window.sendFloatingPrompt('Summarize standard aggregate liability cap policy for Staffing contracts.')">
-                ⚖️ Liability cap policy for Staffing contracts
+              <button class="suggested-chip" onclick="window.sendFloatingPrompt('Explain this clause in simple language')">
+                🔍 Explain clause in simple language
               </button>
-              <button class="suggested-chip" onclick="window.sendFloatingPrompt('What non-disclosure and confidentiality obligations are required?')">
-                🔒 Confidentiality and NDA requirements
+              <button class="suggested-chip" onclick="window.sendFloatingPrompt('Identify missing clauses')">
+                ⚠️ Identify missing clauses
               </button>
-              <button class="suggested-chip" onclick="window.sendFloatingPrompt('Show me all contracts expiring in the next 60 days.')">
-                ⏰ Contracts expiring in next 60 days
+              <button class="suggested-chip" onclick="window.sendFloatingPrompt('Draft a stronger termination clause')">
+                ✍️ Draft stronger termination clause
               </button>
             </div>
           </div>
@@ -118,7 +120,7 @@ export function renderFloatingLegalAssistant() {
                 type="text" 
                 id="floating-chat-input" 
                 class="form-input" 
-                placeholder="Ask legal question (e.g. liability caps)..." 
+                placeholder="Ask legal question or request clause audit..." 
                 style="height: 38px; font-size: 12.5px; border-radius: 20px; padding: 0 14px;"
                 autocomplete="off"
               />
@@ -152,8 +154,6 @@ function formatAiMarkdown(text) {
     .replace(/\*(.*?)\*/g, '<em>$1</em>')
     .replace(/`([^`]+)`/g, '<code style="background: #F1F5F9; padding: 1px 5px; border-radius: 4px; font-family: monospace; font-size: 11.5px; color: #1E293B;">$1</code>')
     .replace(/^\s*-\s+(.*$)/gim, '<li style="margin-left: 16px; margin-bottom: 3px;">$1</li>')
-    .replace(/^\s*\*\s+(.*$)/gim, '<li style="margin-left: 16px; margin-bottom: 3px;">$1</li>')
-    .replace(/&gt; (.*$)/gim, '<blockquote style="border-left: 3px solid #3B82F6; background: #EFF6FF; padding: 6px 10px; border-radius: 4px; margin: 6px 0; font-size: 12px; color: #1E40AF;">$1</blockquote>')
     .replace(/\n\n/g, '<div style="height: 8px;"></div>')
     .replace(/\n/g, '<br/>');
 }
@@ -172,105 +172,9 @@ window.toggleFloatingAssistant = function(forceState = null) {
     win.classList.add('open');
     const input = document.getElementById('floating-chat-input');
     if (input) setTimeout(() => input.focus(), 150);
-    window.refreshOllamaStatus(false);
   } else {
     win.classList.remove('open');
   }
-};
-
-window.refreshOllamaStatus = async function(showToast = false) {
-  const pill = document.getElementById('ollama-status-pill');
-  const select = document.getElementById('floating-model-select');
-  
-  if (pill) {
-    pill.innerHTML = `<span style="width: 6px; height: 6px; border-radius: 50%; background: #F59E0B; display: inline-block;"></span><span>Checking...</span>`;
-    pill.style.background = '#FEF3C7';
-    pill.style.color = '#92400E';
-  }
-
-  const res = await legalAssistantService.checkOllamaStatus();
-
-  if (pill) {
-    if (res.connected) {
-      pill.innerHTML = `<span style="width: 6px; height: 6px; border-radius: 50%; background: #10B981; display: inline-block;"></span><span>Ollama Live</span>`;
-      pill.style.background = '#ECFDF5';
-      pill.style.color = '#047857';
-      pill.title = `Connected to local Ollama (${res.activeModel})`;
-
-      // Update model dropdown with installed models
-      if (select && res.models.length > 0) {
-        select.innerHTML = res.models.map(m => `<option value="${m}" ${m === res.activeModel ? 'selected' : ''}>${m}</option>`).join('');
-      }
-    } else {
-      pill.innerHTML = `<span style="width: 6px; height: 6px; border-radius: 50%; background: #EF4444; display: inline-block;"></span><span>Ollama Offline</span>`;
-      pill.style.background = '#FEE2E2';
-      pill.style.color = '#B91C1C';
-      pill.title = 'Ollama is not running. Click to view quick setup guide.';
-    }
-  }
-
-  if (showToast && window.Toast) {
-    if (res.connected) {
-      window.Toast.success(`Connected to local Ollama! Model: ${res.activeModel}`);
-    } else {
-      window.Toast.info('Ollama not detected. Click "Ollama Offline" for 1-click setup.');
-    }
-  }
-};
-
-window.handleModelChange = function(modelName) {
-  legalAssistantService.setModel(modelName);
-  if (window.Toast) {
-    window.Toast.info(`Switched active AI model to: ${modelName}`);
-  }
-};
-
-window.showOllamaSetupModal = function() {
-  Modal.open({
-    title: '🦙 Local Ollama AI Setup Guide',
-    size: 'md',
-    contentHtml: `
-      <div style="font-size: 13.5px; color: #334155; line-height: 1.6;">
-        <div style="background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 8px; padding: 12px; margin-bottom: 16px;">
-          <strong style="color: #1E40AF;">Connect 100% Private, Local AI to Impacteers DMS</strong><br/>
-          Run state-of-the-art open-source LLMs (Llama 3.2, Mistral, DeepSeek-R1, Qwen 2.5) on your local machine with zero data leaving your computer.
-        </div>
-
-        <div style="display: flex; flex-direction: column; gap: 14px;">
-          <div style="border-left: 3px solid #2563EB; padding-left: 12px;">
-            <div style="font-weight: 700; color: #0F172A;">Step 1: Install Ollama on Windows</div>
-            <div style="font-size: 12.5px; color: #64748B; margin-top: 2px;">Open PowerShell and run:</div>
-            <div style="background: #0F172A; color: #38BDF8; font-family: monospace; font-size: 12px; padding: 8px 12px; border-radius: 6px; margin-top: 4px; display: flex; justify-content: space-between; align-items: center;">
-              <code>winget install Ollama.Ollama</code>
-              <button onclick="navigator.clipboard.writeText('winget install Ollama.Ollama'); if(window.Toast) window.Toast.success('Copied to clipboard!');" style="background: rgba(255,255,255,0.15); border: none; color: #fff; padding: 2px 8px; border-radius: 4px; cursor: pointer; font-size: 11px;">Copy</button>
-            </div>
-            <div style="font-size: 11.5px; color: #64748B; margin-top: 4px;">Or download the installer from <a href="https://ollama.com/download/windows" target="_blank" style="color: #2563EB;">ollama.com/download</a>.</div>
-          </div>
-
-          <div style="border-left: 3px solid #10B981; padding-left: 12px;">
-            <div style="font-weight: 700; color: #0F172A;">Step 2: Pull and Run a Local Model</div>
-            <div style="font-size: 12.5px; color: #64748B; margin-top: 2px;">In PowerShell, start your favorite model:</div>
-            <div style="background: #0F172A; color: #34D399; font-family: monospace; font-size: 12px; padding: 8px 12px; border-radius: 6px; margin-top: 4px; display: flex; justify-content: space-between; align-items: center;">
-              <code>ollama run llama3.2</code>
-              <button onclick="navigator.clipboard.writeText('ollama run llama3.2'); if(window.Toast) window.Toast.success('Copied to clipboard!');" style="background: rgba(255,255,255,0.15); border: none; color: #fff; padding: 2px 8px; border-radius: 4px; cursor: pointer; font-size: 11px;">Copy</button>
-            </div>
-            <div style="font-size: 11.5px; color: #64748B; margin-top: 4px;">For other models: <code>ollama run mistral</code> or <code>ollama run deepseek-r1:8b</code>.</div>
-          </div>
-
-          <div style="border-left: 3px solid #7C3AED; padding-left: 12px;">
-            <div style="font-weight: 700; color: #0F172A;">Step 3: Test Connection</div>
-            <div style="font-size: 12.5px; color: #64748B; margin-top: 2px;">Click the button below once Ollama is running:</div>
-            <button class="btn btn-primary btn-sm" onclick="window.refreshOllamaStatus(true); Modal.close();" style="margin-top: 6px;">
-              🔄 Check Connection Now
-            </button>
-          </div>
-        </div>
-      </div>
-    `,
-    footerHtml: `
-      <button class="btn btn-secondary" onclick="Modal.close()">Close</button>
-    `
-  });
 };
 
 window.sendFloatingPrompt = function(promptText) {
@@ -285,12 +189,14 @@ window.submitFloatingAssistantMessage = async function() {
   const input = document.getElementById('floating-chat-input');
   const container = document.getElementById('floating-chat-messages');
   const docSelect = document.getElementById('floating-doc-context-select');
+  const jurSelect = document.getElementById('floating-jur-select');
   if (!input || !container) return;
 
   const query = input.value.trim();
   if (!query) return;
 
   const selectedDocId = docSelect ? docSelect.value : null;
+  const jurisdiction = jurSelect ? jurSelect.value : 'India';
 
   // Append user message
   const userMsgEl = document.createElement('div');
@@ -312,7 +218,7 @@ window.submitFloatingAssistantMessage = async function() {
   typingEl.id = 'floating-typing-indicator';
   typingEl.innerHTML = `
     <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #64748B;">
-      <span>Thinking with ${legalAssistantService.isConnected ? 'local ' + legalAssistantService.model : 'Legal RAG engine'}</span>
+      <span>Consulting AI Legal Counsel (${jurisdiction})</span>
       <span class="typing-dots">...</span>
     </div>
   `;
@@ -320,38 +226,34 @@ window.submitFloatingAssistantMessage = async function() {
   container.scrollTop = container.scrollHeight;
 
   try {
-    const result = await legalAssistantService.askQuestion({ 
-      question: query,
-      documentId: selectedDocId,
-      conversationHistory: assistantMessages
+    const result = await legalAssistantService.queryLegalAI({ 
+      prompt: query,
+      contextDocId: selectedDocId,
+      jurisdiction: jurisdiction,
+      history: assistantMessages
     });
 
     typingEl.remove();
 
     assistantMessages.push({ role: 'user', content: query });
-    assistantMessages.push({ role: 'assistant', content: result.text });
+    assistantMessages.push({ role: 'assistant', content: result.reply });
 
     const aiMsgEl = document.createElement('div');
     aiMsgEl.className = 'chat-msg ai-msg';
     
-    const formattedHtml = formatAiMarkdown(result.text);
+    const formattedHtml = formatAiMarkdown(result.reply);
 
     aiMsgEl.innerHTML = `
       <div class="chat-msg-header">
         <span style="display: flex; align-items: center; gap: 4px;">
-          <span>🤖 Legal Assistant</span>
-          <span style="font-size: 9.5px; background: ${result.isLiveOllama ? '#ECFDF5' : '#F1F5F9'}; color: ${result.isLiveOllama ? '#047857' : '#475569'}; padding: 1px 5px; border-radius: 4px; font-weight: 700;">
-            ${result.model || 'AI'}
+          <span>⚖️ AI Legal Counsel</span>
+          <span style="font-size: 9.5px; background: #EFF6FF; color: #1E40AF; padding: 1px 5px; border-radius: 4px; font-weight: 700;">
+            ${result.provider || 'AI'}
           </span>
         </span>
         <span>${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
       </div>
       <div class="chat-msg-content" style="line-height: 1.5; font-size: 12.8px;">${formattedHtml}</div>
-      ${result.citations && result.citations.length > 0 ? `
-        <div style="font-size: 11px; color: #64748B; margin-top: 8px; border-top: 1px dashed #CBD5E1; padding-top: 6px;">
-          <strong>Sources Grounded:</strong> ${result.citations.join(', ')}
-        </div>
-      ` : ''}
     `;
     container.appendChild(aiMsgEl);
   } catch (err) {
@@ -360,7 +262,7 @@ window.submitFloatingAssistantMessage = async function() {
     errorEl.className = 'chat-msg ai-msg';
     errorEl.innerHTML = `
       <div class="chat-msg-header" style="color: #BE123C;">Error</div>
-      <div class="chat-msg-content" style="color: #BE123C;">${err.message}</div>
+      <div class="chat-msg-content" style="color: #BE123C;">Unable to connect to Legal Assistant. Please try again.</div>
     `;
     container.appendChild(errorEl);
   }

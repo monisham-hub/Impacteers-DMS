@@ -1,31 +1,17 @@
 /**
  * Impacteers DMS — Enterprise In-House Legal & Document Management System
- * Admin Settings & System Configuration Page
+ * Admin Settings & AI Gateway Configuration Page
  */
 
-import { db } from '../db.js';
 import { authService } from '../services/authService.js';
-import { legalAssistantService } from '../services/legalAssistantService.js';
+import { db } from '../db.js';
+import { Toast } from '../components/Toast.js';
+import { Modal } from '../components/Modal.js';
+import { aiService } from '../services/aiService.js';
 
 export function renderAdminSettingsPage() {
-  if (!authService.isLegalAdmin()) {
-    return `
-      <div class="content-container">
-        <div style="padding: 48px; text-align: center; background: #FFF1F2; border-radius: 12px; border: 1px solid #FECDD3;">
-          <h2 style="color: #BE123C;">Access Denied</h2>
-          <p style="color: #9F1239; margin-top: 6px;">Only System Administrators and Legal Administrators have access to this configuration console.</p>
-        </div>
-      </div>
-    `;
-  }
-
-  const users = db.data.users;
-  const requestTypes = db.data.requestTypes;
-  const alertDays = db.data.expiryAlertDays || [90, 60, 30, 15, 7];
-
-  const currentEndpoint = legalAssistantService.endpoint;
-  const currentModel = legalAssistantService.model;
-  const currentTemp = legalAssistantService.temperature;
+  const user = authService.getCurrentUser();
+  const alertDays = db.data.contractAlertDays || [60, 30, 15, 7];
 
   return `
     <div class="content-container">
@@ -36,7 +22,7 @@ export function renderAdminSettingsPage() {
             <span>Enterprise System Administration & Settings</span>
           </div>
           <div class="page-subtitle">
-            Configure system users, departments, request types, CLM alert thresholds, and local Ollama AI settings.
+            Configure system users, departments, request types, CLM alert thresholds, and AI Legal Assistant Gateway.
           </div>
         </div>
         <div>
@@ -48,43 +34,37 @@ export function renderAdminSettingsPage() {
 
       <div class="grid-2-col">
         
-        <!-- Local Ollama AI Settings Card -->
+        <!-- Enterprise AI Legal Assistant Gateway Card -->
         <div class="enterprise-card">
           <div class="enterprise-card-header">
             <div class="enterprise-card-title">
-              <span>🦙</span>
-              <span>Local Ollama AI Configuration</span>
+              <span>🤖</span>
+              <span>Enterprise Legal AI Gateway</span>
             </div>
-            <span class="badge badge-purple">On-Device LLM</span>
+            <span class="badge badge-blue">Secure Server-Side</span>
           </div>
           <div style="padding: 20px;">
-            <div class="form-group">
-              <label class="form-label">Ollama Server Endpoint</label>
-              <input type="text" id="ai-endpoint-input" class="form-input" value="${currentEndpoint}" placeholder="http://127.0.0.1:11434" />
-              <div class="form-hint" style="font-size: 11.5px; color: #64748B; margin-top: 4px;">Default local endpoint with auto-reverse proxy at <code>/api/ollama</code>.</div>
-            </div>
+            <p style="font-size: 13px; color: #475569; margin-bottom: 14px; line-height: 1.5;">
+              The AI Legal Assistant connects via the secure backend API (<code>/api/legal-assistant/chat</code>) with zero client-side credential exposure.
+            </p>
 
-            <div class="form-group">
-              <label class="form-label">Active Local Model</label>
-              <input type="text" id="ai-model-input" class="form-input" value="${currentModel}" placeholder="llama3.2" />
-              <div class="form-hint" style="font-size: 11.5px; color: #64748B; margin-top: 4px;">e.g., <code>llama3.2</code>, <code>mistral</code>, <code>deepseek-r1:8b</code>, <code>qwen2.5:7b</code>.</div>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Creativity / Temperature (0.0 to 1.0)</label>
-              <input type="number" id="ai-temp-input" class="form-input" value="${currentTemp}" step="0.1" min="0" max="1" />
-              <div class="form-hint" style="font-size: 11.5px; color: #64748B; margin-top: 4px;">Lower (0.2-0.3) is recommended for strict legal clause extraction.</div>
+            <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 12px 14px; margin-bottom: 16px;">
+              <div style="font-size: 12.5px; font-weight: 700; color: #0F172A; margin-bottom: 4px;">Supported AI Providers:</div>
+              <ul style="margin: 0 0 0 16px; font-size: 12px; color: #475569; line-height: 1.6;">
+                <li><strong>Google Gemini</strong>: <code>gemini-1.5-flash</code>, <code>gemini-2.0-flash</code></li>
+                <li><strong>OpenAI</strong>: <code>gpt-4o</code>, <code>gpt-4o-mini</code></li>
+                <li><strong>Groq</strong>: <code>llama-3.3-70b-versatile</code>, <code>mixtral-8x7b-32768</code></li>
+                <li><strong>OpenRouter</strong>: Multi-model router with free & pro endpoints</li>
+                <li><strong>Local Ollama</strong>: <code>llama3.2</code>, <code>mistral</code>, <code>qwen2.5</code> (100% private on-device)</li>
+              </ul>
             </div>
 
             <div style="display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap;">
-              <button class="btn btn-primary btn-sm" id="save-ai-endpoint-btn">
-                💾 Save Ollama Config
+              <button class="btn btn-primary btn-sm" onclick="window.showAIConfigModal()">
+                ⚙️ View AI Gateway Configuration
               </button>
-              <button class="btn btn-secondary btn-sm" id="test-ollama-btn">
-                🔄 Test Connection
-              </button>
-              <button class="btn btn-secondary btn-sm" onclick="window.showOllamaSetupModal()">
-                📖 Setup Guide
+              <button class="btn btn-secondary btn-sm" id="test-ai-gateway-btn" onclick="window.testAIGatewayConnection()">
+                🔄 Test AI Connection
               </button>
             </div>
           </div>
@@ -111,56 +91,43 @@ export function renderAdminSettingsPage() {
           </div>
         </div>
 
-        <!-- Request Types Config -->
-        <div class="enterprise-card">
-          <div class="enterprise-card-header">
-            <div class="enterprise-card-title">
-              <span>📋</span>
-              <span>Configured Request Types (${requestTypes.length})</span>
-            </div>
-            <button class="btn btn-secondary btn-sm" id="add-request-type-btn">
-              + Add Type
-            </button>
-          </div>
-          <div style="padding: 16px; max-height: 280px; overflow-y: auto;">
-            ${requestTypes
-              .map(
-                t => `
-              <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #F1F5F9; font-size: 13px;">
-                <span style="font-weight: 600; color: #0F172A;">${t.name}</span>
-                <span class="badge badge-blue">SLA: ${t.slaDays} Days</span>
-              </div>
-            `
-              )
-              .join('')}
+      </div>
+
+      <!-- Department Directory -->
+      <div class="enterprise-card" style="margin-top: 20px;">
+        <div class="enterprise-card-header">
+          <div class="enterprise-card-title">
+            <span>🏢</span>
+            <span>Registered Business Departments (${db.data.departments.length})</span>
           </div>
         </div>
-
-        <!-- Active Users & Roles -->
-        <div class="enterprise-card">
-          <div class="enterprise-card-header">
-            <div class="enterprise-card-title">
-              <span>👥</span>
-              <span>System Users & Roles (${users.length})</span>
-            </div>
-          </div>
-          <div style="padding: 12px 16px; max-height: 280px; overflow-y: auto;">
-            ${users
-              .map(
-                u => `
-              <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #F1F5F9; font-size: 12.5px;">
-                <div>
-                  <strong style="color: #0F172A;">${u.name}</strong>
-                  <div style="font-size: 11px; color: #64748B;">${u.email}</div>
-                </div>
-                <span class="badge badge-slate">${u.role.replace(/_/g, ' ')}</span>
-              </div>
-            `
-              )
-              .join('')}
-          </div>
+        <div class="table-responsive">
+          <table class="enterprise-table">
+            <thead>
+              <tr>
+                <th>Department Name</th>
+                <th>Department Code</th>
+                <th>Active Head</th>
+                <th>Total Contracts</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${db.data.departments
+                .map(d => {
+                  const docCount = db.data.documents.filter(doc => doc.departmentId === d.id).length;
+                  return `
+                  <tr>
+                    <td style="font-weight: 600;">${d.name}</td>
+                    <td style="font-family: var(--font-mono); font-size: 12px; color: #64748B;">${d.id}</td>
+                    <td>${d.headName || 'Assigned'}</td>
+                    <td><span class="badge badge-blue">${docCount} Documents</span></td>
+                  </tr>
+                `;
+                })
+                .join('')}
+            </tbody>
+          </table>
         </div>
-
       </div>
     </div>
   `;
