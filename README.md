@@ -1,18 +1,18 @@
 # Impacteers DMS — Enterprise In-House Legal & Document Management System
 
-> **A modern, secure, enterprise-grade In-House Legal Operations, Contract Lifecycle Management (CLM), Document Vault & Local AI System for Impacteers.**
+> **A modern, secure, enterprise-grade In-House Legal Operations, Contract Lifecycle Management (CLM), Document Vault & AI Intelligence System for Impacteers.**
 
 ---
 
 ## 🌟 Executive Overview
 
 **Impacteers DMS** (Document Management System) is built for modern corporate legal teams and cross-functional business departments to streamline the complete legal and document lifecycle:
-1. **Legal Requests & Jira-Style Ticket Management**: Triage, assignment, acceptance, rejection, and timeline rescheduling with SLA tracking.
+1. **Legal Requests & Ticket Management**: Triage, assignment, acceptance, rejection, and timeline rescheduling with SLA tracking.
 2. **Dedicated Clause Legal Remarks**: Granular clause-level review (`Clause 4 - Payment terms`, `Clause 7 - Liability cap`) with threaded business responses and resolution workflows (`Open`, `In Progress`, `Resolved`).
 3. **Version-Controlled Document Review**: Immutable multi-version history (`v1 Original Draft`, `v2 Legal Redlines`, `vFinal Executed Agreement`).
 4. **Centralized Legal Repository & Vault**: Global legal archive for counsel and strictly isolated department repositories for 11 business units.
 5. **Contract Lifecycle Management (CLM)**: Active contract tracking, automatic expiry alerts (90d, 60d, 30d, 15d, 7d), notice period management, and execution workflow.
-6. **Local LLM AI Legal Assistant (Ollama Powered)**: 100% private, on-device intelligence (`llama3.2`, `mistral`, `deepseek-r1`, `qwen2.5`) with permission-scoped Legal RAG grounding across contracts, NDAs, and corporate policies.
+6. **In-House AI Legal Assistant**: Enterprise intelligence with permission-scoped Legal RAG grounding across Articles of Association (AOA), contracts, NDAs, and corporate policies.
 7. **Immutable Security Audit Trail**: Tamper-evident logging of all events with actor, diffs, timestamps, and IP/session metadata.
 
 ---
@@ -37,7 +37,7 @@
 ```
 legal-management-system/
 ├── index.html                           # Modern HTML5 application entry point
-├── server.ps1                           # Zero-dependency PowerShell HTTP web server with Ollama proxy
+├── server.ps1                           # Zero-dependency PowerShell HTTP web server
 ├── README.md                            # Comprehensive project documentation
 ├── .gitignore                           # Standard git exclusion rules
 ├── supabase/
@@ -61,7 +61,7 @@ legal-management-system/
 │       │   ├── remarkService.js         # Dedicated clause legal remarks & thread replies
 │       │   ├── commentService.js        # Comments & Internal Legal Notes filtering
 │       │   ├── reportService.js         # Analytics, turnaround metrics & CSV exporter
-│       │   ├── legalAssistantService.js # Local Ollama LLM integration & RAG Grounding engine
+│       │   ├── legalAssistantService.js # AI Legal Intelligence & RAG Grounding engine
 │       │   ├── auditService.js          # Cryptographic immutable audit logging
 │       │   └── notificationService.js   # Notification center & alerts
 │       ├── components/
@@ -84,7 +84,7 @@ legal-management-system/
 │           ├── LegalAssistantPage.js    # Full-page AI Assistant interface
 │           ├── NotificationsPage.js     # Notifications inbox
 │           ├── AuditLogsPage.js         # Immutable security audit trail
-│           └── AdminSettingsPage.js     # User, role, SLA & Ollama AI configuration
+│           └── AdminSettingsPage.js     # User, role, SLA & AI engine configuration
 ```
 
 ---
@@ -104,22 +104,6 @@ Open your browser and navigate to:
 ```
 http://127.0.0.1:8080/
 ```
-
----
-
-## 🤖 Activating Real Local AI with Ollama
-
-Impacteers DMS connects directly to your local Ollama instance for private on-device intelligence:
-
-1. **Install Ollama**:
-   ```powershell
-   winget install Ollama.Ollama
-   ```
-2. **Download & Start a Model**:
-   ```powershell
-   ollama run llama3.2
-   ```
-3. The chatbot in Impacteers DMS will automatically detect Ollama and switch from simulation mode to `🟢 Ollama Live (llama3.2)`.
 
 ---
 

@@ -1,13 +1,11 @@
 /**
  * Impacteers DMS — Enterprise In-House Legal & Document Management System
- * Floating AI Legal Assistant Widget (Secure Gateway & AI Integration)
+ * Floating AI Legal Assistant Widget (Impacteers Legal AI Engine)
  */
 
 import { legalAssistantService } from '../services/legalAssistantService.js';
-import { aiService } from '../services/aiService.js';
 import { authService } from '../services/authService.js';
 import { documentService } from '../services/documentService.js';
-import { Modal } from './Modal.js';
 
 let isAssistantOpen = false;
 let assistantMessages = [];
@@ -24,7 +22,7 @@ export function renderFloatingLegalAssistant() {
       <button 
         id="floating-assistant-fab" 
         class="floating-fab" 
-        title="Open AI Legal Assistant"
+        title="Open Impacteers AI Legal Assistant"
         onclick="window.toggleFloatingAssistant()"
       >
         <span class="fab-icon">💬</span>
@@ -38,26 +36,17 @@ export function renderFloatingLegalAssistant() {
         <div class="floating-assistant-header">
           <div style="display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0;">
             <div style="width: 28px; height: 28px; border-radius: 8px; background: #EFF6FF; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0;">
-              ⚖️
+              🤖
             </div>
             <div style="flex: 1; min-width: 0;">
               <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px;">
                 <div style="font-size: 13.5px; font-weight: 700; color: #0F172A; white-space: nowrap;">Legal AI Assistant</div>
-                <div id="floating-gateway-status-pill" onclick="window.showAIConfigModal()" style="font-size: 10.5px; padding: 1.5px 7px; border-radius: 12px; background: #ECFDF5; color: #047857; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0;" title="Click to view AI Gateway status">
+                <div style="font-size: 10.5px; padding: 1.5px 7px; border-radius: 12px; background: #ECFDF5; color: #047857; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0;">
                   <span style="width: 6px; height: 6px; border-radius: 50%; background: #10B981; display: inline-block;"></span>
                   <span>AI Active</span>
                 </div>
               </div>
-              <div style="display: flex; align-items: center; gap: 6px; margin-top: 2px;">
-                <span style="font-size: 11px; color: #64748B;">Jurisdiction:</span>
-                <select id="floating-jur-select" onchange="window.handleJurisdictionChange(this.value)" style="font-size: 11px; padding: 1px 4px; border-radius: 4px; border: 1px solid #CBD5E1; background: #FFFFFF; color: #334155; max-width: 130px; cursor: pointer;">
-                  <option value="India">🇮🇳 India</option>
-                  <option value="Tamil Nadu">🇮🇳 Tamil Nadu</option>
-                  <option value="Delaware / US">🇺🇸 Delaware</option>
-                  <option value="United Kingdom">🇬🇧 UK</option>
-                </select>
-                <button onclick="window.showAIConfigModal()" style="background: none; border: none; font-size: 11px; color: #64748B; cursor: pointer; padding: 0 2px;" title="AI Configuration">⚙️</button>
-              </div>
+              <div style="font-size: 11px; color: #64748B; margin-top: 1px;">Impacteers In-House Intelligence</div>
             </div>
           </div>
           <button 
@@ -72,7 +61,7 @@ export function renderFloatingLegalAssistant() {
         <div style="padding: 6px 12px; background: #F8FAFC; border-bottom: 1px solid #F1F5F9; display: flex; align-items: center; gap: 6px; font-size: 11.5px;">
           <span style="color: #64748B; font-weight: 600; flex-shrink: 0;">Context:</span>
           <select id="floating-doc-context-select" style="flex: 1; min-width: 0; font-size: 11.5px; padding: 3px 6px; border-radius: 6px; border: 1px solid #E2E8F0; background: #FFFFFF; color: #1E293B;">
-            <option value="">All Vault Documents & Contracts (Global)</option>
+            <option value="">All Vault Documents & Contracts (Global RAG)</option>
             ${docs.map(d => `<option value="${d.id}">📄 ${d.title} (${d.departmentName})</option>`).join('')}
           </select>
         </div>
@@ -83,29 +72,29 @@ export function renderFloatingLegalAssistant() {
           <!-- Welcome Message -->
           <div class="chat-msg ai-msg">
             <div class="chat-msg-header">
-              <span>⚖️ AI Legal Counsel</span>
+              <span>🤖 Legal Assistant</span>
               <span>Just now</span>
             </div>
             <div class="chat-msg-content">
-              Hello <strong>${user.name}</strong>! I am your enterprise AI Legal Assistant. You can ask me to audit clauses, check liability exposure, review notice terms, and analyze contracts.
+              Hello <strong>${user.name}</strong>! I am your in-house AI Legal Counsel. I can audit contracts, check liability caps, verify AOA notice periods, and draft legal summaries.
             </div>
           </div>
 
           <!-- Suggested Prompt Chips -->
           <div style="margin: 8px 0 12px 0;">
-            <div style="font-size: 11px; font-weight: 600; color: #64748B; margin-bottom: 6px;">Suggested Inquiries:</div>
+            <div style="font-size: 11px; font-weight: 600; color: #64748B; margin-bottom: 6px;">Suggested Prompts:</div>
             <div style="display: flex; flex-direction: column; gap: 6px;">
-              <button class="suggested-chip" onclick="window.sendFloatingPrompt('Review this contract for legal risks')">
-                📑 Review this contract for legal risks
+              <button class="suggested-chip" onclick="window.sendFloatingPrompt('What are the standard notice periods for Board Meetings and General Meetings under AOA?')">
+                📜 AOA Board & General Meeting notice periods
               </button>
-              <button class="suggested-chip" onclick="window.sendFloatingPrompt('Explain this clause in simple language')">
-                🔍 Explain clause in simple language
+              <button class="suggested-chip" onclick="window.sendFloatingPrompt('Summarize standard aggregate liability cap policy for Staffing contracts.')">
+                ⚖️ Liability cap policy for Staffing contracts
               </button>
-              <button class="suggested-chip" onclick="window.sendFloatingPrompt('Identify missing clauses')">
-                ⚠️ Identify missing clauses
+              <button class="suggested-chip" onclick="window.sendFloatingPrompt('What non-disclosure and confidentiality obligations are standard across our NDAs?')">
+                🔒 Confidentiality & NDA requirements
               </button>
-              <button class="suggested-chip" onclick="window.sendFloatingPrompt('Draft a stronger termination clause')">
-                ✍️ Draft stronger termination clause
+              <button class="suggested-chip" onclick="window.sendFloatingPrompt('Show me all contracts expiring in the next 60 days.')">
+                ⏰ Contracts expiring in next 60 days
               </button>
             </div>
           </div>
@@ -120,7 +109,7 @@ export function renderFloatingLegalAssistant() {
                 type="text" 
                 id="floating-chat-input" 
                 class="form-input" 
-                placeholder="Ask legal question or request clause audit..." 
+                placeholder="Ask legal question (e.g. AOA notice period)..." 
                 style="height: 38px; font-size: 12.5px; border-radius: 20px; padding: 0 14px;"
                 autocomplete="off"
               />
@@ -147,6 +136,7 @@ function formatAiMarkdown(text) {
   if (!text) return '';
   return text
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/^#### (.*$)/gim, '<div style="font-size: 13px; font-weight: 700; color: #1E293B; margin: 6px 0 2px 0;">$1</div>')
     .replace(/^### (.*$)/gim, '<div style="font-size: 13.5px; font-weight: 800; color: #0F172A; margin: 8px 0 4px 0;">$1</div>')
     .replace(/^## (.*$)/gim, '<div style="font-size: 14px; font-weight: 800; color: #0F172A; margin: 10px 0 6px 0;">$1</div>')
     .replace(/^# (.*$)/gim, '<div style="font-size: 15px; font-weight: 800; color: #0F172A; margin: 12px 0 6px 0;">$1</div>')
@@ -154,6 +144,8 @@ function formatAiMarkdown(text) {
     .replace(/\*(.*?)\*/g, '<em>$1</em>')
     .replace(/`([^`]+)`/g, '<code style="background: #F1F5F9; padding: 1px 5px; border-radius: 4px; font-family: monospace; font-size: 11.5px; color: #1E293B;">$1</code>')
     .replace(/^\s*-\s+(.*$)/gim, '<li style="margin-left: 16px; margin-bottom: 3px;">$1</li>')
+    .replace(/^\s*\*\s+(.*$)/gim, '<li style="margin-left: 16px; margin-bottom: 3px;">$1</li>')
+    .replace(/&gt; (.*$)/gim, '<blockquote style="border-left: 3px solid #3B82F6; background: #EFF6FF; padding: 6px 10px; border-radius: 4px; margin: 6px 0; font-size: 12px; color: #1E40AF;">$1</blockquote>')
     .replace(/\n\n/g, '<div style="height: 8px;"></div>')
     .replace(/\n/g, '<br/>');
 }
@@ -189,14 +181,12 @@ window.submitFloatingAssistantMessage = async function() {
   const input = document.getElementById('floating-chat-input');
   const container = document.getElementById('floating-chat-messages');
   const docSelect = document.getElementById('floating-doc-context-select');
-  const jurSelect = document.getElementById('floating-jur-select');
   if (!input || !container) return;
 
   const query = input.value.trim();
   if (!query) return;
 
   const selectedDocId = docSelect ? docSelect.value : null;
-  const jurisdiction = jurSelect ? jurSelect.value : 'India';
 
   // Append user message
   const userMsgEl = document.createElement('div');
@@ -218,7 +208,7 @@ window.submitFloatingAssistantMessage = async function() {
   typingEl.id = 'floating-typing-indicator';
   typingEl.innerHTML = `
     <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #64748B;">
-      <span>Consulting AI Legal Counsel (${jurisdiction})</span>
+      <span>Analyzing legal knowledge base</span>
       <span class="typing-dots">...</span>
     </div>
   `;
@@ -226,34 +216,38 @@ window.submitFloatingAssistantMessage = async function() {
   container.scrollTop = container.scrollHeight;
 
   try {
-    const result = await legalAssistantService.queryLegalAI({ 
-      prompt: query,
-      contextDocId: selectedDocId,
-      jurisdiction: jurisdiction,
-      history: assistantMessages
+    const result = await legalAssistantService.askQuestion({ 
+      question: query,
+      documentId: selectedDocId,
+      conversationHistory: assistantMessages
     });
 
     typingEl.remove();
 
     assistantMessages.push({ role: 'user', content: query });
-    assistantMessages.push({ role: 'assistant', content: result.reply });
+    assistantMessages.push({ role: 'assistant', content: result.text });
 
     const aiMsgEl = document.createElement('div');
     aiMsgEl.className = 'chat-msg ai-msg';
     
-    const formattedHtml = formatAiMarkdown(result.reply);
+    const formattedHtml = formatAiMarkdown(result.text);
 
     aiMsgEl.innerHTML = `
       <div class="chat-msg-header">
         <span style="display: flex; align-items: center; gap: 4px;">
-          <span>⚖️ AI Legal Counsel</span>
-          <span style="font-size: 9.5px; background: #EFF6FF; color: #1E40AF; padding: 1px 5px; border-radius: 4px; font-weight: 700;">
-            ${result.provider || 'AI'}
+          <span>🤖 Legal Assistant</span>
+          <span style="font-size: 9.5px; background: #ECFDF5; color: #047857; padding: 1px 5px; border-radius: 4px; font-weight: 700;">
+            ${result.model || 'AI'}
           </span>
         </span>
         <span>${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
       </div>
       <div class="chat-msg-content" style="line-height: 1.5; font-size: 12.8px;">${formattedHtml}</div>
+      ${result.citations && result.citations.length > 0 ? `
+        <div style="font-size: 11px; color: #64748B; margin-top: 8px; border-top: 1px dashed #CBD5E1; padding-top: 6px;">
+          <strong>Sources Grounded:</strong> ${result.citations.join(', ')}
+        </div>
+      ` : ''}
     `;
     container.appendChild(aiMsgEl);
   } catch (err) {
@@ -262,7 +256,7 @@ window.submitFloatingAssistantMessage = async function() {
     errorEl.className = 'chat-msg ai-msg';
     errorEl.innerHTML = `
       <div class="chat-msg-header" style="color: #BE123C;">Error</div>
-      <div class="chat-msg-content" style="color: #BE123C;">Unable to connect to Legal Assistant. Please try again.</div>
+      <div class="chat-msg-content" style="color: #BE123C;">${err.message}</div>
     `;
     container.appendChild(errorEl);
   }

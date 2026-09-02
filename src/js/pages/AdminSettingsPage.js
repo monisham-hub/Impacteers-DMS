@@ -1,17 +1,27 @@
 /**
  * Impacteers DMS — Enterprise In-House Legal & Document Management System
- * Admin Settings & AI Gateway Configuration Page
+ * Admin Settings & System Configuration Page
  */
 
-import { authService } from '../services/authService.js';
 import { db } from '../db.js';
-import { Toast } from '../components/Toast.js';
-import { Modal } from '../components/Modal.js';
-import { aiService } from '../services/aiService.js';
+import { authService } from '../services/authService.js';
+import { legalAssistantService } from '../services/legalAssistantService.js';
 
 export function renderAdminSettingsPage() {
-  const user = authService.getCurrentUser();
-  const alertDays = db.data.contractAlertDays || [60, 30, 15, 7];
+  if (!authService.isLegalAdmin()) {
+    return `
+      <div class="content-container">
+        <div style="padding: 48px; text-align: center; background: #FFF1F2; border-radius: 12px; border: 1px solid #FECDD3;">
+          <h2 style="color: #BE123C;">Access Denied</h2>
+          <p style="color: #9F1239; margin-top: 6px;">Only System Administrators and Legal Administrators have access to this configuration console.</p>
+        </div>
+      </div>
+    `;
+  }
+
+  const users = db.data.users;
+  const requestTypes = db.data.requestTypes;
+  const alertDays = db.data.expiryAlertDays || [90, 60, 30, 15, 7];
 
   return `
     <div class="content-container">
@@ -22,7 +32,7 @@ export function renderAdminSettingsPage() {
             <span>Enterprise System Administration & Settings</span>
           </div>
           <div class="page-subtitle">
-            Configure system users, departments, request types, CLM alert thresholds, and AI Legal Assistant Gateway.
+            Configure system users, departments, request types, CLM alert thresholds, and AI legal engine parameters.
           </div>
         </div>
         <div>
@@ -34,37 +44,33 @@ export function renderAdminSettingsPage() {
 
       <div class="grid-2-col">
         
-        <!-- Enterprise AI Legal Assistant Gateway Card -->
+        <!-- Impacteers AI Legal Knowledge Configuration Card -->
         <div class="enterprise-card">
           <div class="enterprise-card-header">
             <div class="enterprise-card-title">
               <span>🤖</span>
-              <span>Enterprise Legal AI Gateway</span>
+              <span>Impacteers AI Legal Intelligence Engine</span>
             </div>
-            <span class="badge badge-blue">Secure Server-Side</span>
+            <span class="badge badge-green">Engine Active</span>
           </div>
           <div style="padding: 20px;">
-            <p style="font-size: 13px; color: #475569; margin-bottom: 14px; line-height: 1.5;">
-              The AI Legal Assistant connects via the secure backend API (<code>/api/legal-assistant/chat</code>) with zero client-side credential exposure.
-            </p>
-
-            <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 12px 14px; margin-bottom: 16px;">
-              <div style="font-size: 12.5px; font-weight: 700; color: #0F172A; margin-bottom: 4px;">Supported AI Providers:</div>
-              <ul style="margin: 0 0 0 16px; font-size: 12px; color: #475569; line-height: 1.6;">
-                <li><strong>Google Gemini</strong>: <code>gemini-1.5-flash</code>, <code>gemini-2.0-flash</code></li>
-                <li><strong>OpenAI</strong>: <code>gpt-4o</code>, <code>gpt-4o-mini</code></li>
-                <li><strong>Groq</strong>: <code>llama-3.3-70b-versatile</code>, <code>mixtral-8x7b-32768</code></li>
-                <li><strong>OpenRouter</strong>: Multi-model router with free & pro endpoints</li>
-                <li><strong>Local Ollama</strong>: <code>llama3.2</code>, <code>mistral</code>, <code>qwen2.5</code> (100% private on-device)</li>
-              </ul>
+            <div class="form-group" style="margin-bottom: 16px;">
+              <label class="form-label" style="font-weight: 600; font-size: 13px;">Knowledge Base Scope</label>
+              <div style="font-size: 13px; color: #334155; line-height: 1.5; background: #F8FAFC; border: 1px solid #E2E8F0; padding: 12px; border-radius: 8px;">
+                ✅ <strong>Articles of Association (AOA)</strong>: General Meeting (21 clear days) & Board Meeting (7 days) notice rules.<br/>
+                ✅ <strong>Contract Standards</strong>: Liability caps (1x-2x), standard Net 30 payment terms, and 30-day termination clauses.<br/>
+                ✅ <strong>Department RAG Indexing</strong>: Active contracts and NDAs indexed across all 11 departments.
+              </div>
             </div>
 
-            <div style="display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap;">
-              <button class="btn btn-primary btn-sm" onclick="window.showAIConfigModal()">
-                ⚙️ View AI Gateway Configuration
-              </button>
-              <button class="btn btn-secondary btn-sm" id="test-ai-gateway-btn" onclick="window.testAIGatewayConnection()">
-                🔄 Test AI Connection
+            <div class="form-group" style="margin-bottom: 16px;">
+              <label class="form-label" style="font-weight: 600; font-size: 13px;">Active AI Engine Version</label>
+              <input type="text" class="form-input" value="${legalAssistantService.model}" readonly style="background: #F1F5F9; color: #475569; font-weight: 600;" />
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 16px;">
+              <button class="btn btn-primary btn-sm" onclick="window.location.hash='#/assistant'">
+                💬 Open Legal AI Assistant
               </button>
             </div>
           </div>
@@ -91,43 +97,56 @@ export function renderAdminSettingsPage() {
           </div>
         </div>
 
-      </div>
-
-      <!-- Department Directory -->
-      <div class="enterprise-card" style="margin-top: 20px;">
-        <div class="enterprise-card-header">
-          <div class="enterprise-card-title">
-            <span>🏢</span>
-            <span>Registered Business Departments (${db.data.departments.length})</span>
+        <!-- Request Types Config -->
+        <div class="enterprise-card">
+          <div class="enterprise-card-header">
+            <div class="enterprise-card-title">
+              <span>📋</span>
+              <span>Configured Request Types (${requestTypes.length})</span>
+            </div>
+            <button class="btn btn-secondary btn-sm" id="add-request-type-btn">
+              + Add Type
+            </button>
+          </div>
+          <div style="padding: 16px; max-height: 280px; overflow-y: auto;">
+            ${requestTypes
+              .map(
+                t => `
+              <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #F1F5F9; font-size: 13px;">
+                <span style="font-weight: 600; color: #0F172A;">${t.name}</span>
+                <span class="badge badge-blue">SLA: ${t.slaDays} Days</span>
+              </div>
+            `
+              )
+              .join('')}
           </div>
         </div>
-        <div class="table-responsive">
-          <table class="enterprise-table">
-            <thead>
-              <tr>
-                <th>Department Name</th>
-                <th>Department Code</th>
-                <th>Active Head</th>
-                <th>Total Contracts</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${db.data.departments
-                .map(d => {
-                  const docCount = db.data.documents.filter(doc => doc.departmentId === d.id).length;
-                  return `
-                  <tr>
-                    <td style="font-weight: 600;">${d.name}</td>
-                    <td style="font-family: var(--font-mono); font-size: 12px; color: #64748B;">${d.id}</td>
-                    <td>${d.headName || 'Assigned'}</td>
-                    <td><span class="badge badge-blue">${docCount} Documents</span></td>
-                  </tr>
-                `;
-                })
-                .join('')}
-            </tbody>
-          </table>
+
+        <!-- Active Users & Roles -->
+        <div class="enterprise-card">
+          <div class="enterprise-card-header">
+            <div class="enterprise-card-title">
+              <span>👥</span>
+              <span>Active System Users (${users.length})</span>
+            </div>
+          </div>
+          <div style="padding: 16px; max-height: 280px; overflow-y: auto;">
+            ${users
+              .map(
+                u => `
+              <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #F1F5F9; font-size: 13px;">
+                <div>
+                  <strong style="color: #0F172A;">${u.name}</strong>
+                  <span style="color: #64748B; font-size: 11.5px; margin-left: 4px;">(${u.departmentName || 'Global'})</span>
+                </div>
+                <span class="badge badge-slate">${u.roleLabel || u.role}</span>
+              </div>
+            `
+              )
+              .join('')}
+          </div>
         </div>
+
       </div>
     </div>
   `;
