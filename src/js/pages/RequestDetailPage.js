@@ -145,7 +145,7 @@ export function renderRequestDetailPage(requestId) {
                   </div>
                   ${
                     req.attachedDocument
-                      ? `<button class="btn btn-secondary btn-sm" style="font-size: 11px; padding: 3px 8px;" onclick="window.downloadDocumentFile('${req.attachedDocument.name}', '${req.title}')">📥 Download</button>`
+                      ? `<button class="btn btn-secondary btn-sm" style="font-size: 11px; padding: 3px 8px;" onclick="window.downloadDocumentFileById('${req.id}', 'attachedDocument')">📥 Download</button>`
                       : ''
                   }
                 </div>
@@ -163,7 +163,7 @@ export function renderRequestDetailPage(requestId) {
                         ${req.reviewedDocument.name} (${req.reviewedDocument.size}) • Uploaded by ${req.reviewedDocument.uploadedBy}
                       </div>
                     </div>
-                    <button class="btn btn-primary btn-sm" style="font-size: 11px; padding: 3px 8px;" onclick="window.downloadDocumentFile('${req.reviewedDocument.name}', '${req.title} - Reviewed Draft')">📥 Download Reviewed</button>
+                    <button class="btn btn-primary btn-sm" style="font-size: 11px; padding: 3px 8px;" onclick="window.downloadDocumentFileById('${req.id}', 'reviewedDocument')">📥 Download Reviewed</button>
                   </div>
                 `
                     : ''
@@ -182,7 +182,7 @@ export function renderRequestDetailPage(requestId) {
                         ${req.finalDocument.name} (${req.finalDocument.size}) • Uploaded by ${req.finalDocument.uploadedBy}
                       </div>
                     </div>
-                    <button class="btn btn-secondary btn-sm" style="font-size: 11px; padding: 3px 8px;" onclick="window.downloadDocumentFile('${req.finalDocument.name}', '${req.title} - Final Executed')">📥 Download Final</button>
+                    <button class="btn btn-secondary btn-sm" style="font-size: 11px; padding: 3px 8px;" onclick="window.downloadDocumentFileById('${req.id}', 'finalDocument')">📥 Download Final</button>
                   </div>
                 `
                     : ''

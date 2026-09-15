@@ -358,6 +358,30 @@ In-House Legal & Document Management System (DMS).
       }
     };
 
+    window.downloadDocumentFileById = (reqId, docField) => {
+      try {
+        const req = requestService.getRequestById(reqId);
+        const doc = req[docField];
+        if (doc && doc.dataUrl) {
+          const a = document.createElement('a');
+          a.href = doc.dataUrl;
+          a.download = doc.name || 'document';
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(() => {
+            document.body.removeChild(a);
+          }, 100);
+          Toast.success(`Downloaded "${doc.name}" successfully.`);
+        } else if (doc) {
+          window.downloadDocumentFile(doc.name, req.title);
+        } else {
+          Toast.error("Document not found.");
+        }
+      } catch (err) {
+        Toast.error("Could not download: " + err.message);
+      }
+    };
+
     // Live Instant Search & Filter for Department Documents
     window.filterDepartmentDocs = (deptId) => {
       const searchInput = document.getElementById('dept-doc-search');
@@ -672,33 +696,45 @@ In-House Legal & Document Management System (DMS).
         const fileInput = document.getElementById('req-doc-file');
 
         let attachedDoc = null;
+
+        const processSubmission = () => {
+          const priorityEl = form.querySelector('input[name="req-priority"]:checked');
+          const priority = priorityEl ? priorityEl.value : 'MEDIUM';
+
+          try {
+            const req = requestService.createRequest({
+              title,
+              requestType: type,
+              priority,
+              requiredByDate: date,
+              description: desc,
+              attachedDocument: attachedDoc,
+              comment
+            });
+
+            Toast.success(`Request ${req.requestId} submitted successfully to Monisha!`);
+            window.location.hash = `#/requests/${req.id}`;
+          } catch (err) {
+            Toast.error(err.message);
+          }
+        };
+
         if (fileInput && fileInput.files && fileInput.files[0]) {
           const file = fileInput.files[0];
-          attachedDoc = {
-            name: file.name,
-            size: `${Math.round(file.size / 1024)} KB`,
-            uploadedAt: new Date().toISOString()
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            attachedDoc = {
+              name: file.name,
+              size: `${Math.round(file.size / 1024)} KB`,
+              uploadedAt: new Date().toISOString(),
+              dataUrl: ev.target.result,
+              mimeType: file.type
+            };
+            processSubmission();
           };
-        }
-
-        const priorityEl = form.querySelector('input[name="req-priority"]:checked');
-        const priority = priorityEl ? priorityEl.value : 'MEDIUM';
-
-        try {
-          const req = requestService.createRequest({
-            title,
-            requestType: type,
-            priority,
-            requiredByDate: date,
-            description: desc,
-            attachedDocument: attachedDoc,
-            comment
-          });
-
-          Toast.success(`Request ${req.requestId} submitted successfully to Monisha!`);
-          window.location.hash = `#/requests/${req.id}`;
-        } catch (err) {
-          Toast.error(err.message);
+          reader.readAsDataURL(file);
+        } else {
+          processSubmission();
         }
       });
     }
@@ -985,7 +1021,7 @@ In-House Legal & Document Management System (DMS).
                 <label class="form-label" style="font-size: 13px; font-weight: 600; color: #0F172A;">
                   Select Target Department <span class="required">*</span>
                 </label>
-                <select id="vault-target-dept" class="form-select">
+                <select id="vault-target-dept" class="form-select" multiple size="4">
                   <option value="dept-staffing">Staffing</option>
                   <option value="dept-finance">Finance</option>
                   <option value="dept-hr">HR</option>
@@ -1038,7 +1074,8 @@ In-House Legal & Document Management System (DMS).
           const title = document.getElementById('vault-doc-title').value;
           const type = document.getElementById('vault-doc-type').value;
           const scope = document.getElementById('vault-doc-scope').value;
-          const targetDept = document.getElementById('vault-target-dept').value;
+          const targetDeptSelect = document.getElementById('vault-target-dept');
+          const targetDept = Array.from(targetDeptSelect.selectedOptions).map(opt => opt.value);
           const effDate = document.getElementById('vault-effective-date').value;
           const fileInput = document.getElementById('vault-file-input');
 

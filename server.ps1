@@ -24,6 +24,7 @@ $mimeTypes = @{
     ".pdf"  = "application/pdf"
     ".docx" = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     ".txt"  = "text/plain; charset=utf-8"
+    ".env"  = "text/plain; charset=utf-8"
 }
 
 $baseDir = $PSScriptRoot
@@ -38,6 +39,9 @@ while ($listener.IsListening) {
         $response.Headers.Add("Access-Control-Allow-Origin", "*")
         $response.Headers.Add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
         $response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
+        
+        # Prevent Browser Caching
+        $response.Headers.Add("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
 
         # Handle CORS Preflight
         if ($request.HttpMethod -eq "OPTIONS") {

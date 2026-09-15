@@ -112,6 +112,7 @@ class DocumentService {
       isArchived: false,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      simulatedText: `This is a simulated document text for ${title.trim()}. It is a ${documentType} belonging to the ${dept.name} department. The counterparty is ${counterparty.trim() || 'Internal'}. The confidentiality level is ${confidentialityLevel}. Effective Date: ${effectiveDate || 'N/A'}, Expiry Date: ${expiryDate || 'N/A'}. Key clauses include standard liability, termination, and payment terms applicable to this category.`,
       versions: [
         {
           versionNumber: 1,
@@ -279,11 +280,23 @@ class DocumentService {
     let deptId = 'ALL';
     let deptName = 'All Departments (Company-Wide)';
 
+    let sharedWithDeptIds = null;
+
     if (sharingTarget === 'SPECIFIC_DEPT') {
-      const dept = db.data.departments.find(d => d.id === targetDepartmentId);
-      if (!dept) throw new Error('Please select a valid department to share with.');
-      deptId = dept.id;
-      deptName = dept.name;
+      if (Array.isArray(targetDepartmentId) && targetDepartmentId.length > 0) {
+        const depts = db.data.departments.filter(d => targetDepartmentId.includes(d.id));
+        if (depts.length === 0) throw new Error('Please select at least one valid department to share with.');
+        deptId = depts[0].id; // Primary dept ID for schema
+        deptName = depts.map(d => d.name).join(', ');
+        sharedWithDeptIds = depts.map(d => d.id);
+      } else {
+        const deptIdToFind = Array.isArray(targetDepartmentId) ? targetDepartmentId[0] : targetDepartmentId;
+        const dept = db.data.departments.find(d => d.id === deptIdToFind);
+        if (!dept) throw new Error('Please select a valid department to share with.');
+        deptId = dept.id;
+        deptName = dept.name;
+        sharedWithDeptIds = [dept.id];
+      }
     } else if (sharingTarget === 'LEGAL_ONLY') {
       deptId = 'LEGAL_ONLY';
       deptName = 'Confidential Legal Vault';
@@ -307,7 +320,9 @@ class DocumentService {
       isExecuted: status === 'Executed',
       isPrivilegedOnly: sharingTarget === 'LEGAL_ONLY',
       sharingTarget,
-      remarks: remarks ? remarks.trim() : ''
+      sharedWithDeptIds,
+      remarks: remarks ? remarks.trim() : '',
+      simulatedText: `This is a central vault document named ${title.trim()}. It is a ${documentType} applicable to ${deptName}. Status is ${status || 'Executed'}. Remarks: ${remarks ? remarks.trim() : 'None'}. This document is considered authoritative.`
     };
 
     db.data.documents.unshift(newDoc);
