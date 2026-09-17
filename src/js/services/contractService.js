@@ -163,6 +163,7 @@ class ContractService {
     }
 
     db.saveToStorage();
+    db.syncToFirestore('contracts', newContract.id, newContract);
 
     auditService.log({
       action: 'CREATE_CONTRACT',
@@ -208,6 +209,7 @@ class ContractService {
     contract.updatedAt = new Date().toISOString();
 
     db.saveToStorage();
+    db.syncToFirestore('contracts', contract.id, contract);
 
     auditService.log({
       action: 'UPDATE_CONTRACT_STATUS',

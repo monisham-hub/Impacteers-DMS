@@ -51,13 +51,23 @@
       frame-ancestors 'none';
     """
 
-# Ensure index.html is always fresh (no stale app versions)
+# Ensure index.html and all JavaScript files are always fresh (no stale code or cached state)
 [[headers]]
   for = "/index.html"
   [headers.values]
-    Cache-Control = "public, max-age=0, must-revalidate"
+    Cache-Control = "public, max-age=0, must-revalidate, no-cache, no-store"
 
-# Cache static CSS & Assets with long-term caching
+[[headers]]
+  for = "/src/js/*"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate, no-cache, no-store"
+
+[[headers]]
+  for = "/*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate, no-cache, no-store"
+
+# Cache static CSS & Assets with moderate caching
 [[headers]]
   for = "/src/css/*"
   [headers.values]

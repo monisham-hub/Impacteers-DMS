@@ -7,17 +7,22 @@ import { DEPARTMENTS, DEMO_USERS, REQUEST_TYPES, USER_ROLES } from './constants.
 import { dbFirestore } from './firebaseConfig.js';
 import { collection, doc, setDoc, getDocs, deleteDoc } from 'firebase/firestore';
 
-const DB_STORAGE_KEY = 'IMPACTEERS_LEGAL_DOCS_STORE_V5_LIVE';
+const DB_STORAGE_KEY = 'IMPACTEERS_DMS_STORE_V6_LIVE';
 
 export class LegalDatabase {
   constructor() {
-    // Clear legacy stores if present in browser
+    // Clear all legacy and stale stores if present in browser
     try {
-      localStorage.removeItem('IMPACTEERS_LEGAL_DOCS_STORE_V1');
-      localStorage.removeItem('IMPACTEERS_LEGAL_DOCS_STORE_V2');
-      localStorage.removeItem('IMPACTEERS_LEGAL_DOCS_STORE_V3');
-      localStorage.removeItem('IMPACTEERS_LEGAL_DOCS_STORE_V4_CLEAN');
-      localStorage.removeItem('impacteers_dms_db');
+      const keysToPurge = [
+        'IMPACTEERS_LEGAL_DOCS_STORE_V1',
+        'IMPACTEERS_LEGAL_DOCS_STORE_V2',
+        'IMPACTEERS_LEGAL_DOCS_STORE_V3',
+        'IMPACTEERS_LEGAL_DOCS_STORE_V4',
+        'IMPACTEERS_LEGAL_DOCS_STORE_V4_CLEAN',
+        'IMPACTEERS_LEGAL_DOCS_STORE_V5_LIVE',
+        'impacteers_dms_db'
+      ];
+      keysToPurge.forEach(k => localStorage.removeItem(k));
     } catch (e) {}
 
     this.data = this.loadFromStorage() || this.initializeSeedData();
@@ -108,7 +113,20 @@ export class LegalDatabase {
         console.warn('Documents collection fetch skipped:', err.message);
       }
 
-      // 3. Fetch live users from Firestore (source of truth)
+      // 3. Fetch live contracts from Firestore (source of truth)
+      try {
+        const cntSnapshot = await getDocs(collection(dbFirestore, 'contracts'));
+        const liveContracts = [];
+        cntSnapshot.forEach(d => {
+          const item = d.data();
+          if (item) liveContracts.push(item);
+        });
+        this.data.contracts = liveContracts;
+      } catch (err) {
+        console.warn('Contracts collection fetch skipped:', err.message);
+      }
+
+      // 4. Fetch live users from Firestore (source of truth)
       try {
         const usersSnapshot = await getDocs(collection(dbFirestore, 'users'));
         const liveUsers = [];
@@ -144,11 +162,12 @@ export class LegalDatabase {
       }
 
       this.saveToStorage();
-      console.log(`Successfully hydrated from Firestore. Requests: ${this.data.requests.length}, Documents: ${this.data.documents.length}, Users: ${this.data.users.length}`);
+      console.log(`Successfully hydrated from Firestore. Requests: ${this.data.requests.length}, Documents: ${this.data.documents.length}, Contracts: ${this.data.contracts.length}, Users: ${this.data.users.length}`);
       
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('request:updated'));
         window.dispatchEvent(new CustomEvent('document:updated'));
+        window.dispatchEvent(new CustomEvent('contract:updated'));
         window.dispatchEvent(new CustomEvent('user:updated'));
       }
     } catch(e) {

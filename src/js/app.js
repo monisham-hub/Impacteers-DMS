@@ -1571,13 +1571,14 @@ In-House Legal & Document Management System (DMS).
   }
 }
 
-// Initialize Application immediately with restored session, then hydrate live data
+// Hydrate live data from Firestore BEFORE initializing App to ensure zero stale data or race condition
 const initApp = async () => {
-  window.impacteersApp = new App();
-  await db.fetchFromFirestore();
-  if (window.impacteersApp) {
-    window.impacteersApp.handleRoute();
+  try {
+    await db.fetchFromFirestore();
+  } catch (e) {
+    console.warn('Initial Firestore hydration notice:', e);
   }
+  window.impacteersApp = new App();
 };
 
 if (document.readyState === 'loading') {
