@@ -29,12 +29,48 @@ class AuthService {
     return Boolean(this.currentUser);
   }
 
-  login(userIdOrEmail) {
-    const user = db.data.users.find(
-      u => u.id === userIdOrEmail || u.email.toLowerCase() === userIdOrEmail.toLowerCase()
+  async login(userIdOrEmail, password) {
+    // Attempt Firebase Auth
+    const { signInWithEmailAndPassword, auth } = await import('../firebaseConfig.js');
+    let firebaseUser;
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, userIdOrEmail, password);
+      firebaseUser = userCredential.user;
+    } catch (e) {
+      throw new Error(e.message || 'Invalid credentials');
+    }
+
+    let user = db.data.users.find(
+      u => u.email.toLowerCase() === userIdOrEmail.toLowerCase()
     );
+
+    // Auto-provision profile in local state if user exists in Firebase Auth
+    if (!user && firebaseUser) {
+      const { USER_ROLES } = await import('../constants.js');
+      const namePart = (firebaseUser.displayName || userIdOrEmail.split('@')[0]);
+      const capitalizedName = namePart.charAt(0).toUpperCase() + namePart.slice(1);
+      user = {
+        id: firebaseUser.uid || ('usr-' + Date.now().toString(36)),
+        name: capitalizedName,
+        email: (firebaseUser.email || userIdOrEmail).toLowerCase(),
+        role: USER_ROLES.BUSINESS_USER,
+        roleLabel: 'Business Stakeholder',
+        departmentId: 'dept-engineering',
+        departmentName: 'Engineering',
+        avatar: capitalizedName.charAt(0).toUpperCase(),
+        tagline: 'Team Stakeholder',
+        isActive: true,
+        permissions: []
+      };
+      db.data.users.push(user);
+      db.saveToStorage();
+    }
+
     if (!user) {
-      throw new Error('User not found. Please select an authorized account.');
+      throw new Error('User profile could not be loaded. Please contact an administrator.');
+    }
+    if (user.isActive === false) {
+      throw new Error('This account has been deactivated. Please contact an administrator.');
     }
     this.currentUser = user;
     try {
@@ -42,11 +78,72 @@ class AuthService {
     } catch (e) {
       console.error(e);
     }
+    this.logAudit('USER_LOGIN', `User signed in: ${user.email}`, user.id);
     window.dispatchEvent(new CustomEvent('auth:changed', { detail: user }));
     return user;
   }
 
-  logout() {
+  async signup({ name, email, password, departmentId }) {
+    const { createUserWithEmailAndPassword, auth } = await import('../firebaseConfig.js');
+    let firebaseUser;
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      firebaseUser = userCredential.user;
+    } catch (e) {
+      if (e.code === 'auth/email-already-in-use') {
+        throw new Error('An account with this email already exists. Please sign in instead.');
+      } else if (e.code === 'auth/weak-password') {
+        throw new Error('Password must be at least 6 characters long.');
+      } else if (e.code === 'auth/invalid-email') {
+        throw new Error('Please enter a valid email address.');
+      }
+      throw new Error(e.message || 'Signup failed. Please try again.');
+    }
+
+    const { DEPARTMENTS, USER_ROLES } = await import('../constants.js');
+    const dept = DEPARTMENTS.find(d => d.id === departmentId);
+
+    const newUser = {
+      id: firebaseUser.uid || ('usr-' + Date.now().toString(36)),
+      name: name.trim(),
+      email: email.trim().toLowerCase(),
+      role: USER_ROLES.BUSINESS_USER,
+      roleLabel: dept ? `${dept.name} Team User` : 'Business Stakeholder',
+      departmentId: dept ? dept.id : (departmentId || null),
+      departmentName: dept ? dept.name : 'General',
+      avatar: name.trim().charAt(0).toUpperCase() || 'U',
+      tagline: dept ? `${dept.name} Team` : 'Stakeholder',
+      isActive: true,
+      permissions: []
+    };
+
+    const existingIndex = db.data.users.findIndex(u => u.email.toLowerCase() === newUser.email);
+    if (existingIndex !== -1) {
+      db.data.users[existingIndex] = { ...db.data.users[existingIndex], ...newUser };
+    } else {
+      db.data.users.push(newUser);
+    }
+    db.saveToStorage();
+
+    this.currentUser = newUser;
+    try {
+      localStorage.setItem('IMPACTEERS_AUTH_USER_ID', newUser.id);
+    } catch (e) {
+      console.error(e);
+    }
+    this.logAudit('USER_SIGNUP', `New user registered via Firebase Auth: ${newUser.email}`, newUser.id);
+    window.dispatchEvent(new CustomEvent('auth:changed', { detail: newUser }));
+    return newUser;
+  }
+
+  async logout() {
+    const { signOut, auth } = await import('../firebaseConfig.js');
+    try {
+      await signOut(auth);
+    } catch (e) {
+      console.error('Logout error:', e);
+    }
+    
     this.currentUser = null;
     try {
       localStorage.removeItem('IMPACTEERS_AUTH_USER_ID');
@@ -54,6 +151,23 @@ class AuthService {
       console.error(e);
     }
     window.dispatchEvent(new CustomEvent('auth:changed', { detail: null }));
+  }
+
+  async initAuth(callback) {
+    const { onAuthStateChanged, auth } = await import('../firebaseConfig.js');
+    onAuthStateChanged(auth, (firebaseUser) => {
+      if (firebaseUser) {
+        const user = db.data.users.find(u => u.email.toLowerCase() === firebaseUser.email.toLowerCase());
+        if (user && user.isActive) {
+          this.currentUser = user;
+        } else {
+          this.currentUser = null;
+        }
+      } else {
+        this.currentUser = null;
+      }
+      if (callback) callback(this.currentUser);
+    });
   }
 
   getCurrentUser() {
@@ -65,11 +179,85 @@ class AuthService {
   }
 
   // ==========================================
+  // USER MANAGEMENT (CRUD)
+  // ==========================================
+
+  addUser(userData) {
+    if (!this.isLegalAdmin()) throw new Error('Unauthorized');
+    
+    // Check if email/username exists
+    const exists = db.data.users.find(u => u.email.toLowerCase() === userData.email.toLowerCase());
+    if (exists) throw new Error('A user with this email already exists.');
+
+    const newUser = {
+      id: 'usr-' + Date.now().toString(36),
+      name: userData.name,
+      email: userData.email,
+      role: userData.role || USER_ROLES.BUSINESS_USER,
+      roleLabel: userData.roleLabel || 'User',
+      departmentId: userData.departmentId || null,
+      departmentName: userData.departmentName || '',
+      avatar: userData.name.charAt(0).toUpperCase(),
+      tagline: userData.tagline || '',
+      isActive: true,
+      permissions: userData.permissions || []
+    };
+
+    db.data.users.push(newUser);
+    db.saveToStorage();
+    this.logAudit('ADD_USER', `Added new user ${newUser.email}`, newUser.id);
+    return newUser;
+  }
+
+  updateUser(userId, updates) {
+    if (!this.isLegalAdmin()) throw new Error('Unauthorized');
+    
+    const userIndex = db.data.users.findIndex(u => u.id === userId);
+    if (userIndex === -1) throw new Error('User not found.');
+
+    db.data.users[userIndex] = { ...db.data.users[userIndex], ...updates };
+    db.saveToStorage();
+    this.logAudit('UPDATE_USER', `Updated details for ${db.data.users[userIndex].email}`, userId);
+    return db.data.users[userIndex];
+  }
+
+  deleteUser(userId) {
+    if (!this.isLegalAdmin()) throw new Error('Unauthorized');
+    if (userId === this.currentUser.id) throw new Error('Cannot delete your own account.');
+
+    const userIndex = db.data.users.findIndex(u => u.id === userId);
+    if (userIndex === -1) throw new Error('User not found.');
+
+    const deletedEmail = db.data.users[userIndex].email;
+    db.data.users.splice(userIndex, 1);
+    db.saveToStorage();
+    this.logAudit('DELETE_USER', `Deleted user ${deletedEmail}`, userId);
+  }
+
+  logAudit(action, details, targetId = null) {
+    if (!db.data.auditLogs) db.data.auditLogs = [];
+    db.data.auditLogs.unshift({
+      id: 'audit-' + Date.now(),
+      actorId: this.currentUser ? this.currentUser.id : 'system',
+      actorName: this.currentUser ? this.currentUser.name : 'System',
+      action,
+      details,
+      targetId,
+      timestamp: new Date().toISOString()
+    });
+    db.saveToStorage();
+  }
+
+  // ==========================================
   // ROLE HELPERS
   // ==========================================
 
+  isLegalAdmin() {
+    return this.currentUser && (this.currentUser.role === USER_ROLES.LEGAL_ADMIN || this.currentUser.role === USER_ROLES.LEGAL_MANAGER || this.currentUser.role === USER_ROLES.CHAIRMAN);
+  }
+
   isLegalManager() {
-    return this.currentUser && this.currentUser.role === USER_ROLES.LEGAL_MANAGER;
+    return this.currentUser && (this.currentUser.role === USER_ROLES.LEGAL_MANAGER || this.currentUser.role === USER_ROLES.LEGAL_ADMIN);
   }
 
   isLegalTeam() {

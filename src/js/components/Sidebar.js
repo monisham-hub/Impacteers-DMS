@@ -23,14 +23,16 @@ export function renderSidebar(activeRoute = 'dashboard', isCollapsed = false) {
       { route: 'requests', label: 'Requests Queue', icon: '⚖️' },
       { route: 'documents', label: 'Documents Vault', icon: '📁' },
       { route: 'departments', label: 'Document Database', icon: '🗄️' },
-      { route: 'calendar', label: 'Calendar', icon: '📅' }
+      { route: 'calendar', label: 'Calendar', icon: '📅' },
+      { route: 'legal-admin', label: 'Legal Admin', icon: '🛡️' }
     ];
   } else if (isChairman) {
     // Chairman - Executive View-Only Sidebar (Removed Documents Vault and Calendar)
     navItems = [
       { route: 'dashboard', label: 'Executive Dashboard', icon: '🏛️' },
       { route: 'requests', label: 'All Requests', icon: '📋' },
-      { route: 'departments', label: 'Document Database', icon: '🗄️' }
+      { route: 'departments', label: 'Document Database', icon: '🗄️' },
+      { route: 'legal-admin', label: 'Legal Admin', icon: '🛡️' }
     ];
   } else {
     // Business User (Edwin, Musthafa, Vinoth, Bala, etc.) - Ultra Minimal 4-item Sidebar

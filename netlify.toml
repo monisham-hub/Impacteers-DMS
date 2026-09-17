@@ -1,0 +1,64 @@
+# ==============================================================================
+# Impacteers DMS — Production Netlify Deployment Configuration
+# ==============================================================================
+
+[build]
+  # Root directory contains index.html and static assets
+  publish = "."
+  command = "npm run build"
+
+# Single Page Application (SPA) Client-Side Hash & Path Routing
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# ==============================================================================
+# Enterprise Security & Performance HTTP Headers
+# ==============================================================================
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    # Prevent clickjacking
+    X-Frame-Options = "DENY"
+    # Prevent MIME type sniffing
+    X-Content-Type-Options = "nosniff"
+    # Cross-site scripting (XSS) filter
+    X-XSS-Protection = "1; mode=block"
+    # Control referrer information
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    # Restrict unneeded browser hardware features
+    Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=()"
+    # Enforce HTTPS across subdomains
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
+    # Content Security Policy: Allowing Firebase Auth, Firestore, Google APIs, and Fonts
+    Content-Security-Policy = """
+      default-src 'self';
+      script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://*.firebaseio.com https://apis.google.com https://generativelanguage.googleapis.com;
+      connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://*.firebasestorage.app wss://*.firebaseio.com https://*.supabase.co;
+      img-src 'self' data: blob: https:;
+      style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+      font-src 'self' data: https://fonts.gstatic.com;
+      object-src 'none';
+      base-uri 'self';
+      form-action 'self';
+      frame-ancestors 'none';
+    """
+
+# Ensure index.html is always fresh (no stale app versions)
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# Cache static CSS & Assets with long-term caching
+[[headers]]
+  for = "/src/css/*"
+  [headers.values]
+    Cache-Control = "public, max-age=86400, stale-while-revalidate=604800"
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800, stale-while-revalidate=2592000"

@@ -71,7 +71,7 @@ export function renderCreateRequestPage() {
                 </div>
               </label>
 
-              <label style="border: 2px solid #2563EB; background: #EFF6FF; border-radius: 8px; padding: 10px 12px; display: flex; align-items: flex-start; gap: 8px; cursor: pointer;">
+              <label style="border: 1px solid #BFDBFE; background: #F0F9FF; border-radius: 8px; padding: 10px 12px; display: flex; align-items: flex-start; gap: 8px; cursor: pointer;">
                 <input type="radio" name="req-priority" value="MEDIUM" style="margin-top: 3px;" checked />
                 <div>
                   <div style="font-size: 12.5px; font-weight: 700; color: #1D4ED8;">⚡ Standard Priority</div>

@@ -344,6 +344,9 @@ class DocumentService {
    */
   deleteDocument(docId) {
     const user = authService.getCurrentUser();
+    if (!authService.isLegalManager() && !authService.isLegalAdmin()) {
+      throw new Error('Unauthorized: Only Legal team members can delete documents.');
+    }
     const index = db.data.documents.findIndex(d => d.id === docId);
     if (index === -1) throw new Error('Document not found.');
 

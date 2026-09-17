@@ -7,6 +7,7 @@ import { db } from '../db.js';
 import { authService } from './authService.js';
 import { documentService } from './documentService.js';
 import { contractService } from './contractService.js';
+import { requestService } from './requestService.js';
 
 class LegalAssistantService {
   constructor() {
@@ -68,8 +69,44 @@ class LegalAssistantService {
     
     let docsContext = '';
     let citations = [];
+    let parts = [];
 
-    if (documentId) {
+    if (documentId && documentId.startsWith('REQ_')) {
+      const reqId = documentId.replace('REQ_', '');
+      try {
+        const req = requestService.getRequestById(reqId);
+        if (req) {
+          let targetDoc = null;
+          let docType = '';
+
+          if (req.finalDocument && req.finalDocument.dataUrl) {
+            targetDoc = req.finalDocument;
+            docType = 'Final Signed Document';
+          } else if (req.reviewedDocument && req.reviewedDocument.dataUrl) {
+            targetDoc = req.reviewedDocument;
+            docType = 'Legal Reviewed Document';
+          } else if (req.attachedDocument && req.attachedDocument.dataUrl) {
+            targetDoc = req.attachedDocument;
+            docType = 'Attached Document';
+          }
+
+          if (targetDoc) {
+            const matches = targetDoc.dataUrl.match(/^data:(.+);base64,(.+)$/);
+            if (matches && matches.length === 3) {
+              parts.push({
+                inlineData: {
+                  mimeType: matches[1],
+                  data: matches[2]
+                }
+              });
+              citations.push(`${docType}: ${targetDoc.name}`);
+            }
+          }
+        }
+      } catch (e) {
+        // Access denied or not found
+      }
+    } else if (documentId) {
       const targetDoc = documentService.getDocumentById(documentId);
       if (targetDoc) {
         docsContext = `Document Title: ${targetDoc.title}\nContent: ${targetDoc.simulatedText || 'No detailed content available.'}\n\n`;
@@ -84,15 +121,18 @@ class LegalAssistantService {
     }
 
     const promptText = `
-You are the Impacteers Legal AI Assistant. Answer the user's question using ONLY the context provided below. 
-If the answer cannot be found in the context, state that you do not have enough information.
+You are the Impacteers Legal AI Assistant. Answer the user's question using ONLY the context provided below or the attached document. 
+If the answer cannot be found in the context or the attached document, state that you do not have enough information.
 Format your response using Markdown (bullet points, bold text).
 
 Context Documents:
-${docsContext}
+${docsContext || 'None provided in text context.'}
 
 User Question: ${question}
 `;
+
+    // Add text prompt as the first part
+    parts.unshift({ text: promptText });
 
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
       method: 'POST',
@@ -100,7 +140,7 @@ User Question: ${question}
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        contents: [{ parts: [{ text: promptText }] }]
+        contents: [{ parts: parts }]
       })
     });
 
@@ -116,7 +156,7 @@ User Question: ${question}
       role: 'assistant',
       text: responseText,
       citations: citations.slice(0, 5), // Keep citations limited
-      model: this.model + ' (Gemini 2.5 Flash)',
+      model: this.model + ' (Gemini 3.6 Flash)',
       provider: 'impacteers-ai',
       timestamp: new Date().toISOString(),
       disclaimer: this.getSafetyDisclaimer(),

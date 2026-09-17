@@ -4,9 +4,53 @@
  */
 
 export const USER_ROLES = {
+  LEGAL_ADMIN: 'LEGAL_ADMIN',
   LEGAL_MANAGER: 'LEGAL_MANAGER',
   CHAIRMAN: 'CHAIRMAN',
   BUSINESS_USER: 'BUSINESS_USER'
+};
+
+export const PERMISSION_CATEGORIES = {
+  LEGAL_REQUESTS: 'Legal Requests',
+  DOCUMENTS: 'Documents & Agreements',
+  CONTRACTS: 'Contract Management',
+  USER_MANAGEMENT: 'User & Access Management',
+  REPORTS: 'Reports & Dashboard',
+  SYSTEM: 'System / Administrative'
+};
+
+export const PERMISSIONS = {
+  // Legal Requests
+  VIEW_REQUESTS: { id: 'VIEW_REQUESTS', label: 'View Legal Requests', category: PERMISSION_CATEGORIES.LEGAL_REQUESTS },
+  CREATE_REQUESTS: { id: 'CREATE_REQUESTS', label: 'Create Legal Requests', category: PERMISSION_CATEGORIES.LEGAL_REQUESTS },
+  EDIT_REQUESTS: { id: 'EDIT_REQUESTS', label: 'Edit Legal Requests', category: PERMISSION_CATEGORIES.LEGAL_REQUESTS },
+  ASSIGN_REQUESTS: { id: 'ASSIGN_REQUESTS', label: 'Assign Legal Requests', category: PERMISSION_CATEGORIES.LEGAL_REQUESTS },
+  
+  // Documents
+  VIEW_DOCUMENTS: { id: 'VIEW_DOCUMENTS', label: 'View Documents', category: PERMISSION_CATEGORIES.DOCUMENTS },
+  UPLOAD_DOCUMENTS: { id: 'UPLOAD_DOCUMENTS', label: 'Upload Documents', category: PERMISSION_CATEGORIES.DOCUMENTS },
+  EDIT_DOCUMENTS: { id: 'EDIT_DOCUMENTS', label: 'Edit Documents', category: PERMISSION_CATEGORIES.DOCUMENTS },
+  APPROVE_DOCUMENTS: { id: 'APPROVE_DOCUMENTS', label: 'Approve Documents', category: PERMISSION_CATEGORIES.DOCUMENTS },
+  DELETE_DOCUMENTS: { id: 'DELETE_DOCUMENTS', label: 'Delete Documents', category: PERMISSION_CATEGORIES.DOCUMENTS },
+
+  // Contracts
+  VIEW_CONTRACTS: { id: 'VIEW_CONTRACTS', label: 'View Contracts', category: PERMISSION_CATEGORIES.CONTRACTS },
+  CREATE_CONTRACTS: { id: 'CREATE_CONTRACTS', label: 'Create Contracts', category: PERMISSION_CATEGORIES.CONTRACTS },
+  EDIT_CONTRACTS: { id: 'EDIT_CONTRACTS', label: 'Edit Contracts', category: PERMISSION_CATEGORIES.CONTRACTS },
+  APPROVE_CONTRACTS: { id: 'APPROVE_CONTRACTS', label: 'Approve Contracts', category: PERMISSION_CATEGORIES.CONTRACTS },
+
+  // User Management
+  VIEW_USERS: { id: 'VIEW_USERS', label: 'View Users', category: PERMISSION_CATEGORIES.USER_MANAGEMENT },
+  MANAGE_USERS: { id: 'MANAGE_USERS', label: 'Add/Edit Users', category: PERMISSION_CATEGORIES.USER_MANAGEMENT },
+  MANAGE_ROLES: { id: 'MANAGE_ROLES', label: 'Assign Roles & Permissions', category: PERMISSION_CATEGORIES.USER_MANAGEMENT },
+
+  // Reports
+  VIEW_REPORTS: { id: 'VIEW_REPORTS', label: 'View Reports', category: PERMISSION_CATEGORIES.REPORTS },
+  EXPORT_REPORTS: { id: 'EXPORT_REPORTS', label: 'Export Reports', category: PERMISSION_CATEGORIES.REPORTS },
+
+  // System
+  MANAGE_SETTINGS: { id: 'MANAGE_SETTINGS', label: 'Manage Admin Settings', category: PERMISSION_CATEGORIES.SYSTEM },
+  VIEW_AUDIT_LOGS: { id: 'VIEW_AUDIT_LOGS', label: 'View Audit Logs', category: PERMISSION_CATEGORIES.SYSTEM }
 };
 
 export const REQUEST_STATUSES = {

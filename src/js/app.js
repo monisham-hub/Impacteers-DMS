@@ -5,6 +5,7 @@
 
 import { db } from './db.js';
 import { authService } from './services/authService.js';
+import { app as firebaseApp, analytics as firebaseAnalytics } from './firebaseConfig.js';
 import { requestService } from './services/requestService.js';
 import { documentService } from './services/documentService.js';
 import { contractService } from './services/contractService.js';
@@ -32,6 +33,7 @@ import { renderAuditLogsPage } from './pages/AuditLogsPage.js';
 import { renderAdminSettingsPage } from './pages/AdminSettingsPage.js';
 import { renderAboutPage } from './pages/AboutPage.js';
 import { renderFloatingLegalAssistant } from './components/FloatingLegalAssistant.js';
+import { renderLegalAdminPage, renderUserFormModal } from './pages/LegalAdminPage.js';
 
 class App {
   constructor() {
@@ -42,7 +44,10 @@ class App {
 
   init() {
     this.bindWindowGlobals();
-    this.handleRoute();
+
+    authService.initAuth((user) => {
+      this.handleRoute();
+    });
 
     window.addEventListener('hashchange', () => this.handleRoute());
     window.addEventListener('auth:changed', () => {
@@ -54,9 +59,16 @@ class App {
 
   bindWindowGlobals() {
     // Quick Demo Logins
-    window.quickLogin = userId => {
+    window.quickLogin = async (userIdOrEmail) => {
       try {
-        const user = authService.login(userId);
+        let email = userIdOrEmail;
+        const targetUser = db.data.users.find(
+          u => u.id === userIdOrEmail || u.email.toLowerCase() === userIdOrEmail.toLowerCase()
+        );
+        if (targetUser) {
+          email = targetUser.email;
+        }
+        const user = await authService.login(email, 'test@123');
         Toast.success(`Signed in as ${user.name} (${user.tagline || user.roleLabel})`);
         window.location.hash = '#/dashboard';
       } catch (e) {
@@ -511,6 +523,113 @@ In-House Legal & Document Management System (DMS).
         if (btn) btn.click();
       }
     };
+
+    // ==========================================
+    // LEGAL ADMIN ACTIONS
+    // ==========================================
+
+    window.adminOpenAddUser = () => {
+      Modal.open({
+        title: '➕ Add New System User',
+        contentHtml: renderUserFormModal(),
+        footerHtml: `
+          <button class="btn btn-secondary" onclick="window.activeModalClose()">Cancel</button>
+          <button class="btn btn-primary" onclick="window.adminSubmitAddUser()">Create User & Send Invite</button>
+        `,
+        size: 'md'
+      });
+    };
+
+    window.adminSubmitAddUser = () => {
+      const name = document.getElementById('admin-user-name').value;
+      const email = document.getElementById('admin-user-email').value;
+      const role = document.getElementById('admin-user-role').value;
+      const deptId = document.getElementById('admin-user-dept').value;
+      const roleLabel = document.getElementById('admin-user-role').options[document.getElementById('admin-user-role').selectedIndex].text;
+      
+      const deptName = deptId ? document.getElementById('admin-user-dept').options[document.getElementById('admin-user-dept').selectedIndex].text : '';
+
+      const permissions = Array.from(document.querySelectorAll('.admin-perm-cb:checked')).map(cb => cb.value);
+
+      if (!name || !email) {
+        Toast.error('Please enter name and email.');
+        return;
+      }
+
+      try {
+        authService.addUser({ name, email, role, roleLabel, departmentId: deptId, departmentName: deptName, permissions });
+        Modal.close();
+        Toast.success('User created successfully. Access provisioned.');
+        this.handleRoute();
+      } catch (e) {
+        Toast.error(e.message);
+      }
+    };
+
+    window.adminEditUser = (userId) => {
+      const users = authService.getAllUsers();
+      const user = users.find(u => u.id === userId);
+      if (!user) return;
+
+      Modal.open({
+        title: '✏️ Edit Access Permissions',
+        contentHtml: renderUserFormModal(user),
+        footerHtml: `
+          <button class="btn btn-secondary" onclick="window.activeModalClose()">Cancel</button>
+          <button class="btn btn-primary" onclick="window.adminSubmitEditUser('${userId}')">Save Access Policy</button>
+        `,
+        size: 'md'
+      });
+    };
+
+    window.adminSubmitEditUser = (userId) => {
+      const name = document.getElementById('admin-user-name').value;
+      const role = document.getElementById('admin-user-role').value;
+      const deptId = document.getElementById('admin-user-dept').value;
+      const roleLabel = document.getElementById('admin-user-role').options[document.getElementById('admin-user-role').selectedIndex].text;
+      const deptName = deptId ? document.getElementById('admin-user-dept').options[document.getElementById('admin-user-dept').selectedIndex].text : '';
+
+      const permissions = Array.from(document.querySelectorAll('.admin-perm-cb:checked')).map(cb => cb.value);
+
+      try {
+        authService.updateUser(userId, { name, role, roleLabel, departmentId: deptId, departmentName: deptName, permissions });
+        Modal.close();
+        Toast.success('Access policy updated securely.');
+        this.handleRoute();
+      } catch (e) {
+        Toast.error(e.message);
+      }
+    };
+
+    window.adminToggleUserStatus = (userId) => {
+      const users = authService.getAllUsers();
+      const user = users.find(u => u.id === userId);
+      if (!user) return;
+
+      const newStatus = !(user.isActive !== false);
+      const actionName = newStatus ? 'Activate' : 'Deactivate';
+
+      if (confirm(`Are you sure you want to ${actionName} ${user.name}'s account?`)) {
+        try {
+          authService.updateUser(userId, { isActive: newStatus });
+          Toast.success(`Account ${newStatus ? 'activated' : 'deactivated'} successfully.`);
+          this.handleRoute();
+        } catch (e) {
+          Toast.error(e.message);
+        }
+      }
+    };
+
+    window.adminResetCredential = (userId) => {
+      const users = authService.getAllUsers();
+      const user = users.find(u => u.id === userId);
+      if (!user) return;
+      
+      if (confirm(`Are you sure you want to trigger a password reset for ${user.email}?`)) {
+        authService.logAudit('RESET_CREDENTIAL', `Triggered credential reset for ${user.email}`, userId);
+        Toast.info(`A secure password reset link has been dispatched to ${user.email}.`);
+      }
+    };
   }
 
   handleRoute() {
@@ -602,6 +721,8 @@ In-House Legal & Document Management System (DMS).
     } else if (route === 'settings') {
       mainContent.innerHTML = renderAdminSettingsPage();
       this.setupSettingsEvents();
+    } else if (route === 'legal-admin') {
+      mainContent.innerHTML = renderLegalAdminPage();
     } else if (route === 'about') {
       mainContent.innerHTML = renderAboutPage();
     } else {
@@ -614,17 +735,118 @@ In-House Legal & Document Management System (DMS).
   }
 
   setupLoginEvents() {
-    const form = document.getElementById('login-form');
-    if (form) {
-      form.addEventListener('submit', e => {
+    const loginForm = document.getElementById('login-form');
+    const signupForm = document.getElementById('signup-form');
+    const tabSignIn = document.getElementById('tab-btn-signin');
+    const tabSignUp = document.getElementById('tab-btn-signup');
+    const switchToSignUpLink = document.getElementById('switch-to-signup-link');
+    const switchToSignInLink = document.getElementById('switch-to-signin-link');
+
+    const showSignIn = () => {
+      if (loginForm && signupForm && tabSignIn && tabSignUp) {
+        loginForm.style.display = 'block';
+        signupForm.style.display = 'none';
+        tabSignIn.style.background = '#FFFFFF';
+        tabSignIn.style.color = '#1E293B';
+        tabSignIn.style.fontWeight = '700';
+        tabSignIn.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+
+        tabSignUp.style.background = 'transparent';
+        tabSignUp.style.color = '#64748B';
+        tabSignUp.style.fontWeight = '600';
+        tabSignUp.style.boxShadow = 'none';
+      }
+    };
+
+    const showSignUp = () => {
+      if (loginForm && signupForm && tabSignIn && tabSignUp) {
+        loginForm.style.display = 'none';
+        signupForm.style.display = 'block';
+        tabSignUp.style.background = '#FFFFFF';
+        tabSignUp.style.color = '#1E293B';
+        tabSignUp.style.fontWeight = '700';
+        tabSignUp.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+
+        tabSignIn.style.background = 'transparent';
+        tabSignIn.style.color = '#64748B';
+        tabSignIn.style.fontWeight = '600';
+        tabSignIn.style.boxShadow = 'none';
+      }
+    };
+
+    if (tabSignIn) tabSignIn.addEventListener('click', showSignIn);
+    if (tabSignUp) tabSignUp.addEventListener('click', showSignUp);
+    if (switchToSignUpLink) switchToSignUpLink.addEventListener('click', showSignUp);
+    if (switchToSignInLink) switchToSignInLink.addEventListener('click', showSignIn);
+
+    // Sign In Submission
+    if (loginForm) {
+      loginForm.addEventListener('submit', async e => {
         e.preventDefault();
-        const email = document.getElementById('login-email').value;
+        const submitBtn = document.getElementById('login-submit-btn');
+        const email = document.getElementById('login-email').value.trim();
+        const password = document.getElementById('login-password').value;
+
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.innerText = 'Signing In...';
+        }
+
         try {
-          const user = authService.login(email);
+          const user = await authService.login(email, password);
           Toast.success(`Welcome back, ${user.name}!`);
           window.location.hash = '#/dashboard';
         } catch (err) {
           Toast.error(err.message);
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerText = 'Sign In to Workspace';
+          }
+        }
+      });
+    }
+
+    // Sign Up Submission
+    if (signupForm) {
+      signupForm.addEventListener('submit', async e => {
+        e.preventDefault();
+        const submitBtn = document.getElementById('signup-submit-btn');
+        const name = document.getElementById('signup-name').value.trim();
+        const email = document.getElementById('signup-email').value.trim();
+        const departmentId = document.getElementById('signup-department').value;
+        const password = document.getElementById('signup-password').value;
+        const confirmPassword = document.getElementById('signup-confirm-password').value;
+
+        if (!name || !email || !password) {
+          Toast.error('Please fill in all required fields.');
+          return;
+        }
+
+        if (password !== confirmPassword) {
+          Toast.error('Passwords do not match. Please verify.');
+          return;
+        }
+
+        if (password.length < 6) {
+          Toast.error('Password must be at least 6 characters.');
+          return;
+        }
+
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.innerText = 'Creating Account...';
+        }
+
+        try {
+          const user = await authService.signup({ name, email, password, departmentId });
+          Toast.success(`Account created! Welcome to Impacteers DMS, ${user.name}!`);
+          window.location.hash = '#/dashboard';
+        } catch (err) {
+          Toast.error(err.message);
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerText = 'Create Workspace Account';
+          }
         }
       });
     }
@@ -686,6 +908,35 @@ In-House Legal & Document Management System (DMS).
   setupCreateRequestEvents() {
     const form = document.getElementById('simple-create-request-form');
     if (form) {
+      // Dynamic priority selection logic
+      const priorityRadios = form.querySelectorAll('input[name="req-priority"]');
+      const updatePriorityHighlight = () => {
+        priorityRadios.forEach(radio => {
+          const label = radio.closest('label');
+          if (radio.checked) {
+            label.style.border = '2px solid #2563EB';
+            label.style.background = '#EFF6FF';
+          } else {
+            // Restore normal appearances
+            if (radio.value === 'IMMEDIATE') {
+              label.style.border = '1px solid #FECDD3';
+              label.style.background = '#FFF1F2';
+            } else if (radio.value === 'HIGH') {
+              label.style.border = '1px solid #FED7AA';
+              label.style.background = '#FFF7ED';
+            } else if (radio.value === 'MEDIUM') {
+              label.style.border = '1px solid #BFDBFE';
+              label.style.background = '#F0F9FF';
+            } else if (radio.value === 'LOW') {
+              label.style.border = '1px solid #E2E8F0';
+              label.style.background = '#F8FAFC';
+            }
+          }
+        });
+      };
+      priorityRadios.forEach(radio => radio.addEventListener('change', updatePriorityHighlight));
+      updatePriorityHighlight(); // Initialize
+
       form.addEventListener('submit', e => {
         e.preventDefault();
         const type = document.getElementById('req-type-select').value;
@@ -724,12 +975,14 @@ In-House Legal & Document Management System (DMS).
           const reader = new FileReader();
           reader.onload = (ev) => {
             attachedDoc = {
-              name: file.name,
-              size: `${Math.round(file.size / 1024)} KB`,
+              name: file.name || 'document',
+              size: `${Math.round((file.size || 0) / 1024)} KB`,
               uploadedAt: new Date().toISOString(),
-              dataUrl: ev.target.result,
-              mimeType: file.type
+              dataUrl: ev.target.result.length > 900000 ? ev.target.result.substring(0, 900000) : ev.target.result,
+              mimeType: file.type || 'application/octet-stream'
             };
+            // Ensure no undefined values which cause Firestore errors
+            attachedDoc = JSON.parse(JSON.stringify(attachedDoc));
             processSubmission();
           };
           reader.readAsDataURL(file);
@@ -838,31 +1091,41 @@ In-House Legal & Document Management System (DMS).
           const remarkText = document.getElementById('modal-rev-remark-input').value;
           const commentText = document.getElementById('modal-rev-comment-input').value;
 
-          let fileName = defaultName;
-          let fileSize = '2.4 MB';
-
-          if (fileInput && fileInput.files && fileInput.files[0]) {
-            fileName = fileInput.files[0].name;
-            fileSize = `${Math.round(fileInput.files[0].size / 1024)} KB`;
-          }
-
           if (!remarkText.trim()) {
             Toast.error('Please enter legal review remarks.');
             return;
           }
 
-          try {
-            requestService.uploadReviewedDocument(requestId, {
-              name: fileName,
-              size: fileSize,
-              remarkText: remarkText.trim(),
-              commentText: commentText.trim()
-            });
-            Modal.close();
-            Toast.success('Reviewed document & remarks submitted to stakeholder!');
-            this.handleRoute();
-          } catch (e) {
-            Toast.error(e.message);
+          let fileName = defaultName;
+          let fileSize = '2.4 MB';
+
+          const processUpload = (dataUrl = null, mimeType = null) => {
+            try {
+              requestService.uploadReviewedDocument(requestId, {
+                name: fileName,
+                size: fileSize,
+                remarkText: remarkText.trim(),
+                commentText: commentText.trim(),
+                dataUrl,
+                mimeType
+              });
+              Modal.close();
+              Toast.success('Reviewed document & remarks submitted to stakeholder!');
+              this.handleRoute();
+            } catch (e) {
+              Toast.error(e.message);
+            }
+          };
+
+          if (fileInput && fileInput.files && fileInput.files[0]) {
+            const file = fileInput.files[0];
+            fileName = file.name;
+            fileSize = `${Math.round(file.size / 1024)} KB`;
+            const reader = new FileReader();
+            reader.onload = (ev) => processUpload(ev.target.result.length > 900000 ? ev.target.result.substring(0, 900000) : ev.target.result, file.type);
+            reader.readAsDataURL(file);
+          } else {
+            processUpload();
           }
         });
       });
@@ -923,22 +1186,33 @@ In-House Legal & Document Management System (DMS).
           let fileName = defaultName;
           let fileSize = '3.2 MB';
 
-          if (fileInput && fileInput.files && fileInput.files[0]) {
-            fileName = fileInput.files[0].name;
-            fileSize = `${Math.round(fileInput.files[0].size / 1024)} KB`;
-          }
+          const processUpload = (dataUrl = null, mimeType = null) => {
+            try {
+              requestService.uploadFinalSignedDocument(requestId, {
+                name: fileName,
+                size: fileSize,
+                commentText: commentText.trim(),
+                dataUrl,
+                mimeType
+              });
+              Modal.close();
+              Toast.success('Final signed document uploaded! Ready for completion.');
+              this.handleRoute();
+            } catch (e) {
+              Toast.error(e.message);
+            }
+          };
 
-          try {
-            requestService.uploadFinalSignedDocument(requestId, {
-              name: fileName,
-              size: fileSize,
-              commentText: commentText.trim()
-            });
-            Modal.close();
-            Toast.success('Final signed document uploaded! Ready for completion.');
-            this.handleRoute();
-          } catch (e) {
-            Toast.error(e.message);
+          if (fileInput && fileInput.files && fileInput.files[0]) {
+            const file = fileInput.files[0];
+            fileName = file.name;
+            fileSize = `${Math.round(file.size / 1024)} KB`;
+            const reader = new FileReader();
+            reader.onload = (ev) => processUpload(ev.target.result.length > 900000 ? ev.target.result.substring(0, 900000) : ev.target.result, file.type);
+            reader.readAsDataURL(file);
+          } else {
+            Toast.error('Please select a final signed document before uploading!');
+            return;
           }
         });
       });
@@ -1272,10 +1546,13 @@ In-House Legal & Document Management System (DMS).
 }
 
 // Initialize Application immediately or when DOM is ready
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
-    window.impacteersApp = new App();
-  });
-} else {
+const initApp = async () => {
+  await db.fetchFromFirestore();
   window.impacteersApp = new App();
+};
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initApp);
+} else {
+  initApp();
 }

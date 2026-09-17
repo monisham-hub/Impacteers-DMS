@@ -99,14 +99,14 @@ class RequestService {
       departmentName: dept.name,
       requestorId: user.id,
       requestorName: user.name,
-      requestorRole: user.tagline || user.roleLabel,
+      requestorRole: user.tagline || user.roleLabel || 'Employee',
       assignedLegalId: 'usr-monisha',
       assignedLegalName: 'Monisha',
       status: 'PENDING_ACCEPTANCE',
       requiredByDate,
       currentDueDate: requiredByDate,
       description: description.trim(),
-      attachedDocument,
+      attachedDocument: attachedDocument ? JSON.parse(JSON.stringify(attachedDocument)) : null,
       rescheduleProposal: null,
       rescheduleHistory: [],
       legalRemarks: [],
@@ -116,7 +116,8 @@ class RequestService {
       updatedAt: new Date().toISOString()
     };
 
-    db.data.requests.unshift(newRequest);
+    const safeRequest = JSON.parse(JSON.stringify(newRequest)); // Ensure no undefined values which crash Firestore
+    db.data.requests.unshift(safeRequest);
 
     // Initial conversation message
     db.data.comments.push({
@@ -124,13 +125,14 @@ class RequestService {
       requestId: newId,
       authorId: user.id,
       authorName: user.name,
-      authorRole: user.tagline || user.roleLabel,
+      authorRole: user.tagline || user.roleLabel || 'Employee',
       text: comment ? `${description.trim()}\n\nAdditional Note: ${comment.trim()}` : description.trim(),
       isInternalLegalOnly: false,
       createdAt: new Date().toISOString()
     });
 
     db.saveToStorage();
+    db.syncToFirestore('requests', safeRequest.id, safeRequest);
 
     // Notify Monisha
     notificationService.send({
@@ -177,6 +179,7 @@ class RequestService {
     });
 
     db.saveToStorage();
+    if (typeof req !== 'undefined') db.syncToFirestore('requests', req.id, req);
 
     notificationService.send({
       userId: req.requestorId,
@@ -225,6 +228,7 @@ class RequestService {
     });
 
     db.saveToStorage();
+    if (typeof req !== 'undefined') db.syncToFirestore('requests', req.id, req);
 
     notificationService.send({
       userId: req.requestorId,
@@ -281,6 +285,7 @@ class RequestService {
     });
 
     db.saveToStorage();
+    if (typeof req !== 'undefined') db.syncToFirestore('requests', req.id, req);
 
     notificationService.send({
       userId: req.requestorId,
@@ -367,6 +372,7 @@ class RequestService {
 
     req.updatedAt = new Date().toISOString();
     db.saveToStorage();
+    if (typeof req !== 'undefined') db.syncToFirestore('requests', req.id, req);
 
     window.dispatchEvent(new CustomEvent('request:updated', { detail: req }));
     return req;
@@ -403,6 +409,7 @@ class RequestService {
     });
 
     db.saveToStorage();
+    if (typeof req !== 'undefined') db.syncToFirestore('requests', req.id, req);
 
     notificationService.send({
       userId: req.requestorId,
@@ -434,6 +441,7 @@ class RequestService {
     req.updatedAt = new Date().toISOString();
 
     db.saveToStorage();
+    if (typeof req !== 'undefined') db.syncToFirestore('requests', req.id, req);
     window.dispatchEvent(new CustomEvent('request:updated', { detail: req }));
     return remark;
   }
@@ -481,6 +489,7 @@ class RequestService {
     });
 
     db.saveToStorage();
+    if (typeof req !== 'undefined') db.syncToFirestore('requests', req.id, req);
 
     notificationService.send({
       userId: req.requestorId,
@@ -524,6 +533,7 @@ class RequestService {
     });
 
     db.saveToStorage();
+    if (typeof req !== 'undefined') db.syncToFirestore('requests', req.id, req);
 
     notificationService.send({
       userId: req.requestorId,
@@ -540,7 +550,7 @@ class RequestService {
   /**
    * Upload Final Signed Document (Business or Legal) -> Automatically Completes Request and Publishes to Department Documents
    */
-  uploadFinalSignedDocument(requestId, { name, size = '3.0 MB', commentText = '' }) {
+  uploadFinalSignedDocument(requestId, { name, size = '3.0 MB', commentText = '', dataUrl = null, mimeType = null }) {
     const user = authService.getCurrentUser();
     const req = db.data.requests.find(r => r.id === requestId);
     if (!req) throw new Error('Request not found.');
@@ -548,6 +558,8 @@ class RequestService {
     req.finalDocument = {
       name,
       size,
+      dataUrl,
+      mimeType: mimeType || 'application/pdf',
       uploadedBy: user.name,
       uploadedAt: new Date().toISOString(),
       isExecuted: true
@@ -563,7 +575,7 @@ class RequestService {
     const exists = db.data.documents.some(d => d.linkedRequestId === req.id && d.fileName === finalDocName);
     
     if (!exists) {
-      db.data.documents.unshift({
+      const newDoc = {
         id: docId,
         title: req.title,
         documentType: req.requestType.includes('MOU') ? 'MOU' : req.requestType.includes('NDA') ? 'NDA' : 'Agreement',
@@ -576,7 +588,9 @@ class RequestService {
         updatedAt: new Date().toISOString().split('T')[0],
         linkedRequestId: req.id,
         isFinal: true
-      });
+      };
+      db.data.documents.unshift(newDoc);
+      db.syncToFirestore('documents', newDoc.id, newDoc);
     }
 
     db.data.comments.push({
@@ -591,6 +605,7 @@ class RequestService {
     });
 
     db.saveToStorage();
+    if (typeof req !== 'undefined') db.syncToFirestore('requests', req.id, req);
 
     notificationService.send({
       userId: 'usr-monisha',
@@ -663,6 +678,7 @@ class RequestService {
     });
 
     db.saveToStorage();
+    if (typeof req !== 'undefined') db.syncToFirestore('requests', req.id, req);
 
     notificationService.send({
       userId: req.requestorId,
@@ -707,6 +723,7 @@ class RequestService {
     db.data.comments.push(comment);
     req.updatedAt = new Date().toISOString();
     db.saveToStorage();
+    if (typeof req !== 'undefined') db.syncToFirestore('requests', req.id, req);
 
     if (!comment.isInternalLegalOnly) {
       if (authService.isLegalManager()) {

@@ -6,6 +6,7 @@
 import { legalAssistantService } from '../services/legalAssistantService.js';
 import { authService } from '../services/authService.js';
 import { documentService } from '../services/documentService.js';
+import { requestService } from '../services/requestService.js';
 
 let isAssistantOpen = false;
 let assistantMessages = [];
@@ -15,6 +16,20 @@ export function renderFloatingLegalAssistant() {
   if (!user) return '';
 
   const docs = documentService.getDocuments();
+
+  let requestContextOption = '';
+  const hash = window.location.hash || '';
+  if (hash.startsWith('#/requests/')) {
+    const reqId = hash.replace('#/requests/', '').trim();
+    try {
+      const req = requestService.getRequestById(reqId);
+      if (req && req.attachedDocument) {
+        requestContextOption = `<option value="REQ_${req.id}" selected>📄 Attached: ${req.attachedDocument.name}</option>`;
+      }
+    } catch (e) {
+      // Ignore if access denied or not found
+    }
+  }
 
   return `
     <!-- Floating Legal Assistant Trigger (FAB) -->
@@ -61,8 +76,9 @@ export function renderFloatingLegalAssistant() {
         <div style="padding: 6px 12px; background: #F8FAFC; border-bottom: 1px solid #F1F5F9; display: flex; align-items: center; gap: 6px; font-size: 11.5px;">
           <span style="color: #64748B; font-weight: 600; flex-shrink: 0;">Context:</span>
           <select id="floating-doc-context-select" style="flex: 1; min-width: 0; font-size: 11.5px; padding: 3px 6px; border-radius: 6px; border: 1px solid #E2E8F0; background: #FFFFFF; color: #1E293B;">
+            ${requestContextOption}
             <option value="">All Vault Documents & Contracts (Global RAG)</option>
-            ${docs.map(d => `<option value="${d.id}">📄 ${d.title} (${d.departmentName})</option>`).join('')}
+            ${docs.map(d => `<option value="${d.id}" ${requestContextOption ? '' : ''}>📄 ${d.title} (${d.departmentName})</option>`).join('')}
           </select>
         </div>
 

@@ -4,6 +4,8 @@
  */
 
 import { DEPARTMENTS, DEMO_USERS, REQUEST_TYPES, USER_ROLES } from './constants.js';
+import { dbFirestore } from './firebaseConfig.js';
+import { collection, doc, setDoc, getDocs } from 'firebase/firestore';
 
 const DB_STORAGE_KEY = 'IMPACTEERS_LEGAL_DOCS_STORE_V4_CLEAN';
 
@@ -38,6 +40,54 @@ export class LegalDatabase {
       localStorage.setItem(DB_STORAGE_KEY, JSON.stringify(this.data));
     } catch (e) {
       console.error('Could not save to localStorage:', e);
+    }
+  }
+
+  async syncToFirestore(collectionName, docId, documentData) {
+    try {
+      if (!dbFirestore) return;
+      
+      // Deep clone to safely mutate and strip out large base64 dataUrls
+      // Firebase throws "invalid nested entity" or "payload exceeds limit" for giant strings
+      const safeData = JSON.parse(JSON.stringify(documentData));
+      
+      if (safeData.attachedDocument && safeData.attachedDocument.dataUrl) {
+        delete safeData.attachedDocument.dataUrl;
+      }
+      if (safeData.reviewedDocument && safeData.reviewedDocument.dataUrl) {
+        delete safeData.reviewedDocument.dataUrl;
+      }
+      if (safeData.finalDocument && safeData.finalDocument.dataUrl) {
+        delete safeData.finalDocument.dataUrl;
+      }
+      if (safeData.dataUrl) {
+        delete safeData.dataUrl;
+      }
+
+      await setDoc(doc(dbFirestore, collectionName, docId), safeData);
+      console.log(`Synced ${docId} to Firestore collection ${collectionName}`);
+    } catch (e) {
+      console.error('Failed to sync to Firestore:', e);
+      alert('Firestore Sync Error: ' + e.message + '\n\nCheck your Firestore Security Rules in the Firebase Console! They are likely denying writes.');
+    }
+  }
+
+  async fetchFromFirestore() {
+    try {
+      if (!dbFirestore) return;
+      const reqSnapshot = await getDocs(collection(dbFirestore, 'requests'));
+      const requests = [];
+      reqSnapshot.forEach(doc => requests.push(doc.data()));
+      
+      if (requests.length > 0) {
+        // Merge with local data or overwrite. We'll overwrite for simplicity if cloud has data
+        this.data.requests = requests;
+        this.saveToStorage();
+        console.log('Successfully hydrated from Firestore');
+      }
+    } catch(e) {
+      console.error('Failed to fetch from Firestore', e);
+      alert('Firestore Fetch Error: ' + e.message + '\n\nCheck your Firestore Security Rules in the Firebase Console! They are likely denying reads.');
     }
   }
 
@@ -79,6 +129,9 @@ export class LegalDatabase {
     if (!Array.isArray(this.data.auditLogs)) {
       this.data.auditLogs = [];
     }
+    if (!Array.isArray(this.data.comments)) {
+      this.data.comments = [];
+    }
     if (!Array.isArray(this.data.requestTypes)) {
       this.data.requestTypes = [
         { id: 'rt-1', name: 'Draft a Document', slaDays: 3 },
@@ -118,7 +171,8 @@ export class LegalDatabase {
       documents: [],
       contracts: [],
       notifications: [],
-      auditLogs: []
+      auditLogs: [],
+      comments: []
     };
   }
 }
