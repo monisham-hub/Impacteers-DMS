@@ -49,8 +49,34 @@ class AuthService {
       u => u.email.toLowerCase() === userIdOrEmail.toLowerCase()
     );
 
-    // Auto-provision profile in local state if user exists in Firebase Auth
-    if (!user && firebaseUser) {
+    // Guaranteed Full Legal Manager Role for Monisha
+    const isMonisha = userIdOrEmail.toLowerCase().includes('monisha');
+    if (isMonisha) {
+      const { USER_ROLES } = await import('../constants.js');
+      if (!user) {
+        user = {
+          id: 'usr-monisha',
+          name: 'Monisha',
+          email: userIdOrEmail.toLowerCase(),
+          role: USER_ROLES.LEGAL_MANAGER,
+          roleLabel: 'Legal Manager',
+          departmentId: null,
+          departmentName: 'Legal Team',
+          avatar: 'M',
+          tagline: 'Legal Manager (Full Admin Access)',
+          isActive: true,
+          permissions: ['*']
+        };
+        db.data.users.unshift(user);
+      } else {
+        user.role = USER_ROLES.LEGAL_MANAGER;
+        user.roleLabel = 'Legal Manager';
+        user.departmentName = 'Legal Team';
+        user.tagline = 'Legal Manager (Full Admin Access)';
+        user.permissions = ['*'];
+      }
+      db.saveToStorage();
+    } else if (!user && firebaseUser) {
       const { USER_ROLES } = await import('../constants.js');
       const namePart = (firebaseUser.displayName || userIdOrEmail.split('@')[0]);
       const capitalizedName = namePart.charAt(0).toUpperCase() + namePart.slice(1);
