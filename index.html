@@ -19,6 +19,39 @@
       }
     }
   </script>
+  <!-- Suppress Netlify Drawer / Feedback Badge -->
+  <style>
+    #netlify-drawer-container,
+    iframe[id*="netlify"],
+    iframe[src*="netlify"],
+    [data-netlify-drawer],
+    netlify-drawer,
+    div[class*="netlify-drawer"],
+    div[class*="netlify-feedback"],
+    div:has(> iframe[src*="netlify"]) {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
+      width: 0 !important;
+      height: 0 !important;
+      position: absolute !important;
+      left: -9999px !important;
+    }
+  </style>
+  <script>
+    // Permanently strip Netlify badge/drawer
+    const purgeNetlifyBadge = () => {
+      document.querySelectorAll(
+        '#netlify-drawer-container, iframe[id*="netlify"], iframe[src*="netlify"], [data-netlify-drawer], netlify-drawer, div[class*="netlify-drawer"]'
+      ).forEach(el => el.remove());
+    };
+    purgeNetlifyBadge();
+    new MutationObserver(purgeNetlifyBadge).observe(document.documentElement, {
+      childList: true,
+      subtree: true
+    });
+  </script>
 </head>
 <body>
   <!-- Main Application Container -->
