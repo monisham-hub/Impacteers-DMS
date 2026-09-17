@@ -41,19 +41,37 @@ class LegalAssistantService {
 
   async _getGeminiApiKey() {
     if (this.apiKey) return this.apiKey;
+    
+    // 1. Try env-config.json (generated during Netlify build)
+    try {
+      const res = await fetch('/env-config.json');
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.gemini_api_key) {
+          this.apiKey = data.gemini_api_key.trim();
+          return this.apiKey;
+        }
+      }
+    } catch (e) {
+      // Fallback
+    }
+
+    // 2. Try local .env file
     try {
       const res = await fetch('/.env');
-      if (!res.ok) throw new Error('Could not fetch .env');
-      const text = await res.text();
-      const match = text.match(/gemini_api_key=(.+)/);
-      if (match && match[1]) {
-        this.apiKey = match[1].trim();
-        return this.apiKey;
+      if (res.ok) {
+        const text = await res.text();
+        const match = text.match(/gemini_api_key=(.+)/i);
+        if (match && match[1]) {
+          this.apiKey = match[1].trim();
+          return this.apiKey;
+        }
       }
     } catch (e) {
       console.warn('Failed to load API key from .env', e);
     }
-    throw new Error('Gemini API key not found. Please add gemini_api_key to your .env file.');
+
+    throw new Error('Gemini API key not found. Please add gemini_api_key in Netlify environment variables or your .env file.');
   }
 
   /**

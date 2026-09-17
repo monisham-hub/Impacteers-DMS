@@ -1,12 +1,12 @@
 {
-  "name": "impacteers-dms",
+  "name": "impacteers-legal-management",
   "version": "1.0.0",
   "description": "Impacteers Document Management System (DMS)",
   "type": "module",
   "scripts": {
     "start": "node server.mjs",
     "dev": "node server.mjs",
-    "build": "echo 'Static app ready for deployment'"
+    "build": "node scripts/build.mjs"
   },
   "dependencies": {
     "firebase": "^12.19.0"

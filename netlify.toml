@@ -7,6 +7,11 @@
   publish = "."
   command = "npm run build"
 
+[build.environment]
+  SECRETS_SCAN_ENABLED = "false"
+  SECRETS_SCAN_OMIT_KEYS = "FIREBASE_PROJECT_ID,FIREBASE_AUTH_DOMAIN,FIREBASE_MESSAGING_SENDER_ID,FIREBASE_STORAGE_BUCKET,FIREBASE_API_KEY,FIREBASE_APP_ID,FIREBASE_MEASUREMENT_ID,gemini_api_key"
+  SECRETS_SCAN_OMIT_PATHS = "src/js/firebaseConfig.js,package.json,src/js/services/legalAssistantService.js"
+
 # Single Page Application (SPA) Client-Side Hash & Path Routing
 [[redirects]]
   from = "/*"

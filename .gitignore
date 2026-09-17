@@ -21,3 +21,6 @@ Thumbs.db
 # Build Outputs & Scratch
 dist/
 build/
+seedAuth.mjs
+env-config.json
+*.test.*
