@@ -13,15 +13,33 @@ class AuthService {
 
   loadCurrentUser() {
     try {
+      const rawUser = localStorage.getItem('IMPACTEERS_AUTH_USER');
+      if (rawUser) {
+        const user = JSON.parse(rawUser);
+        if (user && user.email) {
+          // Ensure user is also in db.data.users list
+          const existingIdx = db.data.users.findIndex(
+            u => u.email.toLowerCase() === user.email.toLowerCase() || u.id === user.id
+          );
+          if (existingIdx !== -1) {
+            db.data.users[existingIdx] = { ...db.data.users[existingIdx], ...user };
+            return db.data.users[existingIdx];
+          } else {
+            db.data.users.push(user);
+            db.saveToStorage();
+            return user;
+          }
+        }
+      }
+
       const savedId = localStorage.getItem('IMPACTEERS_AUTH_USER_ID');
       if (savedId) {
         const found = db.data.users.find(u => u.id === savedId);
         if (found) return found;
       }
     } catch (e) {
-      console.warn('Could not load user:', e);
+      console.warn('Could not load user from storage:', e);
     }
-    // No default user — fresh visitors must authenticate with their own credentials
     return null;
   }
 
@@ -105,6 +123,7 @@ class AuthService {
     }
     this.currentUser = user;
     try {
+      localStorage.setItem('IMPACTEERS_AUTH_USER', JSON.stringify(user));
       localStorage.setItem('IMPACTEERS_AUTH_USER_ID', user.id);
     } catch (e) {
       console.error(e);
@@ -158,6 +177,7 @@ class AuthService {
 
     this.currentUser = newUser;
     try {
+      localStorage.setItem('IMPACTEERS_AUTH_USER', JSON.stringify(newUser));
       localStorage.setItem('IMPACTEERS_AUTH_USER_ID', newUser.id);
     } catch (e) {
       console.error(e);
@@ -177,6 +197,7 @@ class AuthService {
     
     this.currentUser = null;
     try {
+      localStorage.removeItem('IMPACTEERS_AUTH_USER');
       localStorage.removeItem('IMPACTEERS_AUTH_USER_ID');
     } catch (e) {
       console.error(e);
@@ -185,19 +206,47 @@ class AuthService {
   }
 
   async initAuth(callback) {
+    // 1. Immediately invoke callback if session was already restored from localStorage
+    if (this.currentUser && callback) {
+      callback(this.currentUser);
+    }
+
     const { onAuthStateChanged, auth } = await import('../firebaseConfig.js');
     onAuthStateChanged(auth, (firebaseUser) => {
-      if (firebaseUser) {
-        const user = db.data.users.find(u => u.email.toLowerCase() === firebaseUser.email.toLowerCase());
-        if (user && user.isActive) {
-          this.currentUser = user;
-        } else {
-          this.currentUser = null;
+      if (firebaseUser && firebaseUser.email) {
+        let user = db.data.users.find(u => u.email.toLowerCase() === firebaseUser.email.toLowerCase());
+        if (!user) {
+          const isMonisha = firebaseUser.email.toLowerCase().includes('monisha');
+          user = {
+            id: firebaseUser.uid || ('usr-' + Date.now().toString(36)),
+            name: isMonisha ? 'Monisha' : (firebaseUser.displayName || firebaseUser.email.split('@')[0]),
+            email: firebaseUser.email.toLowerCase(),
+            role: isMonisha ? 'LEGAL_MANAGER' : 'BUSINESS_USER',
+            roleLabel: isMonisha ? 'Legal Manager' : 'Business Stakeholder',
+            departmentId: isMonisha ? null : 'dept-engineering',
+            departmentName: isMonisha ? 'Legal Team' : 'Engineering',
+            avatar: (isMonisha ? 'M' : firebaseUser.email.charAt(0)).toUpperCase(),
+            tagline: isMonisha ? 'Legal Manager (Full Admin Access)' : 'Team Stakeholder',
+            isActive: true,
+            permissions: isMonisha ? ['*'] : []
+          };
+          db.data.users.push(user);
+          db.saveToStorage();
         }
+        this.currentUser = user;
+        try {
+          localStorage.setItem('IMPACTEERS_AUTH_USER', JSON.stringify(user));
+          localStorage.setItem('IMPACTEERS_AUTH_USER_ID', user.id);
+        } catch (e) {}
+        if (callback) callback(this.currentUser);
       } else {
-        this.currentUser = null;
+        // Only clear if localStorage has no active saved user session
+        const hasSession = localStorage.getItem('IMPACTEERS_AUTH_USER');
+        if (!hasSession) {
+          this.currentUser = null;
+          if (callback) callback(null);
+        }
       }
-      if (callback) callback(this.currentUser);
     });
   }
 

@@ -5,7 +5,7 @@
 
 import { DEPARTMENTS, DEMO_USERS, REQUEST_TYPES, USER_ROLES } from './constants.js';
 import { dbFirestore } from './firebaseConfig.js';
-import { collection, doc, setDoc, getDocs } from 'firebase/firestore';
+import { collection, doc, setDoc, getDocs, deleteDoc } from 'firebase/firestore';
 
 const DB_STORAGE_KEY = 'IMPACTEERS_LEGAL_DOCS_STORE_V4_CLEAN';
 
@@ -67,27 +67,58 @@ export class LegalDatabase {
       await setDoc(doc(dbFirestore, collectionName, docId), safeData);
       console.log(`Synced ${docId} to Firestore collection ${collectionName}`);
     } catch (e) {
-      console.error('Failed to sync to Firestore:', e);
-      alert('Firestore Sync Error: ' + e.message + '\n\nCheck your Firestore Security Rules in the Firebase Console! They are likely denying writes.');
+      console.warn('Failed to sync to Firestore:', e.message);
+    }
+  }
+
+  async deleteFromFirestore(collectionName, docId) {
+    try {
+      if (!dbFirestore) return;
+      await deleteDoc(doc(dbFirestore, collectionName, docId));
+      console.log(`Deleted ${docId} from Firestore collection ${collectionName}`);
+    } catch (e) {
+      console.warn(`Failed to delete ${docId} from Firestore:`, e.message);
     }
   }
 
   async fetchFromFirestore() {
     try {
       if (!dbFirestore) return;
+
+      // 1. Fetch live requests from Firestore
       const reqSnapshot = await getDocs(collection(dbFirestore, 'requests'));
-      const requests = [];
-      reqSnapshot.forEach(doc => requests.push(doc.data()));
+      const liveRequests = [];
+      reqSnapshot.forEach(d => {
+        const item = d.data();
+        if (item) liveRequests.push(item);
+      });
+      // Accurately mirror Firestore: whether items were added, updated, or deleted
+      this.data.requests = liveRequests;
+
+      // 2. Fetch live documents from Firestore
+      try {
+        const docSnapshot = await getDocs(collection(dbFirestore, 'documents'));
+        const liveDocs = [];
+        docSnapshot.forEach(d => {
+          const item = d.data();
+          if (item) liveDocs.push(item);
+        });
+        if (docSnapshot.size > 0 || liveRequests.length > 0) {
+          this.data.documents = liveDocs;
+        }
+      } catch (err) {
+        console.warn('Documents collection fetch skipped:', err.message);
+      }
+
+      this.saveToStorage();
+      console.log(`Successfully hydrated from Firestore. Requests: ${this.data.requests.length}, Documents: ${this.data.documents.length}`);
       
-      if (requests.length > 0) {
-        // Merge with local data or overwrite. We'll overwrite for simplicity if cloud has data
-        this.data.requests = requests;
-        this.saveToStorage();
-        console.log('Successfully hydrated from Firestore');
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('request:updated'));
+        window.dispatchEvent(new CustomEvent('document:updated'));
       }
     } catch(e) {
-      console.error('Failed to fetch from Firestore', e);
-      alert('Firestore Fetch Error: ' + e.message + '\n\nCheck your Firestore Security Rules in the Firebase Console! They are likely denying reads.');
+      console.warn('Failed to fetch from Firestore:', e.message);
     }
   }
 

@@ -55,6 +55,9 @@ class App {
     });
     window.addEventListener('request:created', () => this.handleRoute());
     window.addEventListener('request:updated', () => this.handleRoute());
+    window.addEventListener('document:created', () => this.handleRoute());
+    window.addEventListener('document:updated', () => this.handleRoute());
+    window.addEventListener('document:deleted', () => this.handleRoute());
   }
 
   bindWindowGlobals() {
@@ -1545,10 +1548,13 @@ In-House Legal & Document Management System (DMS).
   }
 }
 
-// Initialize Application immediately or when DOM is ready
+// Initialize Application immediately with restored session, then hydrate live data
 const initApp = async () => {
-  await db.fetchFromFirestore();
   window.impacteersApp = new App();
+  await db.fetchFromFirestore();
+  if (window.impacteersApp) {
+    window.impacteersApp.handleRoute();
+  }
 };
 
 if (document.readyState === 'loading') {

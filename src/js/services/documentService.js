@@ -129,6 +129,7 @@ class DocumentService {
 
     db.data.documents.unshift(newDoc);
     db.saveToStorage();
+    db.syncToFirestore('documents', newDocId, newDoc);
 
     auditService.log({
       action: 'UPLOAD_DOCUMENT',
@@ -180,6 +181,7 @@ class DocumentService {
     doc.updatedAt = new Date().toISOString();
 
     db.saveToStorage();
+    db.syncToFirestore('documents', doc.id, doc);
 
     auditService.log({
       action: 'UPLOAD_DOCUMENT_VERSION',
@@ -353,6 +355,7 @@ class DocumentService {
     const doc = db.data.documents[index];
     db.data.documents.splice(index, 1);
     db.saveToStorage();
+    db.deleteFromFirestore('documents', docId);
 
     auditService.log({
       actorName: user.name,
@@ -375,8 +378,10 @@ class DocumentService {
     }
 
     const count = db.data.documents.length;
+    const oldDocs = [...db.data.documents];
     db.data.documents = [];
     db.saveToStorage();
+    oldDocs.forEach(d => db.deleteFromFirestore('documents', d.id));
 
     auditService.log({
       actorName: user.name,
