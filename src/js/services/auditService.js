@@ -42,7 +42,9 @@ class AuditService {
     db.data.auditLogs.unshift(entry);
     db.saveToStorage();
 
-    window.dispatchEvent(new CustomEvent('audit:new-entry', { detail: entry }));
+    if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
+      window.dispatchEvent(new CustomEvent('audit:new-entry', { detail: entry }));
+    }
     return entry;
   }
 
@@ -77,4 +79,7 @@ class AuditService {
 }
 
 export const auditService = new AuditService();
-window.auditService = auditService;
+if (typeof window !== 'undefined') {
+  window.auditService = auditService;
+}
+

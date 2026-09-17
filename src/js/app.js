@@ -34,6 +34,8 @@ import { renderAdminSettingsPage } from './pages/AdminSettingsPage.js';
 import { renderAboutPage } from './pages/AboutPage.js';
 import { renderFloatingLegalAssistant } from './components/FloatingLegalAssistant.js';
 import { renderLegalAdminPage, renderUserFormModal } from './pages/LegalAdminPage.js';
+import { renderAccessManagementPage, renderRequestDbAccessModalHtml, renderRequestDocDownloadModalHtml, renderDenialModalHtml } from './pages/AccessManagementPage.js';
+import { accessRequestService } from './services/accessRequestService.js';
 
 class App {
   constructor() {
@@ -61,6 +63,7 @@ class App {
     window.addEventListener('contract:created', () => this.handleRoute());
     window.addEventListener('contract:updated', () => this.handleRoute());
     window.addEventListener('user:updated', () => this.handleRoute());
+    window.addEventListener('access:updated', () => this.handleRoute());
   }
 
   bindWindowGlobals() {
@@ -658,6 +661,132 @@ In-House Legal & Document Management System (DMS).
         }
       }
     };
+
+    // --- ACCESS MANAGEMENT HANDLERS ---
+    window.openRequestDbAccessModal = () => {
+      const user = authService.getCurrentUser();
+      if (!user) return;
+      Modal.open({
+        title: '🗄️ Request Database Access',
+        contentHtml: renderRequestDbAccessModalHtml(user),
+        size: 'md'
+      });
+    };
+
+    window.submitDatabaseAccessRequest = () => {
+      const reasonEl = document.getElementById('req-db-reason');
+      const reason = reasonEl ? reasonEl.value : '';
+      try {
+        accessRequestService.createDatabaseAccessRequest({ reason });
+        Modal.close();
+        Toast.success('Database access request submitted to Legal Admin for review.');
+        this.handleRoute();
+      } catch (e) {
+        Toast.error(e.message);
+      }
+    };
+
+    window.openRequestDocDownloadModal = () => {
+      const user = authService.getCurrentUser();
+      if (!user) return;
+      Modal.open({
+        title: '📥 Request Permission to Download Document',
+        contentHtml: renderRequestDocDownloadModalHtml(user),
+        size: 'md'
+      });
+    };
+
+    window.submitDocumentDownloadRequest = () => {
+      const docSelect = document.getElementById('req-doc-select');
+      const reasonEl = document.getElementById('req-doc-reason');
+      const documentId = docSelect ? docSelect.value : '';
+      const reason = reasonEl ? reasonEl.value : '';
+
+      try {
+        accessRequestService.createDocumentDownloadRequest({ documentId, reason });
+        Modal.close();
+        Toast.success('Document download permission request submitted to Legal Admin for review.');
+        this.handleRoute();
+      } catch (e) {
+        Toast.error(e.message);
+      }
+    };
+
+    window.adminFilterAccessRequests = (deptId, type, status) => {
+      this.currentAccessFilters = {
+        departmentId: deptId || 'ALL',
+        requestType: type || 'ALL',
+        status: status || 'ALL'
+      };
+      this.handleRoute();
+    };
+
+    window.adminApplyFilters = () => {
+      const deptEl = document.getElementById('admin-filter-dept');
+      const typeEl = document.getElementById('admin-filter-type');
+      const statusEl = document.getElementById('admin-filter-status');
+
+      this.currentAccessFilters = {
+        departmentId: deptEl ? deptEl.value : 'ALL',
+        requestType: typeEl ? typeEl.value : 'ALL',
+        status: statusEl ? statusEl.value : 'ALL'
+      };
+      this.handleRoute();
+    };
+
+    window.adminApproveAccessRequest = (requestId) => {
+      if (confirm(`Authorize and approve request ${requestId}?`)) {
+        try {
+          accessRequestService.approveRequest(requestId);
+          Toast.success(`Request ${requestId} approved. Permissions granted.`);
+          this.handleRoute();
+        } catch (e) {
+          Toast.error(e.message);
+        }
+      }
+    };
+
+    window.adminOpenDenyModal = (requestId) => {
+      Modal.open({
+        title: '❌ Deny Access Request',
+        contentHtml: renderDenialModalHtml(requestId),
+        size: 'sm'
+      });
+    };
+
+    window.confirmDenyAccessRequest = (requestId) => {
+      const reasonEl = document.getElementById('admin-deny-reason');
+      const reason = reasonEl ? reasonEl.value : '';
+      try {
+        accessRequestService.denyRequest(requestId, reason);
+        Modal.close();
+        Toast.info(`Request ${requestId} has been denied.`);
+        this.handleRoute();
+      } catch (e) {
+        Toast.error(e.message);
+      }
+    };
+
+    window.userDownloadApprovedDoc = (requestId) => {
+      const requests = db.data.access_requests || [];
+      const req = requests.find(r => r.id === requestId);
+      if (!req || req.status !== 'APPROVED') {
+        Toast.error('Download permission not approved.');
+        return;
+      }
+
+      const docName = req.targetItem?.documentName || 'Document.pdf';
+      const fileUrl = req.targetItem?.fileUrl;
+
+      // Trigger actual or generated download
+      const a = document.createElement('a');
+      a.href = fileUrl || 'data:text/plain;charset=utf-8,' + encodeURIComponent(`Authorized Copy of ${docName}\nImpacteers DMS Access Authorization: ${req.requestId}\nAuthorized for: ${req.userEmail}\nDepartment: ${req.departmentName}`);
+      a.download = docName.endsWith('.pdf') || docName.endsWith('.docx') ? docName : `${docName}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      Toast.success(`Downloading authorized document: ${docName}`);
+    };
   }
 
   handleRoute() {
@@ -749,8 +878,8 @@ In-House Legal & Document Management System (DMS).
     } else if (route === 'settings') {
       mainContent.innerHTML = renderAdminSettingsPage();
       this.setupSettingsEvents();
-    } else if (route === 'legal-admin') {
-      mainContent.innerHTML = renderLegalAdminPage();
+    } else if (route === 'access' || route === 'legal-admin') {
+      mainContent.innerHTML = renderAccessManagementPage(this.currentAccessFilters || {});
     } else if (route === 'about') {
       mainContent.innerHTML = renderAboutPage();
     } else {

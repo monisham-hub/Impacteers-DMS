@@ -24,23 +24,24 @@ export function renderSidebar(activeRoute = 'dashboard', isCollapsed = false) {
       { route: 'documents', label: 'Documents Vault', icon: '📁' },
       { route: 'departments', label: 'Document Database', icon: '🗄️' },
       { route: 'calendar', label: 'Calendar', icon: '📅' },
-      { route: 'legal-admin', label: 'Legal Admin', icon: '🛡️' }
+      { route: 'access', label: 'Access Requests', icon: '🔐' }
     ];
   } else if (isChairman) {
-    // Chairman - Executive View-Only Sidebar (Removed Documents Vault and Calendar)
+    // Chairman - Executive View-Only Sidebar
     navItems = [
       { route: 'dashboard', label: 'Executive Dashboard', icon: '🏛️' },
       { route: 'requests', label: 'All Requests', icon: '📋' },
       { route: 'departments', label: 'Document Database', icon: '🗄️' },
-      { route: 'legal-admin', label: 'Legal Admin', icon: '🛡️' }
+      { route: 'access', label: 'Access Requests', icon: '🔐' }
     ];
   } else {
-    // Business User (Edwin, Musthafa, Vinoth, Bala, etc.) - Ultra Minimal 4-item Sidebar
+    // Business User (Bala, Edwin, etc.)
     const deptName = user.departmentName || 'Department';
     navItems = [
       { route: 'dashboard', label: 'Dashboard', icon: '🏠' },
       { route: 'my-requests', label: 'My Requests', icon: '📋' },
       { route: 'department-docs', label: `${deptName} Documents`, icon: '📁' },
+      { route: 'access', label: 'Access Management', icon: '🔐' },
       { route: 'create-request', label: 'Create Request', icon: '➕', highlight: true }
     ];
   }

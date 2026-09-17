@@ -146,6 +146,20 @@ export class LegalDatabase {
           }
         }
       }, (err) => console.warn('Users real-time sync notice:', err.message));
+
+      // 5. Real-time access requests listener
+      onSnapshot(collection(dbFirestore, 'access_requests'), (snapshot) => {
+        const liveAccessRequests = [];
+        snapshot.forEach(d => {
+          const item = d.data();
+          if (item) liveAccessRequests.push({ id: d.id, ...item });
+        });
+        this.data.access_requests = liveAccessRequests;
+        this.saveToStorage();
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('access:updated'));
+        }
+      }, (err) => console.warn('Access requests real-time sync notice:', err.message));
     } catch (e) {
       console.warn('Real-time sync initialization skipped:', e);
     }
@@ -230,14 +244,28 @@ export class LegalDatabase {
         console.warn('Users collection fetch skipped:', err.message);
       }
 
+      // 5. Fetch live access requests from Firestore (source of truth)
+      try {
+        const accessSnapshot = await getDocs(collection(dbFirestore, 'access_requests'));
+        const liveAccessRequests = [];
+        accessSnapshot.forEach(d => {
+          const item = d.data();
+          if (item) liveAccessRequests.push({ id: d.id, ...item });
+        });
+        this.data.access_requests = liveAccessRequests;
+      } catch (err) {
+        console.warn('Access requests collection fetch skipped:', err.message);
+      }
+
       this.saveToStorage();
-      console.log(`Successfully hydrated from Firestore. Requests: ${this.data.requests.length}, Documents: ${this.data.documents.length}, Contracts: ${this.data.contracts.length}, Users: ${this.data.users.length}`);
+      console.log(`Successfully hydrated from Firestore. Requests: ${this.data.requests.length}, Documents: ${this.data.documents.length}, Contracts: ${this.data.contracts.length}, Users: ${this.data.users.length}, AccessRequests: ${(this.data.access_requests || []).length}`);
       
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('request:updated'));
         window.dispatchEvent(new CustomEvent('document:updated'));
         window.dispatchEvent(new CustomEvent('contract:updated'));
         window.dispatchEvent(new CustomEvent('user:updated'));
+        window.dispatchEvent(new CustomEvent('access:updated'));
       }
     } catch(e) {
       console.warn('Failed to fetch from Firestore:', e.message);
@@ -269,6 +297,9 @@ export class LegalDatabase {
     }
     if (!Array.isArray(this.data.requests)) {
       this.data.requests = [];
+    }
+    if (!Array.isArray(this.data.access_requests)) {
+      this.data.access_requests = [];
     }
     if (!Array.isArray(this.data.users)) {
       this.data.users = [...DEMO_USERS];
@@ -321,6 +352,7 @@ export class LegalDatabase {
       requests: [],
       documents: [],
       contracts: [],
+      access_requests: [],
       notifications: [],
       auditLogs: [],
       comments: []

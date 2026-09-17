@@ -25,7 +25,9 @@ class NotificationService {
     db.data.notifications.unshift(notif);
     db.saveToStorage();
 
-    window.dispatchEvent(new CustomEvent('notification:received', { detail: notif }));
+    if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
+      window.dispatchEvent(new CustomEvent('notification:received', { detail: notif }));
+    }
     return notif;
   }
 
