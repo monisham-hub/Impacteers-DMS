@@ -119,7 +119,27 @@ export class LegalDatabase {
     }
     if (!Array.isArray(this.data.users)) {
       this.data.users = [...DEMO_USERS];
+    } else {
+      // Migrate Monisha's email in existing stored data
+      const monishaUser = this.data.users.find(u => u.id === 'usr-monisha' || u.email.toLowerCase() === 'monisha@impacteers.club');
+      if (monishaUser) {
+        monishaUser.email = 'monisha.m@impacteers.com';
+      } else {
+        const defaultMonisha = DEMO_USERS.find(u => u.id === 'usr-monisha');
+        if (defaultMonisha) {
+          this.data.users.unshift({ ...defaultMonisha });
+        }
+      }
     }
+
+    // Migrate any references in requests
+    if (Array.isArray(this.data.requests)) {
+      this.data.requests.forEach(r => {
+        if (r.requestorEmail === 'monisha@impacteers.club') r.requestorEmail = 'monisha.m@impacteers.com';
+        if (r.assignedToEmail === 'monisha@impacteers.club') r.assignedToEmail = 'monisha.m@impacteers.com';
+      });
+    }
+
     if (!Array.isArray(this.data.departments)) {
       this.data.departments = [...DEPARTMENTS];
     }

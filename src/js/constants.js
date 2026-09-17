@@ -96,7 +96,7 @@ export const DEMO_USERS = [
   {
     id: 'usr-monisha',
     name: 'Monisha',
-    email: 'monisha@impacteers.club',
+    email: 'monisha.m@impacteers.com',
     role: USER_ROLES.LEGAL_MANAGER,
     roleLabel: 'Legal Manager',
     departmentId: null,
