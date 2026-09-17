@@ -133,9 +133,9 @@ export function renderLoginPage() {
                 type="email" 
                 id="login-email" 
                 class="form-input" 
-                placeholder="e.g. monisha.m@impacteers.com" 
+                placeholder="e.g. monisha@impacteers.club" 
                 style="padding: 11px 14px 11px 36px; font-size: 13.5px; border-radius: 10px; border: 1.5px solid #CBD5E1;" 
-                value="monisha.m@impacteers.com" 
+                value="monisha@impacteers.club" 
                 required 
               />
               <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 14px; color: #94A3B8;">✉️</span>

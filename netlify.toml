@@ -37,12 +37,12 @@
     Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=()"
     # Enforce HTTPS across subdomains
     Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
-    # Content Security Policy: Allowing Firebase Auth, Firestore, Google APIs, and Fonts
+    # Content Security Policy: Allowing Firebase Auth, Firestore, Analytics, Google APIs, and Fonts
     Content-Security-Policy = """
       default-src 'self';
-      script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://*.firebaseio.com https://apis.google.com https://generativelanguage.googleapis.com;
-      connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://*.firebasestorage.app wss://*.firebaseio.com https://*.supabase.co;
-      img-src 'self' data: blob: https:;
+      script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://*.firebaseio.com https://apis.google.com https://generativelanguage.googleapis.com https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com;
+      connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://*.firebasestorage.app wss://*.firebaseio.com https://*.supabase.co https://www.gstatic.com https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://stats.g.doubleclick.net;
+      img-src 'self' data: blob: https: https://www.google-analytics.com https://*.googletagmanager.com;
       style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
       font-src 'self' data: https://fonts.gstatic.com;
       object-src 'none';

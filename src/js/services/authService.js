@@ -37,6 +37,11 @@ class AuthService {
       const userCredential = await signInWithEmailAndPassword(auth, userIdOrEmail, password);
       firebaseUser = userCredential.user;
     } catch (e) {
+      if (e.code === 'auth/invalid-credential' || e.code === 'auth/invalid-login-credentials' || e.code === 'auth/wrong-password' || e.code === 'auth/user-not-found') {
+        throw new Error('Invalid email or password. Default demo password is test@123');
+      } else if (e.code === 'auth/too-many-requests') {
+        throw new Error('Too many failed login attempts. Please wait a moment or try again later.');
+      }
       throw new Error(e.message || 'Invalid credentials');
     }
 
