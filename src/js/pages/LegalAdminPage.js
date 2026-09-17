@@ -122,7 +122,7 @@ export function renderUserFormModal(user = null) {
       </div>
       <div class="form-group">
         <label class="form-label">Email Address <span class="required">*</span></label>
-        <input type="email" id="admin-user-email" class="form-input" value="${user?.email || ''}" ${isEdit ? 'readonly style="background: #F8FAFC;"' : ''} required />
+        <input type="email" id="admin-user-email" class="form-input" value="${user?.email || ''}" placeholder="e.g. monisha@impacteers.club" required />
       </div>
       
       <div class="grid-2-col" style="gap: 16px;">

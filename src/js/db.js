@@ -110,6 +110,28 @@ export class LegalDatabase {
         console.warn('Documents collection fetch skipped:', err.message);
       }
 
+      // 3. Fetch live users from Firestore if present
+      try {
+        const usersSnapshot = await getDocs(collection(dbFirestore, 'users'));
+        if (!usersSnapshot.empty) {
+          usersSnapshot.forEach(d => {
+            const uData = d.data();
+            if (uData && uData.email) {
+              const uIdx = this.data.users.findIndex(
+                u => u.id === uData.id || u.email.toLowerCase() === uData.email.toLowerCase()
+              );
+              if (uIdx !== -1) {
+                this.data.users[uIdx] = { ...this.data.users[uIdx], ...uData };
+              } else {
+                this.data.users.push(uData);
+              }
+            }
+          });
+        }
+      } catch (err) {
+        console.warn('Users collection fetch skipped:', err.message);
+      }
+
       this.saveToStorage();
       console.log(`Successfully hydrated from Firestore. Requests: ${this.data.requests.length}, Documents: ${this.data.documents.length}`);
       

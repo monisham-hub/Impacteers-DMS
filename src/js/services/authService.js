@@ -285,6 +285,7 @@ class AuthService {
 
     db.data.users.push(newUser);
     db.saveToStorage();
+    db.syncToFirestore('users', newUser.id, newUser);
     this.logAudit('ADD_USER', `Added new user ${newUser.email}`, newUser.id);
     return newUser;
   }
@@ -295,9 +296,31 @@ class AuthService {
     const userIndex = db.data.users.findIndex(u => u.id === userId);
     if (userIndex === -1) throw new Error('User not found.');
 
-    db.data.users[userIndex] = { ...db.data.users[userIndex], ...updates };
+    const oldEmail = db.data.users[userIndex].email;
+    const newEmail = updates.email ? updates.email.trim().toLowerCase() : oldEmail;
+
+    // Check for email conflicts
+    if (newEmail !== oldEmail.toLowerCase()) {
+      const exists = db.data.users.find((u, i) => i !== userIndex && u.email.toLowerCase() === newEmail);
+      if (exists) throw new Error(`A user with email '${newEmail}' already exists.`);
+    }
+
+    db.data.users[userIndex] = { ...db.data.users[userIndex], ...updates, email: newEmail };
     db.saveToStorage();
-    this.logAudit('UPDATE_USER', `Updated details for ${db.data.users[userIndex].email}`, userId);
+    
+    // Carry forward to Firestore DB!
+    db.syncToFirestore('users', userId, db.data.users[userIndex]);
+
+    // If the edited user is currently logged in, sync the active session
+    if (this.currentUser && (this.currentUser.id === userId || this.currentUser.email.toLowerCase() === oldEmail.toLowerCase())) {
+      this.currentUser = { ...this.currentUser, ...db.data.users[userIndex] };
+      try {
+        localStorage.setItem('IMPACTEERS_AUTH_USER', JSON.stringify(this.currentUser));
+        localStorage.setItem('IMPACTEERS_AUTH_USER_ID', this.currentUser.id);
+      } catch (e) {}
+    }
+
+    this.logAudit('UPDATE_USER', `Updated user details for ${newEmail} (was: ${oldEmail})`, userId);
     return db.data.users[userIndex];
   }
 
@@ -311,6 +334,7 @@ class AuthService {
     const deletedEmail = db.data.users[userIndex].email;
     db.data.users.splice(userIndex, 1);
     db.saveToStorage();
+    db.deleteFromFirestore('users', userId);
     this.logAudit('DELETE_USER', `Deleted user ${deletedEmail}`, userId);
   }
 

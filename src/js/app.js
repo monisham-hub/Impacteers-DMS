@@ -586,7 +586,8 @@ In-House Legal & Document Management System (DMS).
     };
 
     window.adminSubmitEditUser = (userId) => {
-      const name = document.getElementById('admin-user-name').value;
+      const name = document.getElementById('admin-user-name').value.trim();
+      const email = document.getElementById('admin-user-email').value.trim().toLowerCase();
       const role = document.getElementById('admin-user-role').value;
       const deptId = document.getElementById('admin-user-dept').value;
       const roleLabel = document.getElementById('admin-user-role').options[document.getElementById('admin-user-role').selectedIndex].text;
@@ -594,10 +595,15 @@ In-House Legal & Document Management System (DMS).
 
       const permissions = Array.from(document.querySelectorAll('.admin-perm-cb:checked')).map(cb => cb.value);
 
+      if (!name || !email) {
+        Toast.error('Please enter name and email address.');
+        return;
+      }
+
       try {
-        authService.updateUser(userId, { name, role, roleLabel, departmentId: deptId, departmentName: deptName, permissions });
+        authService.updateUser(userId, { name, email, role, roleLabel, departmentId: deptId, departmentName: deptName, permissions });
         Modal.close();
-        Toast.success('Access policy updated securely.');
+        Toast.success('User and email updated successfully.');
         this.handleRoute();
       } catch (e) {
         Toast.error(e.message);
