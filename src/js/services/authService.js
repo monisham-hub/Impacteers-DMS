@@ -17,18 +17,13 @@ class AuthService {
       if (rawUser) {
         const user = JSON.parse(rawUser);
         if (user && user.email) {
-          // Ensure user is also in db.data.users list
-          const existingIdx = db.data.users.findIndex(
-            u => u.email.toLowerCase() === user.email.toLowerCase() || u.id === user.id
+          const matched = db.data.users.find(
+            u => (user.id && u.id === user.id) || (u.email && u.email.toLowerCase() === user.email.toLowerCase())
           );
-          if (existingIdx !== -1) {
-            db.data.users[existingIdx] = { ...db.data.users[existingIdx], ...user };
-            return db.data.users[existingIdx];
-          } else {
-            db.data.users.push(user);
-            db.saveToStorage();
-            return user;
+          if (matched) {
+            return matched;
           }
+          return user;
         }
       }
 

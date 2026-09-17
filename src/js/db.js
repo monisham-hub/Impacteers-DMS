@@ -146,8 +146,13 @@ export class LegalDatabase {
 
         if (liveUsers.length > 0) {
           this.data.users = liveUsers;
-          if (currentSavedUser && !this.data.users.find(u => u.email?.toLowerCase() === currentSavedUser.email?.toLowerCase())) {
-            this.data.users.unshift(currentSavedUser);
+          if (currentSavedUser) {
+            const matched = this.data.users.find(
+              u => (currentSavedUser.id && u.id === currentSavedUser.id) || (u.email && u.email.toLowerCase() === currentSavedUser.email?.toLowerCase())
+            );
+            if (matched) {
+              localStorage.setItem('IMPACTEERS_AUTH_USER', JSON.stringify(matched));
+            }
           }
         } else {
           // If Firestore users collection is empty/cleared, only keep active session user or minimal primary user
