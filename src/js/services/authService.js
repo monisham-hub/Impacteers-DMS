@@ -149,18 +149,20 @@ class AuthService {
     const { DEPARTMENTS, USER_ROLES } = await import('../constants.js');
     const dept = DEPARTMENTS.find(d => d.id === departmentId);
 
+    const isLegal = departmentId === 'dept-legal' || email.trim().toLowerCase().includes('monisha');
+
     const newUser = {
       id: firebaseUser.uid || ('usr-' + Date.now().toString(36)),
       name: name.trim(),
       email: email.trim().toLowerCase(),
-      role: USER_ROLES.BUSINESS_USER,
-      roleLabel: dept ? `${dept.name} Team User` : 'Business Stakeholder',
+      role: isLegal ? USER_ROLES.LEGAL_MANAGER : USER_ROLES.BUSINESS_USER,
+      roleLabel: isLegal ? 'Legal Manager' : (dept ? `${dept.name} Team User` : 'Business Stakeholder'),
       departmentId: dept ? dept.id : (departmentId || null),
-      departmentName: dept ? dept.name : 'General',
+      departmentName: dept ? dept.name : (isLegal ? 'Legal Team' : 'General'),
       avatar: name.trim().charAt(0).toUpperCase() || 'U',
-      tagline: dept ? `${dept.name} Team` : 'Stakeholder',
+      tagline: isLegal ? 'Legal Manager (Full Admin Access)' : (dept ? `${dept.name} Team` : 'Stakeholder'),
       isActive: true,
-      permissions: []
+      permissions: isLegal ? ['*'] : []
     };
 
     const existingIndex = db.data.users.findIndex(u => u.email.toLowerCase() === newUser.email);

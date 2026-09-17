@@ -80,6 +80,7 @@ export const REQUEST_PRIORITIES = {
 };
 
 export const DEPARTMENTS = [
+  { id: 'dept-legal', code: 'LEGAL', name: 'Legal', description: 'Legal Team, Compliance & Corporate Governance' },
   { id: 'dept-hr', code: 'HR', name: 'HR', description: 'Human Resources & Employment Agreements' },
   { id: 'dept-it', code: 'IT', name: 'IT', description: 'Information Technology, Cloud & Software Licensing' },
   { id: 'dept-engineering', code: 'ENGINEERING', name: 'Engineering', description: 'Software Development & Technical Compliance' },

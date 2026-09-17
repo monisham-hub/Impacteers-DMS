@@ -209,9 +209,7 @@ export class LegalDatabase {
     if (!Array.isArray(this.data.users)) {
       this.data.users = [...DEMO_USERS];
     }
-    if (!Array.isArray(this.data.departments)) {
-      this.data.departments = [...DEPARTMENTS];
-    }
+    this.data.departments = [...DEPARTMENTS];
     if (!Array.isArray(this.data.notifications)) {
       this.data.notifications = [];
     }
