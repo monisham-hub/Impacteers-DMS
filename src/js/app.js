@@ -58,6 +58,8 @@ class App {
     window.addEventListener('document:created', () => this.handleRoute());
     window.addEventListener('document:updated', () => this.handleRoute());
     window.addEventListener('document:deleted', () => this.handleRoute());
+    window.addEventListener('contract:created', () => this.handleRoute());
+    window.addEventListener('contract:updated', () => this.handleRoute());
     window.addEventListener('user:updated', () => this.handleRoute());
   }
 
@@ -1578,6 +1580,7 @@ const initApp = async () => {
   } catch (e) {
     console.warn('Initial Firestore hydration notice:', e);
   }
+  db.initRealtimeSync();
   window.impacteersApp = new App();
 };
 

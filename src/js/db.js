@@ -5,7 +5,7 @@
 
 import { DEPARTMENTS, DEMO_USERS, REQUEST_TYPES, USER_ROLES } from './constants.js';
 import { dbFirestore } from './firebaseConfig.js';
-import { collection, doc, setDoc, getDocs, deleteDoc } from 'firebase/firestore';
+import { collection, doc, setDoc, getDocs, deleteDoc, onSnapshot } from 'firebase/firestore';
 
 const DB_STORAGE_KEY = 'IMPACTEERS_DMS_STORE_V6_LIVE';
 
@@ -53,8 +53,6 @@ export class LegalDatabase {
     try {
       if (!dbFirestore) return;
       
-      // Deep clone to safely mutate and strip out large base64 dataUrls
-      // Firebase throws "invalid nested entity" or "payload exceeds limit" for giant strings
       const safeData = JSON.parse(JSON.stringify(documentData));
       
       if (safeData.attachedDocument && safeData.attachedDocument.dataUrl) {
@@ -87,6 +85,72 @@ export class LegalDatabase {
     }
   }
 
+  initRealtimeSync() {
+    if (!dbFirestore) return;
+
+    try {
+      // 1. Real-time requests listener
+      onSnapshot(collection(dbFirestore, 'requests'), (snapshot) => {
+        const liveRequests = [];
+        snapshot.forEach(d => {
+          const item = d.data();
+          if (item) liveRequests.push({ id: d.id, ...item });
+        });
+        this.data.requests = liveRequests;
+        this.saveToStorage();
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('request:updated'));
+        }
+      }, (err) => console.warn('Requests real-time sync notice:', err.message));
+
+      // 2. Real-time documents listener
+      onSnapshot(collection(dbFirestore, 'documents'), (snapshot) => {
+        const liveDocs = [];
+        snapshot.forEach(d => {
+          const item = d.data();
+          if (item) liveDocs.push({ id: d.id, ...item });
+        });
+        this.data.documents = liveDocs;
+        this.saveToStorage();
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('document:updated'));
+        }
+      }, (err) => console.warn('Documents real-time sync notice:', err.message));
+
+      // 3. Real-time contracts listener
+      onSnapshot(collection(dbFirestore, 'contracts'), (snapshot) => {
+        const liveContracts = [];
+        snapshot.forEach(d => {
+          const item = d.data();
+          if (item) liveContracts.push({ id: d.id, ...item });
+        });
+        this.data.contracts = liveContracts;
+        this.saveToStorage();
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('contract:updated'));
+        }
+      }, (err) => console.warn('Contracts real-time sync notice:', err.message));
+
+      // 4. Real-time users listener
+      onSnapshot(collection(dbFirestore, 'users'), (snapshot) => {
+        const liveUsers = [];
+        snapshot.forEach(d => {
+          const uData = d.data();
+          if (uData) liveUsers.push({ id: d.id, ...uData });
+        });
+        if (liveUsers.length > 0) {
+          this.data.users = liveUsers;
+          this.saveToStorage();
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('user:updated'));
+          }
+        }
+      }, (err) => console.warn('Users real-time sync notice:', err.message));
+    } catch (e) {
+      console.warn('Real-time sync initialization skipped:', e);
+    }
+  }
+
   async fetchFromFirestore() {
     try {
       if (!dbFirestore) return;
@@ -96,7 +160,7 @@ export class LegalDatabase {
       const liveRequests = [];
       reqSnapshot.forEach(d => {
         const item = d.data();
-        if (item) liveRequests.push(item);
+        if (item) liveRequests.push({ id: d.id, ...item });
       });
       this.data.requests = liveRequests;
 
@@ -106,7 +170,7 @@ export class LegalDatabase {
         const liveDocs = [];
         docSnapshot.forEach(d => {
           const item = d.data();
-          if (item) liveDocs.push(item);
+          if (item) liveDocs.push({ id: d.id, ...item });
         });
         this.data.documents = liveDocs;
       } catch (err) {
@@ -119,7 +183,7 @@ export class LegalDatabase {
         const liveContracts = [];
         cntSnapshot.forEach(d => {
           const item = d.data();
-          if (item) liveContracts.push(item);
+          if (item) liveContracts.push({ id: d.id, ...item });
         });
         this.data.contracts = liveContracts;
       } catch (err) {
@@ -133,7 +197,7 @@ export class LegalDatabase {
         usersSnapshot.forEach(d => {
           const uData = d.data();
           if (uData && (uData.email || uData.id)) {
-            liveUsers.push(uData);
+            liveUsers.push({ id: d.id, ...uData });
           }
         });
 
