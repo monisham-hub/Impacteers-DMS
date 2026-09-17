@@ -58,6 +58,7 @@ class App {
     window.addEventListener('document:created', () => this.handleRoute());
     window.addEventListener('document:updated', () => this.handleRoute());
     window.addEventListener('document:deleted', () => this.handleRoute());
+    window.addEventListener('user:updated', () => this.handleRoute());
   }
 
   bindWindowGlobals() {
@@ -637,6 +638,22 @@ In-House Legal & Document Management System (DMS).
       if (confirm(`Are you sure you want to trigger a password reset for ${user.email}?`)) {
         authService.logAudit('RESET_CREDENTIAL', `Triggered credential reset for ${user.email}`, userId);
         Toast.info(`A secure password reset link has been dispatched to ${user.email}.`);
+      }
+    };
+
+    window.adminDeleteUser = (userId) => {
+      const users = authService.getAllUsers();
+      const user = users.find(u => u.id === userId);
+      if (!user) return;
+
+      if (confirm(`Are you sure you want to permanently delete "${user.name}" (${user.email})? This will delete the user from the database.`)) {
+        try {
+          authService.deleteUser(userId);
+          Toast.success(`User ${user.email} permanently removed.`);
+          this.handleRoute();
+        } catch (e) {
+          Toast.error(e.message);
+        }
       }
     };
   }

@@ -102,6 +102,7 @@ export function renderUsersTableRows(users) {
           <button class="btn btn-secondary btn-sm" onclick="window.adminEditUser('${u.id}')">Edit Access</button>
           <button class="btn ${isActive ? 'btn-danger' : 'btn-primary'} btn-sm" style="margin-left: 4px;" onclick="window.adminToggleUserStatus('${u.id}')">${isActive ? 'Deactivate' : 'Activate'}</button>
           <button class="btn btn-secondary btn-sm" style="margin-left: 4px;" onclick="window.adminResetCredential('${u.id}')">Reset</button>
+          ${u.id !== authService.getCurrentUser()?.id ? `<button class="btn btn-danger btn-sm" style="margin-left: 4px; background: #dc2626; border-color: #dc2626;" onclick="window.adminDeleteUser('${u.id}')" title="Permanently delete user">Delete</button>` : ''}
         </td>
       </tr>
     `;

@@ -128,6 +128,7 @@ class AuthService {
     } catch (e) {
       console.error(e);
     }
+    db.syncToFirestore('users', user.id, user);
     this.logAudit('USER_LOGIN', `User signed in: ${user.email}`, user.id);
     window.dispatchEvent(new CustomEvent('auth:changed', { detail: user }));
     return user;
@@ -182,6 +183,7 @@ class AuthService {
     } catch (e) {
       console.error(e);
     }
+    db.syncToFirestore('users', newUser.id, newUser);
     this.logAudit('USER_SIGNUP', `New user registered via Firebase Auth: ${newUser.email}`, newUser.id);
     window.dispatchEvent(new CustomEvent('auth:changed', { detail: newUser }));
     return newUser;
@@ -232,6 +234,7 @@ class AuthService {
           };
           db.data.users.push(user);
           db.saveToStorage();
+          db.syncToFirestore('users', user.id, user);
         }
         this.currentUser = user;
         try {

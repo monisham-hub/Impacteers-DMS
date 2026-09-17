@@ -7,15 +7,16 @@ import { DEPARTMENTS, DEMO_USERS, REQUEST_TYPES, USER_ROLES } from './constants.
 import { dbFirestore } from './firebaseConfig.js';
 import { collection, doc, setDoc, getDocs, deleteDoc } from 'firebase/firestore';
 
-const DB_STORAGE_KEY = 'IMPACTEERS_LEGAL_DOCS_STORE_V4_CLEAN';
+const DB_STORAGE_KEY = 'IMPACTEERS_LEGAL_DOCS_STORE_V5_LIVE';
 
 export class LegalDatabase {
   constructor() {
-    // Clear legacy v1, v2, v3 stores if present in browser
+    // Clear legacy stores if present in browser
     try {
       localStorage.removeItem('IMPACTEERS_LEGAL_DOCS_STORE_V1');
       localStorage.removeItem('IMPACTEERS_LEGAL_DOCS_STORE_V2');
       localStorage.removeItem('IMPACTEERS_LEGAL_DOCS_STORE_V3');
+      localStorage.removeItem('IMPACTEERS_LEGAL_DOCS_STORE_V4_CLEAN');
       localStorage.removeItem('impacteers_dms_db');
     } catch (e) {}
 
@@ -85,17 +86,16 @@ export class LegalDatabase {
     try {
       if (!dbFirestore) return;
 
-      // 1. Fetch live requests from Firestore
+      // 1. Fetch live requests from Firestore (source of truth)
       const reqSnapshot = await getDocs(collection(dbFirestore, 'requests'));
       const liveRequests = [];
       reqSnapshot.forEach(d => {
         const item = d.data();
         if (item) liveRequests.push(item);
       });
-      // Accurately mirror Firestore: whether items were added, updated, or deleted
       this.data.requests = liveRequests;
 
-      // 2. Fetch live documents from Firestore
+      // 2. Fetch live documents from Firestore (source of truth)
       try {
         const docSnapshot = await getDocs(collection(dbFirestore, 'documents'));
         const liveDocs = [];
@@ -103,41 +103,53 @@ export class LegalDatabase {
           const item = d.data();
           if (item) liveDocs.push(item);
         });
-        if (docSnapshot.size > 0 || liveRequests.length > 0) {
-          this.data.documents = liveDocs;
-        }
+        this.data.documents = liveDocs;
       } catch (err) {
         console.warn('Documents collection fetch skipped:', err.message);
       }
 
-      // 3. Fetch live users from Firestore if present
+      // 3. Fetch live users from Firestore (source of truth)
       try {
         const usersSnapshot = await getDocs(collection(dbFirestore, 'users'));
-        if (!usersSnapshot.empty) {
-          usersSnapshot.forEach(d => {
-            const uData = d.data();
-            if (uData && uData.email) {
-              const uIdx = this.data.users.findIndex(
-                u => u.id === uData.id || u.email.toLowerCase() === uData.email.toLowerCase()
-              );
-              if (uIdx !== -1) {
-                this.data.users[uIdx] = { ...this.data.users[uIdx], ...uData };
-              } else {
-                this.data.users.push(uData);
-              }
-            }
-          });
+        const liveUsers = [];
+        usersSnapshot.forEach(d => {
+          const uData = d.data();
+          if (uData && (uData.email || uData.id)) {
+            liveUsers.push(uData);
+          }
+        });
+
+        const currentSavedUser = (() => {
+          try {
+            const raw = localStorage.getItem('IMPACTEERS_AUTH_USER');
+            return raw ? JSON.parse(raw) : null;
+          } catch(e) { return null; }
+        })();
+
+        if (liveUsers.length > 0) {
+          this.data.users = liveUsers;
+          if (currentSavedUser && !this.data.users.find(u => u.email?.toLowerCase() === currentSavedUser.email?.toLowerCase())) {
+            this.data.users.unshift(currentSavedUser);
+          }
+        } else {
+          // If Firestore users collection is empty/cleared, only keep active session user or minimal primary user
+          if (currentSavedUser) {
+            this.data.users = [currentSavedUser];
+          } else {
+            this.data.users = [...DEMO_USERS];
+          }
         }
       } catch (err) {
         console.warn('Users collection fetch skipped:', err.message);
       }
 
       this.saveToStorage();
-      console.log(`Successfully hydrated from Firestore. Requests: ${this.data.requests.length}, Documents: ${this.data.documents.length}`);
+      console.log(`Successfully hydrated from Firestore. Requests: ${this.data.requests.length}, Documents: ${this.data.documents.length}, Users: ${this.data.users.length}`);
       
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('request:updated'));
         window.dispatchEvent(new CustomEvent('document:updated'));
+        window.dispatchEvent(new CustomEvent('user:updated'));
       }
     } catch(e) {
       console.warn('Failed to fetch from Firestore:', e.message);
