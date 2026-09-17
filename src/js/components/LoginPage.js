@@ -133,9 +133,9 @@ export function renderLoginPage() {
                 type="email" 
                 id="login-email" 
                 class="form-input" 
-                placeholder="e.g. monisha@impacteers.club" 
+                placeholder="name@impacteers.club" 
                 style="padding: 11px 14px 11px 36px; font-size: 13.5px; border-radius: 10px; border: 1.5px solid #CBD5E1;" 
-                value="monisha@impacteers.club" 
+                value="" 
                 required 
               />
               <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 14px; color: #94A3B8;">✉️</span>
@@ -147,7 +147,7 @@ export function renderLoginPage() {
               <label class="form-label" style="font-size: 12.5px; font-weight: 700; color: #334155; text-transform: uppercase; letter-spacing: 0.04em; margin: 0;">
                 Password
               </label>
-              <a href="javascript:void(0)" onclick="alert('Demo password is test@123 for all demo accounts. You can also sign up for a new account!')" style="font-size: 12px; color: #2563EB; text-decoration: none; font-weight: 600;">
+              <a href="javascript:void(0)" onclick="alert('Please contact your system administrator or use the Reset Password feature.')" style="font-size: 12px; color: #2563EB; text-decoration: none; font-weight: 600;">
                 Forgot Password?
               </a>
             </div>
@@ -156,15 +156,12 @@ export function renderLoginPage() {
                 type="password" 
                 id="login-password" 
                 class="form-input" 
-                placeholder="••••••••" 
+                placeholder="Enter your password" 
                 style="padding: 11px 14px 11px 36px; font-size: 13.5px; border-radius: 10px; border: 1.5px solid #CBD5E1;" 
-                value="test@123" 
+                value="" 
                 required 
               />
               <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 14px; color: #94A3B8;">🔒</span>
-            </div>
-            <div style="font-size: 11.5px; color: #64748B; margin-top: 6px;">
-              Default demo password: <strong style="color: #2563EB;">test@123</strong>
             </div>
           </div>
 

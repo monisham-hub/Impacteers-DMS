@@ -21,8 +21,8 @@ class AuthService {
     } catch (e) {
       console.warn('Could not load user:', e);
     }
-    // Default to Edwin (HR) for instant business test, or Monisha
-    return DEMO_USERS[0]; // Monisha (Legal Manager)
+    // No default user — fresh visitors must authenticate with their own credentials
+    return null;
   }
 
   isLoggedIn() {
