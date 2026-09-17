@@ -21,7 +21,15 @@ class AuthService {
             u => (user.id && u.id === user.id) || (u.email && u.email.toLowerCase() === user.email.toLowerCase())
           );
           if (matched) {
+            const isMonisha = matched.email.toLowerCase().includes('monisha');
+            if (!isMonisha && matched.approvalStatus !== 'APPROVED') {
+              return null;
+            }
             return matched;
+          }
+          const isMonisha = user.email.toLowerCase().includes('monisha');
+          if (!isMonisha && user.approvalStatus !== 'APPROVED') {
+            return null;
           }
           return user;
         }
@@ -30,7 +38,13 @@ class AuthService {
       const savedId = localStorage.getItem('IMPACTEERS_AUTH_USER_ID');
       if (savedId) {
         const found = db.data.users.find(u => u.id === savedId);
-        if (found) return found;
+        if (found) {
+          const isMonisha = found.email.toLowerCase().includes('monisha');
+          if (!isMonisha && found.approvalStatus !== 'APPROVED') {
+            return null;
+          }
+          return found;
+        }
       }
     } catch (e) {
       console.warn('Could not load user from storage:', e);
@@ -116,6 +130,27 @@ class AuthService {
     if (user.isActive === false) {
       throw new Error('This account has been deactivated. Please contact an administrator.');
     }
+
+    // Backend-level Login Approval Gate
+    if (!isMonisha) {
+      const accessRequests = Array.isArray(db.data.access_requests) ? db.data.access_requests : [];
+      const loginReq = accessRequests.find(r => 
+        r.requestType === 'LOGIN_ACCESS' && r.userEmail?.toLowerCase() === user.email.toLowerCase()
+      );
+
+      const status = user.approvalStatus || (loginReq ? loginReq.status : 'PENDING');
+      const isApproved = (user.loginApproved === true || status === 'APPROVED') && user.approvalStatus !== 'DENIED';
+
+      if (status === 'DENIED' || user.approvalStatus === 'DENIED') {
+        const reasonStr = user.denialReason || (loginReq && loginReq.denialReason) ? ` Reason: ${user.denialReason || loginReq.denialReason}` : '';
+        throw new Error(`Your login access request has been denied. Please contact the Legal Admin.${reasonStr ? ' ' + reasonStr : ''}`);
+      }
+
+      if (!isApproved || status === 'PENDING') {
+        throw new Error('Your login access request has been submitted and is awaiting approval from the Legal Admin.');
+      }
+    }
+
     this.currentUser = user;
     try {
       localStorage.setItem('IMPACTEERS_AUTH_USER', JSON.stringify(user));
@@ -129,7 +164,7 @@ class AuthService {
     return user;
   }
 
-  async signup({ name, email, password, departmentId }) {
+  async signup({ name, email, password, departmentId, designation = 'Team Member', reason = '' }) {
     const { createUserWithEmailAndPassword, auth } = await import('../firebaseConfig.js');
     let firebaseUser;
     try {
@@ -147,22 +182,29 @@ class AuthService {
     }
 
     const { DEPARTMENTS, USER_ROLES } = await import('../constants.js');
-    const dept = DEPARTMENTS.find(d => d.id === departmentId);
+    const dept = DEPARTMENTS.find(d => d.id === departmentId) || {
+      id: departmentId || 'dept-legal',
+      name: 'General'
+    };
 
-    const isLegal = departmentId === 'dept-legal' || email.trim().toLowerCase().includes('monisha');
+    const isLegal = email.trim().toLowerCase().includes('monisha');
 
     const newUser = {
       id: firebaseUser.uid || ('usr-' + Date.now().toString(36)),
       name: name.trim(),
       email: email.trim().toLowerCase(),
       role: isLegal ? USER_ROLES.LEGAL_MANAGER : USER_ROLES.BUSINESS_USER,
-      roleLabel: isLegal ? 'Legal Manager' : (dept ? `${dept.name} Team User` : 'Business Stakeholder'),
-      departmentId: dept ? dept.id : (departmentId || null),
-      departmentName: dept ? dept.name : (isLegal ? 'Legal Team' : 'General'),
+      roleLabel: isLegal ? 'Legal Manager' : `${dept.name} Team User`,
+      departmentId: dept.id,
+      departmentName: dept.name,
       avatar: name.trim().charAt(0).toUpperCase() || 'U',
-      tagline: isLegal ? 'Legal Manager (Full Admin Access)' : (dept ? `${dept.name} Team` : 'Stakeholder'),
+      tagline: designation || (dept ? `${dept.name} Team` : 'Stakeholder'),
       isActive: true,
-      permissions: isLegal ? ['*'] : []
+      approvalStatus: isLegal ? 'APPROVED' : 'PENDING',
+      loginApproved: isLegal ? true : false,
+      permissions: isLegal ? ['*'] : [],
+      grantedDatabases: isLegal ? ['dept-legal'] : [],
+      approvedDownloads: []
     };
 
     const existingIndex = db.data.users.findIndex(u => u.email.toLowerCase() === newUser.email);
@@ -172,6 +214,25 @@ class AuthService {
       db.data.users.push(newUser);
     }
     db.saveToStorage();
+    db.syncToFirestore('users', newUser.id, newUser);
+
+    // If not legal manager, submit Login Access request and block automatic session
+    if (!isLegal) {
+      const { accessRequestService } = await import('./accessRequestService.js');
+      accessRequestService.createLoginAccessRequest({
+        fullName: newUser.name,
+        email: newUser.email,
+        departmentId: dept.id,
+        designation: designation || 'Team Member',
+        reason: reason || 'Initial software workspace login request'
+      });
+
+      return {
+        ...newUser,
+        isPendingApproval: true,
+        message: 'Your login access request has been submitted and is awaiting approval from the Legal Admin.'
+      };
+    }
 
     this.currentUser = newUser;
     try {
@@ -232,6 +293,12 @@ class AuthService {
           db.data.users.push(user);
           db.saveToStorage();
           db.syncToFirestore('users', user.id, user);
+        }
+        const isMonisha = user.email.toLowerCase().includes('monisha');
+        if (!isMonisha && user.approvalStatus !== 'APPROVED') {
+          this.currentUser = null;
+          if (callback) callback(null);
+          return;
         }
         this.currentUser = user;
         try {

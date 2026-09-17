@@ -110,7 +110,7 @@ export function renderLoginPage() {
               padding: 9px 12px;
               border: none;
               border-radius: 8px;
-              font-size: 13.5px;
+              font-size: 13px;
               font-weight: 600;
               cursor: pointer;
               background: transparent;
@@ -118,7 +118,7 @@ export function renderLoginPage() {
               transition: all 0.2s ease;
             "
           >
-            Create Account
+            Request Login Access
           </button>
         </div>
 
@@ -147,7 +147,7 @@ export function renderLoginPage() {
               <label class="form-label" style="font-size: 12.5px; font-weight: 700; color: #334155; text-transform: uppercase; letter-spacing: 0.04em; margin: 0;">
                 Password
               </label>
-              <a href="javascript:void(0)" onclick="alert('Please contact your system administrator or use the Reset Password feature.')" style="font-size: 12px; color: #2563EB; text-decoration: none; font-weight: 600;">
+              <a href="javascript:void(0)" onclick="alert('Please contact your Legal Admin to reset access credentials.')" style="font-size: 12px; color: #2563EB; text-decoration: none; font-weight: 600;">
                 Forgot Password?
               </a>
             </div>
@@ -185,16 +185,20 @@ export function renderLoginPage() {
           </button>
 
           <div style="text-align: center; margin-top: 18px; font-size: 13px; color: #64748B;">
-            Don't have an account? 
+            Need new user access? 
             <a href="javascript:void(0)" id="switch-to-signup-link" style="color: #2563EB; font-weight: 700; text-decoration: none; margin-left: 4px;">
-              Sign up here
+              Request Login Access
             </a>
           </div>
         </form>
 
-        <!-- 2. Sign Up Form -->
+        <!-- 2. Request Login Access Form -->
         <form id="signup-form" style="display: none;">
-          <div class="form-group" style="margin-bottom: 14px;">
+          <div style="background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 10px; padding: 10px 12px; margin-bottom: 14px; font-size: 12px; color: #1E40AF; line-height: 1.4;">
+            ℹ️ All login requests require manual verification and approval from the <strong>Legal Admin</strong> before access is granted.
+          </div>
+
+          <div class="form-group" style="margin-bottom: 12px;">
             <label class="form-label" style="font-size: 12px; font-weight: 700; color: #334155; text-transform: uppercase; letter-spacing: 0.04em;">
               Full Name <span style="color: #EF4444;">*</span>
             </label>
@@ -204,16 +208,16 @@ export function renderLoginPage() {
                 id="signup-name" 
                 class="form-input" 
                 placeholder="e.g. Alex Johnson" 
-                style="padding: 10px 14px 10px 36px; font-size: 13px; border-radius: 10px; border: 1.5px solid #CBD5E1;" 
+                style="padding: 9px 12px 9px 34px; font-size: 13px; border-radius: 8px; border: 1.5px solid #CBD5E1;" 
                 required 
               />
-              <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 14px; color: #94A3B8;">👤</span>
+              <span style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 13px; color: #94A3B8;">👤</span>
             </div>
           </div>
 
-          <div class="form-group" style="margin-bottom: 14px;">
+          <div class="form-group" style="margin-bottom: 12px;">
             <label class="form-label" style="font-size: 12px; font-weight: 700; color: #334155; text-transform: uppercase; letter-spacing: 0.04em;">
-              Work Email <span style="color: #EF4444;">*</span>
+              Official Email <span style="color: #EF4444;">*</span>
             </label>
             <div style="position: relative;">
               <input 
@@ -221,63 +225,86 @@ export function renderLoginPage() {
                 id="signup-email" 
                 class="form-input" 
                 placeholder="e.g. alex@impacteers.club" 
-                style="padding: 10px 14px 10px 36px; font-size: 13px; border-radius: 10px; border: 1.5px solid #CBD5E1;" 
+                style="padding: 9px 12px 9px 34px; font-size: 13px; border-radius: 8px; border: 1.5px solid #CBD5E1;" 
                 required 
               />
-              <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 14px; color: #94A3B8;">✉️</span>
+              <span style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 13px; color: #94A3B8;">✉️</span>
             </div>
           </div>
 
-          <div class="form-group" style="margin-bottom: 14px;">
-            <label class="form-label" style="font-size: 12px; font-weight: 700; color: #334155; text-transform: uppercase; letter-spacing: 0.04em;">
-              Department <span style="color: #EF4444;">*</span>
-            </label>
-            <div style="position: relative;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+            <div class="form-group" style="margin: 0;">
+              <label class="form-label" style="font-size: 12px; font-weight: 700; color: #334155; text-transform: uppercase; letter-spacing: 0.04em;">
+                Department <span style="color: #EF4444;">*</span>
+              </label>
               <select 
                 id="signup-department" 
                 class="form-select"
-                style="padding: 10px 14px 10px 36px; font-size: 13px; border-radius: 10px; border: 1.5px solid #CBD5E1;"
+                style="padding: 9px 10px; font-size: 12.5px; border-radius: 8px; border: 1.5px solid #CBD5E1;"
                 required
               >
                 ${deptOptionsHtml}
               </select>
-              <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 14px; color: #94A3B8;">🏢</span>
+            </div>
+
+            <div class="form-group" style="margin: 0;">
+              <label class="form-label" style="font-size: 12px; font-weight: 700; color: #334155; text-transform: uppercase; letter-spacing: 0.04em;">
+                Designation / Role <span style="color: #EF4444;">*</span>
+              </label>
+              <input 
+                type="text" 
+                id="signup-designation" 
+                class="form-input" 
+                placeholder="e.g. HR Manager" 
+                style="padding: 9px 10px; font-size: 12.5px; border-radius: 8px; border: 1.5px solid #CBD5E1;" 
+                required 
+              />
             </div>
           </div>
 
-          <div class="form-group" style="margin-bottom: 14px;">
+          <div class="form-group" style="margin-bottom: 12px;">
             <label class="form-label" style="font-size: 12px; font-weight: 700; color: #334155; text-transform: uppercase; letter-spacing: 0.04em;">
-              Password (min. 6 characters) <span style="color: #EF4444;">*</span>
+              Reason for Request <span style="color: #EF4444;">*</span>
             </label>
-            <div style="position: relative;">
+            <textarea 
+              id="signup-reason" 
+              class="form-input" 
+              rows="2"
+              placeholder="State why you need login access to the software..." 
+              style="padding: 9px 12px; font-size: 12.5px; border-radius: 8px; border: 1.5px solid #CBD5E1; resize: vertical;" 
+              required
+            ></textarea>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px;">
+            <div class="form-group" style="margin: 0;">
+              <label class="form-label" style="font-size: 11.5px; font-weight: 700; color: #334155; text-transform: uppercase; letter-spacing: 0.04em;">
+                Password <span style="color: #EF4444;">*</span>
+              </label>
               <input 
                 type="password" 
                 id="signup-password" 
                 class="form-input" 
-                placeholder="••••••••" 
+                placeholder="min. 6 chars" 
                 minlength="6"
-                style="padding: 10px 14px 10px 36px; font-size: 13px; border-radius: 10px; border: 1.5px solid #CBD5E1;" 
+                style="padding: 8px 10px; font-size: 12.5px; border-radius: 8px; border: 1.5px solid #CBD5E1;" 
                 required 
               />
-              <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 14px; color: #94A3B8;">🔒</span>
             </div>
-          </div>
 
-          <div class="form-group" style="margin-bottom: 20px;">
-            <label class="form-label" style="font-size: 12px; font-weight: 700; color: #334155; text-transform: uppercase; letter-spacing: 0.04em;">
-              Confirm Password <span style="color: #EF4444;">*</span>
-            </label>
-            <div style="position: relative;">
+            <div class="form-group" style="margin: 0;">
+              <label class="form-label" style="font-size: 11.5px; font-weight: 700; color: #334155; text-transform: uppercase; letter-spacing: 0.04em;">
+                Confirm <span style="color: #EF4444;">*</span>
+              </label>
               <input 
                 type="password" 
                 id="signup-confirm-password" 
                 class="form-input" 
-                placeholder="••••••••" 
+                placeholder="confirm" 
                 minlength="6"
-                style="padding: 10px 14px 10px 36px; font-size: 13px; border-radius: 10px; border: 1.5px solid #CBD5E1;" 
+                style="padding: 8px 10px; font-size: 12.5px; border-radius: 8px; border: 1.5px solid #CBD5E1;" 
                 required 
               />
-              <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 14px; color: #94A3B8;">🔑</span>
             </div>
           </div>
 
@@ -287,23 +314,23 @@ export function renderLoginPage() {
             class="btn btn-primary" 
             style="
               width: 100%; 
-              padding: 12px; 
-              font-size: 14px; 
+              padding: 11px; 
+              font-size: 13.5px; 
               font-weight: 700; 
               border-radius: 10px; 
-              background: linear-gradient(135deg, #10B981, #059669);
-              box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+              background: linear-gradient(135deg, #2563EB, #1D4ED8);
+              box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
               border: none;
               cursor: pointer;
             "
           >
-            Create Workspace Account
+            Submit Login Access Request
           </button>
 
-          <div style="text-align: center; margin-top: 18px; font-size: 13px; color: #64748B;">
-            Already have an account? 
+          <div style="text-align: center; margin-top: 14px; font-size: 12.5px; color: #64748B;">
+            Already have approved login access? 
             <a href="javascript:void(0)" id="switch-to-signin-link" style="color: #2563EB; font-weight: 700; text-decoration: none; margin-left: 4px;">
-              Sign in here
+              Sign In
             </a>
           </div>
         </form>

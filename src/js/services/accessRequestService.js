@@ -13,6 +13,7 @@ import { notificationService } from './notificationService.js';
 import { DEPARTMENTS } from '../constants.js';
 
 export const ACCESS_REQUEST_TYPES = {
+  LOGIN_ACCESS: 'LOGIN_ACCESS',
   DATABASE_ACCESS: 'DATABASE_ACCESS',
   DOCUMENT_DOWNLOAD: 'DOCUMENT_DOWNLOAD'
 };
@@ -31,6 +32,88 @@ class AccessRequestService {
     const list = Array.isArray(db.data.access_requests) ? db.data.access_requests : [];
     const num = list.length + 1;
     return `REQ-${String(num).padStart(6, '0')}`;
+  }
+
+  /**
+   * Request Login / Account Access
+   * A new user must first request permission to log in to the software.
+   * Fields: Full Name, Official Email, Department, Designation / Role, Reason for Request
+   */
+  createLoginAccessRequest({ fullName, email, departmentId, designation = 'Team Member', reason = '' } = {}) {
+    if (!fullName || !fullName.trim()) {
+      throw new Error('Please provide your Full Name.');
+    }
+    if (!email || !email.trim() || !email.includes('@')) {
+      throw new Error('Please provide a valid Official Email address.');
+    }
+    if (!departmentId) {
+      throw new Error('Please select your assigned Department.');
+    }
+    if (!reason || !reason.trim()) {
+      throw new Error('Please provide a reason for the login access request.');
+    }
+
+    const dept = DEPARTMENTS.find(d => d.id === departmentId) || {
+      id: departmentId,
+      name: 'General'
+    };
+
+    const requestId = this.generateRequestId();
+    const newRequest = {
+      id: requestId,
+      requestId: requestId,
+      userId: null,
+      userName: fullName.trim(),
+      userEmail: email.trim().toLowerCase(),
+      departmentId: dept.id,
+      departmentName: dept.name,
+      designation: designation ? designation.trim() : 'Team Member',
+      requestType: ACCESS_REQUEST_TYPES.LOGIN_ACCESS,
+      requestTypeLabel: 'Login Access',
+      targetItem: {
+        application: 'Impacteers DMS',
+        scope: 'Software Workspace Login'
+      },
+      itemLabel: 'Software Workspace Login',
+      reason: reason.trim(),
+      status: ACCESS_STATUSES.PENDING,
+      createdAt: new Date().toISOString(),
+      reviewedAt: null,
+      reviewedBy: null,
+      denialReason: null
+    };
+
+    if (!Array.isArray(db.data.access_requests)) {
+      db.data.access_requests = [];
+    }
+
+    db.data.access_requests.unshift(newRequest);
+    db.saveToStorage();
+    db.syncToFirestore('access_requests', newRequest.id, newRequest);
+
+    auditService.log({
+      action: 'REQUEST_LOGIN_ACCESS',
+      objectType: 'ACCESS_REQUEST',
+      objectId: newRequest.id,
+      newValue: {
+        department: dept.name,
+        user: email.trim().toLowerCase(),
+        designation: newRequest.designation,
+        reason: newRequest.reason
+      }
+    });
+
+    notificationService.broadcastToLegal({
+      title: 'New Login Access Request',
+      message: `${fullName.trim()} (${dept.name} - ${newRequest.designation}) requested login access.`,
+      category: 'ACCESS',
+      linkUrl: `#/access`
+    });
+
+    if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
+      window.dispatchEvent(new CustomEvent('access:updated', { detail: newRequest }));
+    }
+    return newRequest;
   }
 
   /**
@@ -268,7 +351,28 @@ class AccessRequestService {
     request.denialReason = null;
 
     // Grant access to user profile
-    const targetUser = db.data.users.find(u => u.id === request.userId || u.email?.toLowerCase() === request.userEmail?.toLowerCase());
+    let targetUser = db.data.users.find(u => u.id === request.userId || u.email?.toLowerCase() === request.userEmail?.toLowerCase());
+    if (!targetUser && request.requestType === ACCESS_REQUEST_TYPES.LOGIN_ACCESS) {
+      targetUser = {
+        id: 'usr-' + Date.now().toString(36),
+        name: request.userName,
+        email: request.userEmail.toLowerCase(),
+        role: 'BUSINESS_USER',
+        roleLabel: `${request.departmentName} Stakeholder`,
+        departmentId: request.departmentId,
+        departmentName: request.departmentName,
+        avatar: (request.userName || 'U').charAt(0).toUpperCase(),
+        tagline: request.designation || 'Team Member',
+        approvalStatus: ACCESS_STATUSES.APPROVED,
+        loginApproved: true,
+        isActive: true,
+        permissions: [],
+        grantedDatabases: [],
+        approvedDownloads: []
+      };
+      db.data.users.push(targetUser);
+    }
+
     if (targetUser) {
       if (!Array.isArray(targetUser.grantedDatabases)) {
         targetUser.grantedDatabases = [];
@@ -277,7 +381,11 @@ class AccessRequestService {
         targetUser.approvedDownloads = [];
       }
 
-      if (request.requestType === ACCESS_REQUEST_TYPES.DATABASE_ACCESS) {
+      if (request.requestType === ACCESS_REQUEST_TYPES.LOGIN_ACCESS) {
+        targetUser.approvalStatus = ACCESS_STATUSES.APPROVED;
+        targetUser.loginApproved = true;
+        targetUser.isActive = true;
+      } else if (request.requestType === ACCESS_REQUEST_TYPES.DATABASE_ACCESS) {
         if (!targetUser.grantedDatabases.includes(request.departmentId)) {
           targetUser.grantedDatabases.push(request.departmentId);
         }
@@ -337,6 +445,15 @@ class AccessRequestService {
     request.reviewedAt = new Date().toISOString();
     request.reviewedBy = admin ? admin.email : 'monisha@impacteers.club';
     request.denialReason = denialReason ? denialReason.trim() : 'Request denied by Legal Admin.';
+
+    // Update target user record if it exists
+    const targetUser = db.data.users.find(u => u.id === request.userId || u.email?.toLowerCase() === request.userEmail?.toLowerCase());
+    if (targetUser && request.requestType === ACCESS_REQUEST_TYPES.LOGIN_ACCESS) {
+      targetUser.approvalStatus = ACCESS_STATUSES.DENIED;
+      targetUser.loginApproved = false;
+      targetUser.denialReason = request.denialReason;
+      db.syncToFirestore('users', targetUser.id, targetUser);
+    }
 
     db.saveToStorage();
     db.syncToFirestore('access_requests', request.id, request);

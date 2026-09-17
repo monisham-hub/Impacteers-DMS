@@ -25,9 +25,9 @@ class AuditService {
     const user = authService.getCurrentUser();
     const entry = {
       id: `aud-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-      actorId: actorId || user.id,
-      actorName: actorName || user.name,
-      actorRole: actorRole || user.role,
+      actorId: actorId || (user ? user.id : 'applicant'),
+      actorName: actorName || (user ? user.name : 'Prospective User'),
+      actorRole: actorRole || (user ? user.role : 'APPLICANT'),
       action,
       objectType,
       objectId: String(objectId),

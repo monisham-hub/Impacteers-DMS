@@ -34,7 +34,7 @@ import { renderAdminSettingsPage } from './pages/AdminSettingsPage.js';
 import { renderAboutPage } from './pages/AboutPage.js';
 import { renderFloatingLegalAssistant } from './components/FloatingLegalAssistant.js';
 import { renderLegalAdminPage, renderUserFormModal } from './pages/LegalAdminPage.js';
-import { renderAccessManagementPage, renderRequestDbAccessModalHtml, renderRequestDocDownloadModalHtml, renderDenialModalHtml } from './pages/AccessManagementPage.js';
+import { renderAccessManagementPage, renderRequestLoginAccessModalHtml, renderRequestDbAccessModalHtml, renderRequestDocDownloadModalHtml, renderDenialModalHtml } from './pages/AccessManagementPage.js';
 import { accessRequestService } from './services/accessRequestService.js';
 
 class App {
@@ -663,6 +663,44 @@ In-House Legal & Document Management System (DMS).
     };
 
     // --- ACCESS MANAGEMENT HANDLERS ---
+    window.openRequestLoginAccessModal = () => {
+      const user = authService.getCurrentUser();
+      Modal.open({
+        title: '🔑 Request Login / Account Access',
+        contentHtml: renderRequestLoginAccessModalHtml(user),
+        size: 'md'
+      });
+    };
+
+    window.submitLoginAccessRequest = () => {
+      const nameEl = document.getElementById('req-login-name');
+      const emailEl = document.getElementById('req-login-email');
+      const deptEl = document.getElementById('req-login-department');
+      const desigEl = document.getElementById('req-login-designation');
+      const reasonEl = document.getElementById('req-login-reason');
+
+      const fullName = nameEl ? nameEl.value.trim() : '';
+      const email = emailEl ? emailEl.value.trim() : '';
+      const departmentId = deptEl ? deptEl.value : '';
+      const designation = desigEl ? desigEl.value.trim() : 'Team Member';
+      const reason = reasonEl ? reasonEl.value.trim() : '';
+
+      try {
+        accessRequestService.createLoginAccessRequest({
+          fullName,
+          email,
+          departmentId,
+          designation,
+          reason
+        });
+        Modal.close();
+        Toast.success('Your login access request has been submitted and is awaiting approval from the Legal Admin.');
+        this.handleRoute();
+      } catch (e) {
+        Toast.error(e.message);
+      }
+    };
+
     window.openRequestDbAccessModal = () => {
       const user = authService.getCurrentUser();
       if (!user) return;
@@ -963,7 +1001,7 @@ In-House Legal & Document Management System (DMS).
       });
     }
 
-    // Sign Up Submission
+    // Request Login Access Submission
     if (signupForm) {
       signupForm.addEventListener('submit', async e => {
         e.preventDefault();
@@ -971,11 +1009,13 @@ In-House Legal & Document Management System (DMS).
         const name = document.getElementById('signup-name').value.trim();
         const email = document.getElementById('signup-email').value.trim();
         const departmentId = document.getElementById('signup-department').value;
+        const designation = (document.getElementById('signup-designation')?.value || 'Team Member').trim();
+        const reason = (document.getElementById('signup-reason')?.value || '').trim();
         const password = document.getElementById('signup-password').value;
         const confirmPassword = document.getElementById('signup-confirm-password').value;
 
-        if (!name || !email || !password) {
-          Toast.error('Please fill in all required fields.');
+        if (!name || !email || !password || !reason) {
+          Toast.error('Please fill in all required fields including the reason for request.');
           return;
         }
 
@@ -991,18 +1031,41 @@ In-House Legal & Document Management System (DMS).
 
         if (submitBtn) {
           submitBtn.disabled = true;
-          submitBtn.innerText = 'Creating Account...';
+          submitBtn.innerText = 'Submitting Request...';
         }
 
         try {
-          const user = await authService.signup({ name, email, password, departmentId });
-          Toast.success(`Account created! Welcome to Impacteers DMS, ${user.name}!`);
-          window.location.hash = '#/dashboard';
+          const result = await authService.signup({ name, email, password, departmentId, designation, reason });
+          if (result && result.isPendingApproval) {
+            Toast.info('Your login access request has been submitted and is awaiting approval from the Legal Admin.', 8000);
+            Modal.alert({
+              title: 'Access Request Submitted ⏳',
+              contentHtml: `
+                <div style="font-size: 14px; color: #1E293B; line-height: 1.5; padding: 10px 0;">
+                  <p><strong>Your login access request has been submitted and is awaiting approval from the Legal Admin.</strong></p>
+                  <p style="color: #64748B; font-size: 13px; margin-top: 8px;">
+                    Department: <strong>${result.departmentName || 'Assigned'}</strong><br/>
+                    Email: <strong>${result.email}</strong>
+                  </p>
+                  <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 10px; font-size: 12px; color: #475569; margin-top: 10px;">
+                    Login rule: Access remains blocked until the Legal Admin approves your request.
+                  </div>
+                </div>
+              `
+            });
+            showSignIn();
+            const emailInput = document.getElementById('login-email');
+            if (emailInput) emailInput.value = email;
+          } else {
+            Toast.success(`Welcome to Impacteers DMS, ${result.name}!`);
+            window.location.hash = '#/dashboard';
+          }
         } catch (err) {
           Toast.error(err.message);
+        } finally {
           if (submitBtn) {
             submitBtn.disabled = false;
-            submitBtn.innerText = 'Create Workspace Account';
+            submitBtn.innerText = 'Submit Login Access Request';
           }
         }
       });
